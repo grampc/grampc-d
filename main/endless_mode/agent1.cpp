@@ -1,0 +1,72 @@
+/* This file is part of GRAMPC-D - (https://github.com/DanielBurk/GRAMPC-D.git)
+ *
+ * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
+ * based on the alternating direction method of multipliers (ADMM).
+ *
+ * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * All rights reserved.
+ *
+ * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
+ *
+ */
+
+#include "dmpc/interface/dmpc_interface.hpp"
+
+int main(int argc, char** argv)
+{
+	// create interface
+	dmpc::DmpcInterfacePtr interface(new dmpc::DmpcInterface());
+
+	// show logging
+	interface->set_print_message(true);
+	interface->set_print_warning(true);
+	interface->set_print_error(true);
+
+	const int agent_id = 1;
+
+	// set communication info
+	auto comm_info_coordinator = interface->communicationInfo();
+    comm_info_coordinator.ip_ = "127.0.0.1";
+	comm_info_coordinator.port_ = "7777";
+
+	// initialize communication interface
+	interface->initialize_local_communicationInterface_as_agent(comm_info_coordinator);
+
+	// parameters for cost function
+	typeRNum P = 1; typeRNum Q = 1; typeRNum R = 0.1;
+
+	// parameters for model
+	typeRNum A = 0.1; typeRNum a = 0.005; typeRNum d = 0.01;
+
+	// initial and desired states and controls
+	std::vector<typeRNum> xinit(1, 1);
+	std::vector<typeRNum> uinit(1, 0.0);
+	std::vector<typeRNum> xdes(1, 2.0);
+	std::vector<typeRNum> udes(1, 0.0);
+
+	// register agent
+	auto agent = interface->agentInfo();
+	agent.id_ = agent_id;
+	agent.model_name_ = "water_tank_agentModel";
+	agent.model_parameters_ = { A, 0, d };
+	agent.cost_parameters_ = { P, Q, 0 };
+
+	interface->register_agent(agent, xinit, uinit);
+	interface->set_desiredAgentState(agent_id, xdes, udes);
+
+	// register coupling
+	auto coupling_info = interface->couplingInfo();
+	coupling_info.agent_id_ = agent_id;
+	coupling_info.model_name_ = "water_tank_couplingModel";
+	coupling_info.model_parameters_ = { A, a };
+
+	coupling_info.neighbor_id_ = 0;
+	interface->register_coupling(coupling_info);
+
+	interface->cap_stored_data(100);
+
+	while (true)
+		interface->wait_blocking_s(1);
+
+	return 0;
+}
