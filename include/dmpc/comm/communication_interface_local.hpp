@@ -306,7 +306,7 @@ private:
     const unsigned int polling_period_s_ = 3;
     const unsigned int ping_period_s_ = 2;
     const unsigned int ping_waiting_time_ms_ = 1500;
-    const bool disconnect_at_timetout_ = false;
+    const bool disconnect_at_timeout_ = true;
 
     // variables to wait for: trigger step
     mutable std::mutex mutex_triggerStep_;

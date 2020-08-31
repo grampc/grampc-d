@@ -354,7 +354,7 @@ void CommunicationInterfaceLocal::start_client()
 
 void CommunicationInterfaceLocal::poll_check_connection(const std::error_code &ec, CommunicationDataPtr comm_data)
 {
-    if(ec || !disconnect_at_timetout_) 
+    if(ec || !disconnect_at_timeout_)
         return;
 
     if(comm_data->communication_info_->agent_type_ == "coordinator")
