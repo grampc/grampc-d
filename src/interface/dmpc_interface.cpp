@@ -92,7 +92,7 @@ namespace dmpc
 			typeRNum simulate_timestep;
 			if (realtime_)
 				simulate_timestep = static_cast<typeRNum>(std::max(dt_in_ms, CPUtime_iteration)) / 1000.0;
-			else
+        else
 				simulate_timestep = oi.COMMON_dt_;
 
 			simulator->centralized_simulation(&solver, oi.COMMON_Integrator_, simulate_timestep);
@@ -111,7 +111,7 @@ namespace dmpc
 
 		simulator_->set_t0(t_0);
 
-		long long CPUtime_max = 0;
+		std::chrono::milliseconds::rep CPUtime_max = 0;
 
 		for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
 		{
