@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(grampcd)
 
-set(PYTHON_AVAILABLE TRUE)
+set(PYTHON_AVAILABLE FALSE)
 
 # add support for C++17 standard
 if(MSVC)
