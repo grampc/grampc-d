@@ -28,10 +28,9 @@ VDPAgentModel::VDPAgentModel(
     p3_ = model_parameters[2];
     P_.push_back(cost_parameters[0]);
     P_.push_back(cost_parameters[1]);
-    P_.push_back(cost_parameters[2]);
+    Q_.push_back(cost_parameters[2]);
     Q_.push_back(cost_parameters[3]);
-    Q_.push_back(cost_parameters[4]);
-    R_.push_back(cost_parameters[5]);
+    R_.push_back(cost_parameters[4]);
 }
 
 dmpc::AgentModelPtr VDPAgentModel::create(const std::vector<typeRNum>& model_parameters, 
@@ -62,40 +61,32 @@ void VDPAgentModel::dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum
 void VDPAgentModel::lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes)
 {
     for(unsigned int i = 0; i < get_Nxi(); ++i)
-    {
-        out[0] += Q_[i] * x[i] * x[i];
-    }
+        out[0] += Q_[i] * (x[i] - xdes[i]) * (x[i] - xdes[i]);
+
     for(unsigned int i = 0; i < get_Nui(); ++i)
-    {
         out[0] += R_[i] * u[i] * u[i];
-    }
 }
 
 void VDPAgentModel::dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes)
 {
     for(unsigned int i = 0; i < get_Nxi(); ++i)
-    {
-        out[i] += Q_[i] * 2.0 * x[i];
-    }
+        out[i] += Q_[i] * 2.0 * (x[i] - xdes[i]);
 }
 
 void VDPAgentModel::dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes)
 {
     for(unsigned int i = 0; i < get_Nui(); ++i)
-    {
         out[i] += R_[i] * 2.0 * u[i];
-    }
 }
 
 void VDPAgentModel::Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes)
 {
-    out[0] += P_[0] * x[0] * x[0]
-            + P_[1] * x[0] * x[1] * 2.0
-            + P_[2] * x[1] * x[1];
+    for(unsigned int i = 0; i < get_Nxi(); ++i)
+        out[0] += P_[i] * (x[i] - xdes[i]) * (x[i] - xdes[i]);
 }
 
 void VDPAgentModel::dVdx(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes)
 {
-    out[0] += 2.0 * (P_[0] * x[0] + P_[1] * x[1]);
-    out[1] += 2.0 * (P_[1] * x[0] + P_[2] * x[1]);
+    for(unsigned int i = 0; i < get_Nxi(); ++i)
+        out[i] += 2 * P_[i] * (x[i] - xdes[i]);
 }
