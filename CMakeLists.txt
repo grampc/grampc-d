@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(grampcd)
 
-set(PYTHON_AVAILABLE FALSE)
+set(PYTHON_AVAILABLE TRUE)
 
 # add support for C++17 standard
 if(MSVC)
@@ -19,8 +19,8 @@ if(MSVC)
     SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ")
     set(CMAKE_CXX_STANDARD 17)
 else()
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++17 -DASIO_STANDALONE -Wno-psabi")
-    SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++17 -DASIO_STANDALONE -Wno-psabi -fpic")
+    SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fpic")
     set(CMAKE_CXX_STANDARD 17)
 endif()
 
