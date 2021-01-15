@@ -4,3 +4,9 @@ dmpc.creator
 dmpc.creator.user
 dmpc.files
 dmpc.includes
+CMakeCache.txt
+CMakeFiles/
+Makefile
+bin/
+*.a
+*.cmake
