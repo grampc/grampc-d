@@ -168,7 +168,7 @@ void shiftState(AgentState& state, typeRNum dt, typeRNum t0)
 
 	// This maximum ensures that all agents have the same time base 
 	// even in case of plug-and-play scenarios
-	state.t0_ = std::max(state.t0_ + dt, t0);
+	state.t0_ = std::max(state.t0_ + dt, t0 + dt);
 }
 
 void shiftState(CouplingState& state, typeRNum dt, typeRNum t0)
