@@ -1,7 +1,7 @@
 #ifndef SOLUTION_HPP
 #define SOLUTION_HPP
 
-/* This file is part of GRAMPC-D - (https://github.com/DanielBurk/GRAMPC-D.git)
+/* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
  * based on the alternating direction method of multipliers (ADMM).
