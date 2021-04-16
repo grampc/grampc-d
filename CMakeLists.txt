@@ -30,6 +30,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # link_directories should treat paths as relative to the source directory
 cmake_policy(SET CMP0015 NEW)
 
+# include asio
+include(ExternalProject)
+find_package(Git REQUIRED)
+
+ExternalProject_Add(asio
+	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+	GIT_TAG be7badc31abcc395cf868de6a1e240c2350bdbf2
+	UPDATE_COMMAND ""
+	CONFIGURE_COMMAND ""
+    	BUILD_COMMAND ""
+    	INSTALL_COMMAND ""
+    	LOG_DOWNLOAD ON
+        PREFIX  ${CMAKE_SOURCE_DIR}/asio
+)
+ExternalProject_Get_Property(asio source_dir)
+set(ASIO_INCLUDE_DIR ${source_dir}/asio/include CACHE INTERNAL "Path to include folder for asio")
 
 # where to search for header files
 include_directories(
@@ -37,7 +53,7 @@ include_directories(
     model_description
     libs/grampc/include
     libs/grampc/cpp/include
-    libs/asio/asio/include
+    ${ASIO_INCLUDE_DIR}
 )
 
 # add simulation examples
@@ -78,6 +94,8 @@ add_library(dmpc
     src/optim/problem_description_local_neighbor_approximation.cpp
     src/optim/approximate_neighbor.cpp
 )
+
+add_dependencies(dmpc asio)
 
 add_library(grampc
   libs/grampc/src/euler1.c
