@@ -1,0 +1,32 @@
+name: CMake
+
+on: [push]
+
+jobs:
+  build: 
+    strategy:
+      matrix:
+        os: ['ubuntu-20.04', 'ubuntu-18.04', 'ubuntu-16.04', 'windows-latest', 'macos-latest']
+    runs-on: ${{matrix.os}}
+
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Create Build Environment
+      run: cmake -E make_directory ${{github.workspace}}/build
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build
+      shell: bash
+      run: ctest -C $BUILD_TYPE
