@@ -20,10 +20,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # include missing compiler flags
 if(MSVC)
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /DASIO_STANDALONE -D_WIN32_WINNT=0x0A00")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=0x0A00")
     SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ")
 else()
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DASIO_STANDALONE -Wno-psabi -fpic")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-psabi -fpic")
     SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -fpic")
 endif()
 
@@ -49,6 +49,9 @@ ExternalProject_Add(asio
 )
 ExternalProject_Get_Property(asio source_dir)
 set(ASIO_INCLUDE_DIR ${source_dir}/asio/include CACHE INTERNAL "Path to include folder for asio")
+
+# define flag to use asio as standalone library
+add_definitions(-DASIO_STANDALONE )
 
 # where to search for header files
 include_directories(
