@@ -24,7 +24,7 @@ jobs:
     - name: Build
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build .
 
     - name: Test
       working-directory: ${{github.workspace}}/build
