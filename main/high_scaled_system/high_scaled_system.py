@@ -56,8 +56,8 @@ R_ux = 0.01; R_uy = 0.01;
 m_agent = 7.5; c = 0.5;
 
 # number of agents
-n_agents_x = 40;
-n_agents_y = 40;
+n_agents_x = 5;
+n_agents_y = 5;
 n_agents = n_agents_x * n_agents_y;
 
 # register agents

@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.0)
 project(grampcd VERSION 1.0.0)
 
 set(PYTHON_AVAILABLE FALSE)
+set(UNIT_TEST FALSE)
 
 # add support for C++17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -45,7 +46,7 @@ ExternalProject_Add(asio
     	BUILD_COMMAND ""
     	INSTALL_COMMAND ""
     	LOG_DOWNLOAD ON
-        PREFIX  ${CMAKE_SOURCE_DIR}/asio
+        PREFIX  ${CMAKE_SOURCE_DIR}/libs/asio
 )
 ExternalProject_Get_Property(asio source_dir)
 set(ASIO_INCLUDE_DIR ${source_dir}/asio/include CACHE INTERNAL "Path to include folder for asio")
@@ -141,3 +142,24 @@ if(PYTHON_AVAILABLE)
     target_link_libraries(grampcd_interface PRIVATE factory )
 endif()
 
+if(UNIT_TEST)
+
+    # include SHA1 as external project
+    ExternalProject_Add(sha
+	    GIT_REPOSITORY https://github.com/983/SHA1.git
+	    GIT_TAG 0ec907360c70b7eac33ec87927d227c602bb1265
+	    UPDATE_COMMAND ""
+	    CONFIGURE_COMMAND ""
+    	    BUILD_COMMAND ""
+    	    INSTALL_COMMAND ""
+    	    LOG_DOWNLOAD ON
+            PREFIX  ${CMAKE_SOURCE_DIR}/libs/sha
+    )
+    
+    include_directories(libs/sha/src/sha)
+
+    # force GTest to use MTd
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    
+    add_subdirectory(unit_tests)
+endif()

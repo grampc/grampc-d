@@ -44,8 +44,8 @@ int main(int argc, char** argv)
     typeRNum m_agent = 7.5; typeRNum c = 0.5;
 
     // number of agents
-    const unsigned int n_agents_x = 40;
-    const unsigned int n_agents_y = 40;
+    const unsigned int n_agents_x = 5;
+    const unsigned int n_agents_y = 5;
     const unsigned int n_agents = n_agents_x * n_agents_y;
 
     // register agents

@@ -8,5 +8,8 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 bin/
+backup_high_scaled/
+.vs/
+asio/
 *.a
 *.cmake
