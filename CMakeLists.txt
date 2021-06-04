@@ -40,7 +40,7 @@ find_package(Git REQUIRED)
 
 ExternalProject_Add(asio
 	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-	GIT_TAG be7badc31abcc395cf868de6a1e240c2350bdbf2
+	GIT_TAG 53d83a3321e62e54d352425479e59a91edd1a34b
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ""
     	BUILD_COMMAND ""
@@ -49,7 +49,7 @@ ExternalProject_Add(asio
         PREFIX  ${CMAKE_SOURCE_DIR}/libs/asio
 )
 ExternalProject_Get_Property(asio source_dir)
-set(ASIO_INCLUDE_DIR ${source_dir}/asio/include CACHE INTERNAL "Path to include folder for asio")
+set(ASIO_INCLUDE_DIR ${source_dir}/asio/include)
 
 # define flag to use asio as standalone library
 add_definitions(-DASIO_STANDALONE )
