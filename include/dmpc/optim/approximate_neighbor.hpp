@@ -10,51 +10,49 @@
  *
  */
 
-#ifndef APPROXIMATE_NEIGHBOR_HPP
-#define APPROXIMATE_NEIGHBOR_HPP
+#pragma once
 
-#include "dmpc/optim/problem_description_local_neighbor_approximation.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
-namespace dmpc {
+#include "dmpc/state/agent_state.hpp"
 
-/* @brief Approximation of neighbors dynamics. */
-class ApproximateNeighbor
+namespace dmpc 
 {
-public:
-    ApproximateNeighbor(Agent *agent, Neighbor *neighbor);
 
-    /*Dynamics*/
-    void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u,
-                      const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr );
+    /* @brief Approximation of neighbors dynamics. */
+    class ApproximateNeighbor
+    {
+    public:
+        ApproximateNeighbor(Agent *agent, Neighbor *neighbor);
 
-    /*Partial derivate of the dynamics with respect to state multiplied with Lagrangian multipliers*/
-    void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
+        /*Dynamics*/
+        void ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u,
+                          const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr );
+
+        /*Partial derivate of the dynamics with respect to state multiplied with Lagrangian multipliers*/
+        void dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
+                              const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
+
+        /*Partial derivate of the dynamics with respect to controls multiplied with Lagrangian multipliers*/
+        void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
+                              const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
+
+        /*External influence*/
+        void vfct(typeRNum *out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u,
                           const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
 
-    /*Partial derivate of the dynamics with respect to controls multiplied with Lagrangian multipliers*/
-    void dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
-                          const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
+        /*Partial derivate of the external influence with respect to states multiplied with Lagrangian multipliers*/
+        void dvdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
+                              const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
 
-    /*External influence*/
-    void vfct(typeRNum *out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u,
-                      const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
+	    /*Partial derivate of the external influence with respect to controls multiplied with Lagrangian multipliers*/
+        void dvdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
+                              const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
 
-    /*Partial derivate of the external influence with respect to states multiplied with Lagrangian multipliers*/
-    void dvdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
-                          const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
-
-	/*Partial derivate of the external influence with respect to controls multiplied with Lagrangian multipliers*/
-    void dvdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *vec,
-                          const std::vector<int>& x_index_xji_ptr, const std::vector<int>& u_index_uji_ptr, const std::vector<int>& u_index_vji_ptr);
-
-protected:
-    Agent *agent_;
-    Neighbor *neighbor_;
-    AgentState desired_state_;
-};
-
-typedef std::shared_ptr<ApproximateNeighbor> ApproximateNeighborPtr;
+    protected:
+        Agent *agent_;
+        Neighbor *neighbor_;
+        AgentState desired_state_;
+    };
 
 }
-
-#endif // APPROXIMATE_NEIGHBOR_HPP

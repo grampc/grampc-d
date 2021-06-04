@@ -10,49 +10,46 @@
  *
  */
 
-#ifndef SSMS_agentModel_HPP
-#define SSMS_agentModel_HPP
+#pragma once
 
 #include "dmpc/model/agent_model.hpp"
 
 class SSMSAgentModel : public dmpc::AgentModel
 {
 public:
-    SSMSAgentModel(
-        const std::vector<typeRNum>& model_parameters,
-        const std::vector<typeRNum>& cost_parameters,
+	SSMSAgentModel(
+		const std::vector<typeRNum>& model_parameters,
+		const std::vector<typeRNum>& cost_parameters,
 		const std::string& name,
-		const LoggingPtr& log);
+		const dmpc::LoggingPtr& log);
 
 	static dmpc::AgentModelPtr create(
 		const std::vector<typeRNum>& model_parameters,
 		const std::vector<typeRNum>& cost_parameters,
 		const std::string& name,
-		const LoggingPtr& log);
+		const dmpc::LoggingPtr& log);
 
-    virtual void ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u) override;
+	virtual void ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u) override;
 
-    virtual void dfdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec) override;
+	virtual void dfdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec) override;
 
-    virtual void dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec) override;
+	virtual void dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec) override;
 
-    virtual void lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
+	virtual void lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
 
-    virtual void dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
+	virtual void dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
 
-    virtual void dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
+	virtual void dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes) override;
 
-    virtual void Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes) override;
+	virtual void Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes) override;
 
-    virtual void dVdx(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes) override;
+	virtual void dVdx(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes) override;
 
 private:
-    typeRNum m_;
-    typeRNum c_;
-    typeRNum d_;
-    std::vector<typeRNum> P_;
-    std::vector<typeRNum> Q_;
-    std::vector<typeRNum> R_;
+	typeRNum m_;
+	typeRNum c_;
+	typeRNum d_;
+	std::vector<typeRNum> P_;
+	std::vector<typeRNum> Q_;
+	std::vector<typeRNum> R_;
 };
-
-#endif // SSMS_agentModel_HPP

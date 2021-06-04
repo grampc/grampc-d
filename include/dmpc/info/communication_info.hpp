@@ -10,28 +10,23 @@
  *
  */
 
-#ifndef COMMUNICATION_INFO_HPP
-#define COMMUNICATION_INFO_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-/*@brief Class that provides informations for a TCP connection.*/
-struct CommunicationInfo
-{
-public:
-    CommunicationInfo() {}
+    /*@brief Class that provides informations for a TCP connection.*/
+    struct CommunicationInfo
+    {
+    public:
+        CommunicationInfo() {}
 
-    std::string agent_type_ = "";
-    int id_ = -1;
-    std::string ip_ = "";
-    std::string port_ = "";
-};
-
-typedef std::shared_ptr<CommunicationInfo> CommunicationInfoPtr;
+        std::string agent_type_ = "";
+        int id_ = -1;
+        std::string ip_ = "";
+        std::string port_ = "";
+    };
 
 }
-
-#endif // COMMUNICATION_INFO_HPP

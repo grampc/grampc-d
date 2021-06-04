@@ -10,8 +10,7 @@
  *
  */
 
-#ifndef LOCAL_SOLVER_HPP
-#define LOCAL_SOLVER_HPP
+#pragma once
 
 #include "dmpc/info/optimization_info.hpp"
 #include "dmpc/optim/problem_description_local_default.hpp"
@@ -20,48 +19,44 @@
 namespace dmpc
 {
 
-class SolverLocal
-{
-public:
-    SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log);
+    class SolverLocal
+    {
+    public:
+        SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log);
 
-    void update_agentStates();
-    void update_couplingStates();
-    void update_multiplierStates();
+        void update_agentStates();
+        void update_couplingStates();
+        void update_multiplierStates();
 
-    const bool is_converged() const;
+        const bool is_converged() const;
 
-    void initialize_ADMM();
+        void initialize_ADMM();
 
-    const std::vector<int>& get_x_index_xji() const;
-    const std::vector<int>& get_u_index_uji() const;
-    const std::vector<int>& get_u_index_xji() const;
-    const std::vector<int>& get_u_index_vji() const;
-    const int get_x_index_xji(int j) const;
-    const int get_u_index_xji(int j) const;
-    const int get_u_index_vji(int j) const;
-    const int get_u_index_uji(int j) const;
+        const std::vector<int>& get_x_index_xji() const;
+        const std::vector<int>& get_u_index_uji() const;
+        const std::vector<int>& get_u_index_xji() const;
+        const std::vector<int>& get_u_index_vji() const;
+        const int get_x_index_xji(int j) const;
+        const int get_u_index_xji(int j) const;
+        const int get_u_index_vji(int j) const;
+        const int get_u_index_uji(int j) const;
 
-protected:
-	ProblemDescriptionLocalDefault default_problem_description_;
-    ProblemDescriptionLocalNeighborApproximation neighbor_approximation_problem_description_;
+    protected:
+	    ProblemDescriptionLocalDefault default_problem_description_;
+        ProblemDescriptionLocalNeighborApproximation neighbor_approximation_problem_description_;
 
-	SolverPtr solver_;
-    LoggingPtr log_;
+	    SolverPtr solver_;
+        LoggingPtr log_;
 
-	int ADMM_iter_ = 0;
-	double ADMM_PrimalResiduum = 0.0;
-	double ADMM_DualResiduum = 0.0;
+	    int ADMM_iter_ = 0;
+	    double ADMM_PrimalResiduum = 0.0;
+	    double ADMM_DualResiduum = 0.0;
 
-    typeRNum adaptPenaltyParameter( typeRNum primal_residuum, typeRNum dual_residuum, typeRNum penalty );
-	void penaltyParameterAdaption();
+        typeRNum adaptPenaltyParameter( typeRNum primal_residuum, typeRNum dual_residuum, typeRNum penalty );
+	    void penaltyParameterAdaption();
 
-	Agent* agent_;
-	OptimizationInfo info_;
-};
-
-typedef std::shared_ptr<SolverLocal> SolverLocalPtr;
+	    Agent* agent_;
+	    OptimizationInfo info_;
+    };
 
 }
-
-#endif // LOCAL_SOLVER_HPP

@@ -10,33 +10,28 @@
  *
  */
 
-#ifndef MULTIPLIER_STATE_HPP
-#define MULTIPLIER_STATE_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-/**
- * @brief Lagrangian multiplier mu = [mu_x, mu_u]
- */
-struct MultiplierState
-{
-public:
+	/**
+	 * @brief Lagrangian multiplier mu = [mu_x, mu_u]
+	 */
+	struct MultiplierState
+	{
+	public:
 
-    int i_;
+		int i_;
 
-    typeRNum t0_;
-    std::vector<typeRNum> t_;
+		typeRNum t0_;
+		std::vector<typeRNum> t_;
 
-    std::vector<typeRNum> mu_x_;
-    std::vector<typeRNum> mu_u_;
-    std::vector<typeRNum> mu_v_;
-};
-
-typedef std::shared_ptr<MultiplierState> MultiplierStatePtr;
+		std::vector<typeRNum> mu_x_;
+		std::vector<typeRNum> mu_u_;
+		std::vector<typeRNum> mu_v_;
+	};
 
 }
-
-#endif // MULTIPLIER_STATE_HPP

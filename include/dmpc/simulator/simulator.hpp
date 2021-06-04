@@ -10,43 +10,38 @@
  *
  */
 
-#ifndef SIMULATOR_HPP
-#define SIMULATOR_HPP
+#pragma once
 
-#include "dmpc/comm/communication_interface.hpp"
 #include "dmpc/optim/solver_central.hpp"
 
-#include "dmpc/util/types.hpp"
+#include "dmpc/util/class_forwarding.hpp"
+#include "dmpc/util/logging.hpp"
 
 namespace dmpc
 {
 
-class Simulator
-{
-public:
-    Simulator(const CommunicationInterfacePtr& communication_interface, const LoggingPtr& log);
+    class Simulator
+    {
+    public:
+        Simulator(const CommunicationInterfacePtr& communication_interface, const LoggingPtr& log);
 
-    /*Simulate the overall system based on a distributed setup.*/
-	void distributed_simulation(const std::string& Integrator, typeRNum dt);
-	/*Simulate the overall system based on a centralized setup.*/
-    void centralized_simulation(const SolverCentral *solver, const std::string& Integrator, typeRNum dt);
+        /*Simulate the overall system based on a distributed setup.*/
+	    void distributed_simulation(const std::string& Integrator, typeRNum dt);
+	    /*Simulate the overall system based on a centralized setup.*/
+        void centralized_simulation(const SolverCentral *solver, const std::string& Integrator, typeRNum dt);
 
-    /*Set t0*/
-    void set_t0(typeRNum t0);
+        /*Set t0*/
+        void set_t0(typeRNum t0);
 
-private:
-    void simulate();
+    private:
+        void simulate();
 
-    LoggingPtr log_;
-    typeRNum dt_ = 0.0;
-    typeRNum t0_ = 0.0;
-    std::string Integrator_ = "";
-    std::map<unsigned int, AgentStatePtr > agentStates_ = std::map<unsigned int, AgentStatePtr >();
-    CommunicationInterfacePtr communication_interface_;
-};
-
-typedef std::shared_ptr<Simulator> SimulatorPtr;
+        LoggingPtr log_;
+        typeRNum dt_ = 0.0;
+        typeRNum t0_ = 0.0;
+        std::string Integrator_ = "";
+        std::map<unsigned int, AgentStatePtr > agentStates_ = std::map<unsigned int, AgentStatePtr >();
+        CommunicationInterfacePtr communication_interface_;
+    };
 
 }
-
-#endif // SIMULATOR_HPP

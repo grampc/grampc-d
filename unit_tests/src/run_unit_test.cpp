@@ -1,3 +1,14 @@
+/* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
+ *
+ * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
+ * based on the alternating direction method of multipliers (ADMM).
+ *
+ * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * All rights reserved.
+ *
+ * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
+ *
+ */
 
 #include "dmpc/util/logging.hpp"
 
@@ -8,14 +19,14 @@ const bool evaluate
 (
 	const std::string& name_of_simulation, 
 	const unit_test::ChecksumHandler& checksumHandler, 
-	const LoggingPtr& log
+	const std::shared_ptr<dmpc::Logging>& log
 ) 
 {
 	//obtain reference values of checksums for the current simulation from checksumHandler
 	const auto referenceValues = checksumHandler.get_reference_checksums(name_of_simulation);
 	if (referenceValues == nullptr)
 	{
-		log->print_debug(Logging::Error) << "[Unit_Test]: " 
+		log->print(dmpc::DebugType::Error) << "[Unit_Test]: " 
 			<< "Reference values not found for simulation "
 			<< name_of_simulation << std::endl;
 		return false;
@@ -26,7 +37,7 @@ const bool evaluate
 	const auto number_of_files = unit_test::FileHandler::get_number_of_text_files(".");
 	if (number_of_files != desired_number_of_files)
 	{
-		log->print_debug(Logging::Error) << "[Unit_Test]: "
+		log->print(dmpc::DebugType::Error) << "[Unit_Test]: "
 			<< "Test failed. Number of solution files should be "
 			<< desired_number_of_files << " but is " << number_of_files
 			<< "." << std::endl;
@@ -42,7 +53,7 @@ const bool evaluate
 
 		if (desired_checksum != checksum)
 		{
-			log->print_debug(Logging::Error) << "[Unit test]: "
+			log->print(dmpc::DebugType::Error) << "[Unit test]: "
 				<< "Test failed. Checksum does not match." << std::endl;
 			return false;
 		}
@@ -54,7 +65,7 @@ const bool evaluate
 int main(int argc, char* argv[])
 {
 	//initialize Logging and specify which MessageTypes are printed
-	const auto log = std::make_shared<Logging>();
+	const auto log = std::make_shared<dmpc::Logging>();
 	log->set_print_error(true);
 	log->set_print_message(true);
 
@@ -77,7 +88,7 @@ int main(int argc, char* argv[])
 		unit_test::FileHandler::remove_text_files(".");
 		
 		//start simulation executable
-		log->print_debug(Logging::Message) << "[Unit test]: unit test starts for " 
+		log->print(dmpc::DebugType::Message) << "[Unit test]: unit test starts for " 
 			<< filename << " ..." << std::endl;
 
 		// call .exe
@@ -87,18 +98,18 @@ int main(int argc, char* argv[])
 		const bool individual_test_succeeded = evaluate(filename, checksumHandler, log);
 
 		if(individual_test_succeeded)
-			log->print_debug(Logging::Error) << "[Unit_Test]: Passed" << std::endl;
+			log->print(dmpc::DebugType::Error) << "[Unit_Test]: Passed" << std::endl;
 
 		whole_unit_test_suceeded &= individual_test_succeeded;
 
-		log->print_debug(Logging::Message) << std::endl;
+		log->print(dmpc::DebugType::Message) << std::endl;
 	}
 
 	//print test result
 	if (whole_unit_test_suceeded)
-		log->print_debug(Logging::Message) << "[Unit test] : Unit test passed." << std::endl;
+		log->print(dmpc::DebugType::Message) << "[Unit test] : Unit test passed." << std::endl;
 	else
-		log->print_debug(Logging::Error) << "[Unit test]: Unit test failed." << std::endl;
+		log->print(dmpc::DebugType::Error) << "[Unit test]: Unit test failed." << std::endl;
 
 	return 0;
 }

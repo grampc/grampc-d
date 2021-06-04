@@ -12,6 +12,24 @@
 
 #include "dmpc/util/protocol_communication.hpp"
 #include "dmpc/util/data_conversion.hpp"
+#include "dmpc/util/logging.hpp"
+
+#include "dmpc/model/agent_model.hpp"
+#include "dmpc/model/coupling_model.hpp"
+
+#include "dmpc/comm/communication_interface_local.hpp"
+
+#include "dmpc/info/agent_info.hpp"
+#include "dmpc/info/coupling_info.hpp"
+#include "dmpc/info/optimization_info.hpp"
+
+#include "dmpc/state/agent_state.hpp"
+#include "dmpc/state/coupling_state.hpp"
+#include "dmpc/state/multiplier_state.hpp"
+#include "dmpc/state/penalty_state.hpp"
+
+#include "dmpc/optim/solution.hpp"
+
 #include "general_model_factory.hpp"
 
 namespace dmpc
@@ -145,7 +163,7 @@ namespace dmpc
             break;
         default:
             const LoggingPtr& log = communication_interface->get_log();
-            log->print_debug(Logging::Error) << "[ProtocolCommunication::evaluateData] Unknown index in protocol." << std::endl;
+            log->print(DebugType::Error) << "[ProtocolCommunication::evaluateData] Unknown index in protocol." << std::endl;
             break;
         }
     }

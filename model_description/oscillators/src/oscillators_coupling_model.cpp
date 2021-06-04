@@ -13,12 +13,12 @@
 #include "../include/oscillators_coupling_model.hpp"
 
 OscillatorsCouplingModel::OscillatorsCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
-    : CouplingModel(2, 1, 2, 1, 0, 0,
-        model_parameters,
-        name)
+	: CouplingModel(2, 1, 2, 1, 0, 0,
+		model_parameters,
+		name)
 {
-    m_ = model_parameters[0]; // tank area
-    c_ = model_parameters[1]; // pipe area
+	m_ = model_parameters[0]; // tank area
+	c_ = model_parameters[1]; // pipe area
 }
 
 dmpc::CouplingModelPtr OscillatorsCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
@@ -28,27 +28,27 @@ dmpc::CouplingModelPtr OscillatorsCouplingModel::create(const std::vector<typeRN
 
 void OscillatorsCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
-    out[0] += 0;
-    out[1] += c_/m_ * xj[0] - c_/m_ * xi[0];
+	out[0] += 0;
+	out[1] += c_ / m_ * xj[0] - c_ / m_ * xi[0];
 }
 
 void OscillatorsCouplingModel::dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += - c_/m_ * vec[1];
-    out[1] += 0;
+	out[0] += -c_ / m_ * vec[1];
+	out[1] += 0;
 }
 
 void OscillatorsCouplingModel::dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += 0.0;
+	out[0] += 0.0;
 }
 
 void OscillatorsCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += c_/m_ * vec[1];
+	out[0] += c_ / m_ * vec[1];
 }
 
 void OscillatorsCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += 0.0;
+	out[0] += 0.0;
 }

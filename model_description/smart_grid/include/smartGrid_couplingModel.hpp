@@ -10,28 +10,25 @@
  *
  */
 
-#ifndef SMART_GRID_couplingModel_HPP
-#define SMART_GRID_couplingModel_HPP
+#pragma once
 
 #include "dmpc/model/coupling_model.hpp"
 
 class SmartGridCouplingModel : public dmpc::CouplingModel
 {
 public:
-    SmartGridCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name);
+	SmartGridCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name);
 
 	static dmpc::CouplingModelPtr create(const std::vector<typeRNum>& model_parameters, const std::string& name);
 
-    virtual void ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) override;
-    virtual void dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
-    virtual void dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
-    virtual void dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
-    virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) override;
+	virtual void dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
 
 private:
-    typeRNum I_;
-    typeRNum Omega_;
-    typeRNum P_max_ij_;
+	typeRNum I_;
+	typeRNum Omega_;
+	typeRNum P_max_ij_;
 };
-
-#endif // SMART_GRID_couplingModel_HPP

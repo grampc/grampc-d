@@ -10,27 +10,27 @@
  *
  */
 
-#ifndef GENERAL_MODEL_FACTORY_HPP
-#define GENERAL_MODEL_FACTORY_HPP
+#pragma once
 
 #include "dmpc/model/model_factory.hpp"
+
+#include "dmpc/util/class_forwarding.hpp"
+#include "dmpc/util/logging.hpp"
 
 class GeneralModelFactory : public dmpc::ModelFactory
 {
 public:
-	using create_agentModel_functionPtr = dmpc::AgentModelPtr(*)(const std::vector<typeRNum>&, const std::vector<typeRNum>&, const std::string&, const LoggingPtr&);
+	using create_agentModel_functionPtr = dmpc::AgentModelPtr(*)(const std::vector<typeRNum>&, const std::vector<typeRNum>&, const std::string&, const dmpc::LoggingPtr&);
 	using create_couplingModel_functionPtr = dmpc::CouplingModelPtr(*)(const std::vector<typeRNum>&, const std::string&);
 
-	GeneralModelFactory(const LoggingPtr& log);
+	GeneralModelFactory(const dmpc::LoggingPtr& log);
 
 	virtual dmpc::AgentModelPtr create_agentModel(const dmpc::AgentInfo& info) const override;
 
 	virtual dmpc::CouplingModelPtr create_couplingModel(const dmpc::CouplingInfo& info) const override;
 
 private:
-	LoggingPtr log_;
+	const dmpc::LoggingPtr log_;
 	std::map<std::string, create_agentModel_functionPtr> map_agentModels_;
 	std::map<std::string, create_couplingModel_functionPtr> map_couplingModels_;
 };
-
-#endif // GENERAL_MODEL_FACTORY_HPP

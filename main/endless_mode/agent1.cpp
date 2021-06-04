@@ -15,7 +15,7 @@
 int main(int argc, char** argv)
 {
 	// create interface
-	dmpc::DmpcInterfacePtr interface(new dmpc::DmpcInterface());
+	const auto interface = std::make_shared<dmpc::DmpcInterface>();
 
 	// show logging
 	interface->set_print_message(true);

@@ -1,21 +1,9 @@
 
-#ifndef PROTOCOL_COMMUNICATION_HPP
-#define PROTOCOL_COMMUNICATION_HPP
+#pragma once
 
-#include "dmpc/optim/optim_util.hpp"
-#include "dmpc/optim/solution.hpp"
-#include "dmpc/info/communication_data.hpp"
-#include "dmpc/comm/communication_interface_local.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
-#include "dmpc/info/agent_info.hpp"
-#include "dmpc/info/coupling_info.hpp"
-#include "dmpc/info/optimization_info.hpp"
-#include "dmpc/info/communication_info.hpp"
-
-#include "dmpc/state/agent_state.hpp"
-#include "dmpc/state/coupling_state.hpp"
-#include "dmpc/state/multiplier_state.hpp"
-#include "dmpc/state/penalty_state.hpp"
+#include "dmpc/util/logging.hpp"
 
 namespace dmpc
 {
@@ -156,5 +144,3 @@ namespace dmpc
 		send_solution = 104
 	};
 }
-
-#endif // PROTOCOL_COMMUNICATION_HPP

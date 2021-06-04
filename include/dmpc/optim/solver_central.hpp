@@ -10,8 +10,7 @@
  *
  */
 
-#ifndef CENTRALIZED_SOLVER_HPP
-#define CENTRALIZED_SOLVER_HPP
+#pragma once
 
 #include "dmpc/info/optimization_info.hpp"
 #include "dmpc/optim/problem_description_central.hpp"
@@ -19,30 +18,26 @@
 namespace dmpc
 {
 
-/**
- * @brief Solver for the centralized MPC problem.
- */
-class SolverCentral
-{
-public:
-    SolverCentral(const std::vector<AgentPtr>& agents,
-                      const OptimizationInfo& info);
+    /**
+     * @brief Solver for the centralized MPC problem.
+     */
+    class SolverCentral
+    {
+    public:
+        SolverCentral(const std::vector<AgentPtr>& agents,
+                          const OptimizationInfo& info);
 
-    /*Solve the centralized OCP.*/
-    void solve();
+        /*Solve the centralized OCP.*/
+        void solve();
 
-    /*Returns a vector with pointer to agents.*/
-    const std::vector<AgentPtr>& get_agents() const;
+        /*Returns a vector with pointer to agents.*/
+        const std::vector<AgentPtr>& get_agents() const;
 
-private:
-    OptimizationInfo optimizationInfo_;
-	std::vector<AgentPtr> agents_;
-    ProblemDescriptionCentral problem_description_;
-    std::shared_ptr<grampc::Grampc> solver_;
-};
-
-typedef std::shared_ptr<SolverCentral> SolverCentralPtr;
+    private:
+        OptimizationInfo optimizationInfo_;
+	    std::vector<AgentPtr> agents_;
+        ProblemDescriptionCentral problem_description_;
+        std::shared_ptr<grampc::Grampc> solver_;
+    };
 
 }
-
-#endif // CENTRALIZED_SOLVER_HPP

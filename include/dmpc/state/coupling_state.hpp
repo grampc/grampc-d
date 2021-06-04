@@ -10,33 +10,28 @@
  *
  */
 
-#ifndef COUPLING_STATE_HPP
-#define COUPLING_STATE_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-/**
- * @brief Coupling variable $ z = [z_x, z_u] $.
- */
-struct CouplingState
-{
-public:
+	/**
+	 * @brief Coupling variable $ z = [z_x, z_u] $.
+	 */
+	struct CouplingState
+	{
+	public:
 
-    int i_;
+		int i_;
 
-    typeRNum t0_;
-    std::vector<typeRNum> t_;
+		typeRNum t0_;
+		std::vector<typeRNum> t_;
 
-    std::vector<typeRNum> z_x_;
-    std::vector<typeRNum> z_u_;
-    std::vector<typeRNum> z_v_;
-};
-
-typedef std::shared_ptr<CouplingState> CouplingStatePtr;
+		std::vector<typeRNum> z_x_;
+		std::vector<typeRNum> z_u_;
+		std::vector<typeRNum> z_v_;
+	};
 
 }
-
-#endif // COUPLING_STATE_HPP

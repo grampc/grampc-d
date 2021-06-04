@@ -10,244 +10,226 @@
  *
  */
 
-#ifndef AGENT_HPP
-#define AGENT_HPP
+#pragma once
 
-#include "dmpc/agent/neighbor.hpp"
-
+#include "dmpc/info/agent_info.hpp"
 #include "dmpc/info/coupling_info.hpp"
-
-#include "dmpc/comm/communication_interface.hpp"
-
-#include "dmpc/model/model_factory.hpp"
-
-#include "dmpc/optim/optim_util.hpp"
-#include "dmpc/optim/solver_local.hpp"
+#include "dmpc/info/optimization_info.hpp"
 
 #include "dmpc/state/agent_state.hpp"
 #include "dmpc/state/coupling_state.hpp"
 #include "dmpc/state/multiplier_state.hpp"
 #include "dmpc/state/penalty_state.hpp"
 
-#include "dmpc/util/logging.hpp"
-
-#include "dmpc/optim/solution.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
 namespace dmpc
-{
+{  
+    /**
+     * @brief The agent is a single node in the network.
+     * All communication with other agents is handled over the communication interface.
+     */
+    class Agent
+    {
+    public:
 
-DMPC_CLASS_FORWARD(CommunicationInterface)
-enum class ADMMStep;
+        Agent(const CommunicationInterfacePtr& communication_interface,
+              const ModelFactoryPtr& model_factory,
+              const AgentInfo& agent_info, 
+            const LoggingPtr& log);
 
-/**
- * @brief The agent is a single node in the network.
- * All communication with other agents is handled over the communication interface.
- */
-class Agent
-{
-public:
+        /*Returns the agents id.*/
+        const int get_id() const;
 
-    Agent(const CommunicationInterfacePtr& communication_interface,
-          const ModelFactoryPtr& model_factory,
-          const AgentInfo& agent_info, 
-        const LoggingPtr& log);
+        /*Returns the agents number of states.*/
+        const unsigned int get_Nxi() const;
+        /* Returns the agents number of controls.*/
+        const unsigned int get_Nui() const;
 
-    /*Returns the agents id.*/
-    const int get_id() const;
+        /* Returns true if the agent is using neighbor approximation.*/
+        const bool is_approximating() const;
+        /*Returns true if the agent is approximating cost.*/
+        const bool is_approximatingCost() const;
+	    /*Returns true if the agent is approximating constraints.*/
+        const bool is_approximatingConstraints() const;
+	    /*Returns true if the agent is approximating dynamics.*/
+        const bool is_approximatingDynamics() const;
 
-    /*Returns the agents number of states.*/
-    const unsigned int get_Nxi() const;
-    /* Returns the agents number of controls.*/
-    const unsigned int get_Nui() const;
+        /*Returns the agent info.*/
+        const AgentInfo& get_agentInfo() const;
+        /*Return the agent model.*/
+        const AgentModelPtr& get_agentModel() const;
+        /*Returns the optimization info.*/
+        const OptimizationInfo& get_optimizationInfo() const;
 
-    /* Returns true if the agent is using neighbor approximation.*/
-    const bool is_approximating() const;
-    /*Returns true if the agent is approximating cost.*/
-    const bool is_approximatingCost() const;
-	/*Returns true if the agent is approximating constraints.*/
-    const bool is_approximatingConstraints() const;
-	/*Returns true if the agent is approximating dynamics.*/
-    const bool is_approximatingDynamics() const;
+        /*************************************************************************
+         neighbor functions
+         *************************************************************************/
 
-    /*Returns the agent info.*/
-    const AgentInfo& get_agentInfo() const;
-    /*Return the agent model.*/
-    const AgentModelPtr& get_agentModel() const;
-    /*Returns the optimization info.*/
-    const OptimizationInfo& get_optimizationInfo() const;
+        /*Add a neighbor.*/
+        const bool add_neighbor(const CouplingInfo& coupling_info, const AgentInfo& neighbor_info);
+        /*Add a receiving neighbor.*/
+        const bool add_receivingNeighbor(const CouplingInfo& coupling_info, const AgentInfo& neighbor_info);
+        /*Add a sending neighbor.*/
+        const bool add_sendingNeighbor(const CouplingInfo& coupling_info, const AgentInfo& neighbor_info);
+        /*Remove a neighbor.*/
+        void remove_neighbor( const CouplingInfo& coupling_info );
 
-    /*************************************************************************
-     neighbor functions
-     *************************************************************************/
+        /*************************************************************************
+         state functions
+         *************************************************************************/
 
-    /*Add a neighbor.*/
-    const bool add_neighbor(const dmpc::CouplingInfo& coupling_info, const dmpc::AgentInfo& neighbor_info);
-    /*Add a receiving neighbor.*/
-    const bool add_receivingNeighbor(const dmpc::CouplingInfo& coupling_info, const dmpc::AgentInfo& neighbor_info);
-    /*Add a sending neighbor.*/
-    const bool add_sendingNeighbor(const dmpc::CouplingInfo& coupling_info, const dmpc::AgentInfo& neighbor_info);
-    /*Remove a neighbor.*/
-    void remove_neighbor( const dmpc::CouplingInfo& coupling_info );
+        /*Initialize the agent.*/
+        void initialize(const OptimizationInfo& optimization_info);
 
-    /*************************************************************************
-     state functions
-     *************************************************************************/
+        /*Shift the agents states.*/
+        void shift_states(const typeRNum dt, const typeRNum t0);
 
-    /*Initialize the agent.*/
-    void initialize(const OptimizationInfo& optimization_info);
+        /*Returns the agents desired agent state.*/
+        const AgentState& get_desiredAgentState() const;
 
-    /*Shift the agents states.*/
-    void shift_states(const typeRNum dt, const typeRNum t0);
+        /*Sets the agents desired agent state.*/
+	    void set_desiredAgentState(const AgentState& state);
+	    /*Sets the agents desired agent state.*/
+	    void set_desiredAgentState(const std::vector<typeRNum>& x_des);
+	    /*Sets the agents desired agent state.*/
+        void set_desiredAgentState(const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des);
 
-    /*Returns the agents desired agent state.*/
-    const AgentState& get_desiredAgentState() const;
+        /*Sets the initial state.*/
+        void set_initialState(const std::vector<typeRNum>& x_init);
+        void set_initialState(const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init);
 
-    /*Sets the agents desired agent state.*/
-	void set_desiredAgentState(const AgentState& state);
-	/*Sets the agents desired agent state.*/
-	void set_desiredAgentState(const std::vector<typeRNum>& x_des);
-	/*Sets the agents desired agent state.*/
-    void set_desiredAgentState(const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des);
+        /*Return the agents agent state.*/
+	    const AgentState& get_agentState() const;
+	    /*Return the agents coupling state.*/
+	    const CouplingState& get_couplingState() const;
+	    /*Return the agents previous coupling state.*/
+	    const CouplingState& get_previous_couplingState() const;
+	    /*Return the agents multiplier state.*/
+	    const MultiplierState& get_multiplierState() const;
+	    /*Return the agents previous multiplier state.*/
+	    const MultiplierState& get_previous_multiplierState() const;
+	    /*Return the agents penalty state.*/
+	    const PenaltyState& get_penaltyState() const;
 
-	/*Sets the initial state.*/
-	void set_initialState(const std::vector<typeRNum>& x_init);
-    void set_initialState(const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init);
+        /*Set the agents agent state.*/
+	    void set_agentState(const AgentState& state);
+	    /*Set the agents coupling state.*/
+	    void set_couplingState(const CouplingState& state);
+	    /*Set the agents multiplier state.*/
+	    void set_multiplierState(const MultiplierState& state);
+	    /*Set the agents penalty state.*/
+        void set_penaltyState( const PenaltyState& penalty );
 
-    /*Return the agents agent state.*/
-	const AgentState& get_agentState() const;
-	/*Return the agents coupling state.*/
-	const CouplingState& get_couplingState() const;
-	/*Return the agents previous coupling state.*/
-	const CouplingState& get_previous_couplingState() const;
-	/*Return the agents multiplier state.*/
-	const MultiplierState& get_multiplierState() const;
-	/*Return the agents previous multiplier state.*/
-	const MultiplierState& get_previous_multiplierState() const;
-	/*Return the agents penalty state.*/
-	const PenaltyState& get_penaltyState() const;
+	    /*Returns all coupling models.*/
+        const std::shared_ptr< std::map<int, CouplingModelPtr> > get_couplingModels() const;
 
-    /*Set the agents agent state.*/
-	void set_agentState(const AgentState& state);
-	/*Set the agents coupling state.*/
-	void set_couplingState(const CouplingState& state);
-	/*Set the agents multiplier state.*/
-	void set_multiplierState(const MultiplierState& state);
-	/*Set the agents penalty state.*/
-    void set_penaltyState( const PenaltyState& penalty );
+        /*Sets the simulated state.*/
+        void set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0 );
 
-	/*Returns all coupling models.*/
-    const std::shared_ptr< std::map<int, CouplingModelPtr> > get_couplingModels() const;
+        /*Returns the agents neighbors.*/
+        const std::vector<NeighborPtr>& get_neighbors() const;
+        /*Returns the agents receiving neighbors.*/
+        const std::vector<NeighborPtr>& get_receivingNeighbors() const;
+        /*Returns the agents sending neighbors.*/
+        const std::vector<NeighborPtr>& get_sendingNeighbors() const;
 
-    /*Sets the simulated state.*/
-    void set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0 );
+        /*Returns the predicted cost.*/
+        const typeRNum get_predicted_cost() const;
 
-    /*Returns the agents neighbors.*/
-    const std::vector<NeighborPtr>& get_neighbors() const;
-    /*Returns the agents receiving neighbors.*/
-    const std::vector<NeighborPtr>& get_receivingNeighbors() const;
-    /*Returns the agents sending neighbors.*/
-    const std::vector<NeighborPtr>& get_sendingNeighbors() const;
+        /*************************************************************************
+         communication functions
+         *************************************************************************/
 
-    /*Returns the predicted cost.*/
-    const typeRNum get_predicted_cost() const;
+        /*This function is called if a message is received to register a coupling.*/
+        void fromCommunication_registered_coupling(const CouplingInfo& coupling_info, const AgentInfo& neighbor_info);
+        /*This function is called if a message is received to de-register a coupling.*/
+        void fromCommunication_deregistered_coupling(const CouplingInfo& coupling_info);
+        /*This function is called if a message is received including the number of a neighbors neighbors..*/
+        void fromCommunication_received_numberOfNeighbors( const unsigned int number, const int from );
+        /*This function is called if a message is received including the neighbors agent state.*/
+        void fromCommunication_received_agentState(const AgentState& state, int from);
+        /*This function is called if a message is received including the neighbors desired agent state.*/
+        void fromCommunication_received_desiredAgentState(const AgentState& state, int from);
+        /*This function is called if a message is received including the neighbors coupling state.*/
+	    void fromCommunication_received_couplingState(const CouplingState& state, int from);
+	    /*This function is called if a message is received including the neighbors coupling states.*/
+        void fromCommunication_received_couplingState(const CouplingState& state, const CouplingState& state2, int from);
+        /*This function is called if a message is received including the neighbors multiplier state.*/
+        void fromCommunication_received_multiplierState(const MultiplierState& state, PenaltyState penalty, int from);
+        /*This function is called if a message is received including the optimization info.*/
+        void fromCommunication_configured_optimization(const OptimizationInfo& info);
+        /*This function is called if a message is received to trigger an ADMM step.*/
+        void fromCommunication_trigger_step(const ADMMStep& step);
 
-    /*************************************************************************
-     communication functions
-     *************************************************************************/
+        /*Set initial states for neighbors.*/
+        void set_neighbors_initial_states();
 
-    /*This function is called if a message is received to register a coupling.*/
-    void fromCommunication_registered_coupling(const CouplingInfo& coupling_info, const AgentInfo& neighbor_info);
-    /*This function is called if a message is received to de-register a coupling.*/
-    void fromCommunication_deregistered_coupling(const CouplingInfo& coupling_info);
-    /*This function is called if a message is received including the number of a neighbors neighbors..*/
-    void fromCommunication_received_numberOfNeighbors( const unsigned int number, const int from );
-    /*This function is called if a message is received including the neighbors agent state.*/
-    void fromCommunication_received_agentState(const AgentState& state, int from);
-    /*This function is called if a message is received including the neighbors desired agent state.*/
-    void fromCommunication_received_desiredAgentState(const AgentState& state, int from);
-    /*This function is called if a message is received including the neighbors coupling state.*/
-	void fromCommunication_received_couplingState(const CouplingState& state, int from);
-	/*This function is called if a message is received including the neighbors coupling states.*/
-    void fromCommunication_received_couplingState(const CouplingState& state, const CouplingState& state2, int from);
-    /*This function is called if a message is received including the neighbors multiplier state.*/
-    void fromCommunication_received_multiplierState(const MultiplierState& state, PenaltyState penalty, int from);
-    /*This function is called if a message is received including the optimization info.*/
-    void fromCommunication_configured_optimization(const OptimizationInfo& info);
-    /*This function is called if a message is received to trigger an ADMM step.*/
-    void fromCommunication_trigger_step(const ADMMStep& step);
+        /*Return the current solution.*/
+        const SolutionPtr& get_solution() const;
+        /*Sets a new solution.*/
+        void set_solution(const SolutionPtr& solution);
+        /*Reset the current solution.*/
+        void reset_solution();
 
-    /*Set initial states for neighbors.*/
-    void set_neighbors_initial_states();
+    private:
+        //*********************************************
+        // log
+        //*********************************************
+        LoggingPtr log_;
 
-    /*Return the current solution.*/
-    const SolutionPtr& get_solution() const;
-    /*Sets a new solution.*/
-    void set_solution(const SolutionPtr& solution);
-    /*Reset the current solution.*/
-    void reset_solution();
+        //*********************************************
+        // agent parameters
+        //*********************************************
+        CommunicationInterfacePtr communication_interface_;
+        ModelFactoryPtr model_factory_;
+        AgentModelPtr model_;
+        AgentInfo info_;
+        std::vector<typeRNum> x_init_;
+	    std::vector<typeRNum> u_init_;
+	    std::vector<typeRNum> x_des_;
+	    std::vector<typeRNum> u_des_;
 
-private:
-    //*********************************************
-    // log
-    //*********************************************
-    LoggingPtr log_;
+        //*********************************************
+        // vector for neighbors
+        //*********************************************
 
-    //*********************************************
-    // agent parameters
-    //*********************************************
-    CommunicationInterfacePtr communication_interface_;
-    ModelFactoryPtr model_factory_;
-    AgentModelPtr model_;
-    AgentInfo info_;
-    std::vector<typeRNum> x_init_;
-	std::vector<typeRNum> u_init_;
-	std::vector<typeRNum> x_des_;
-	std::vector<typeRNum> u_des_;
+        std::vector<NeighborPtr> neighbors_;
+        std::vector<NeighborPtr> receiving_neighbors_;
+        std::vector<NeighborPtr> sending_neighbors_;
 
-    //*********************************************
-    // vector for neighbors
-    //*********************************************
+        //*********************************************
+        // agent states
+        //*********************************************
 
-    std::vector<NeighborPtr> neighbors_;
-    std::vector<NeighborPtr> receiving_neighbors_;
-    std::vector<NeighborPtr> sending_neighbors_;
+        AgentState desired_agentState_;
+        AgentState agentState_;
 
-    //*********************************************
-    // agent states
-    //*********************************************
+        CouplingState couplingState_;
+        CouplingState previous_couplingState_;
 
-    AgentState desired_agentState_;
-    AgentState agentState_;
+        MultiplierState multiplierState_;
+        MultiplierState previous_multiplierState_;
 
-    CouplingState couplingState_;
-    CouplingState previous_couplingState_;
+        PenaltyState penaltyState_;
+        typeRNum initial_penalty_;
 
-    MultiplierState multiplierState_;
-    MultiplierState previous_multiplierState_;
+        //*********************************************
+        // optimization parameters
+        //*********************************************
 
-    PenaltyState penaltyState_;
-    typeRNum initial_penalty_;
+        OptimizationInfo optimizationInfo_;
+        SolverLocalPtr local_solver_;
+        SolutionPtr solution_;
 
-    //*********************************************
-    // optimization parameters
-    //*********************************************
+        //*********************************************
+        // neighbor approximation
+        //*********************************************
 
-    OptimizationInfo optimizationInfo_;
-    SolverLocalPtr local_solver_;
-    SolutionPtr solution_ = std::shared_ptr<Solution>(new Solution());
-
-    //*********************************************
-    // neighbor approximation
-    //*********************************************
-
-    bool is_approximating_ = false;
-    bool is_approximatingCost_ = false;
-    bool is_approximatingConstraints_ = false;
-    bool is_approximatingDynamics_ = false;
-};
-
-typedef std::shared_ptr<Agent> AgentPtr;
+        bool is_approximating_ = false;
+        bool is_approximatingCost_ = false;
+        bool is_approximatingConstraints_ = false;
+        bool is_approximatingDynamics_ = false;
+    };
 
 }
-
-#endif // AGENT_HPP

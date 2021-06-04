@@ -10,8 +10,7 @@
  *
  */
 
-#ifndef SSMS_3D_couplingModel_HPP
-#define SSMS_3D_couplingModel_HPP
+#pragma once
 
 #include "dmpc/model/coupling_model.hpp"
 
@@ -37,5 +36,3 @@ private:
     typeRNum p2_;
     typeRNum d0_;
 };
-
-#endif // SSMS_3D_couplingModel_HPP

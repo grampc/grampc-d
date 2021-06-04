@@ -10,14 +10,9 @@
  *
  */
 
-#ifndef INTERFACE_HPP
-#define INTERFACE_HPP
+#pragma once
 
-#include "dmpc/info/agent_info.hpp"
-#include "dmpc/info/coupling_info.hpp"
-#include "dmpc/info/communication_info.hpp"
-#include "dmpc/optim/solution.hpp"
-#include "dmpc/info/optimization_info.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
 namespace dmpc
 {
@@ -105,5 +100,3 @@ namespace dmpc
 		virtual void set_print_error(bool print) = 0;
 	};
 }
-
-#endif // INTERFACE_HPP

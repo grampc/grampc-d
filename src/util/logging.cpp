@@ -12,20 +12,34 @@
 
 #include "dmpc/util/logging.hpp"
 
-std::ostream& Logging::print_debug(MessageType type) const
+namespace dmpc
 {
-	std::cout.clear();
-
-	if (type == Logging::Error && set_print_error_)
-		return std::cerr;
-	else if (type == Logging::Warning && set_print_warning_)
-		return std::cerr;
-	else if (type == Logging::Message && set_print_message_)
-		return std::cout;
-	else if (type == Logging::Base && set_print_base_)
-		return std::cout;
-	else
+	std::ostream& Logging::print(const DebugType type) const
 	{
+		std::cout.clear();
+
+		switch (type)
+		{
+		case DebugType::Error:
+			if(set_print_error_)
+				return std::cerr;
+			break;
+		case DebugType::Warning:
+			if (set_print_warning_)
+				return std::cerr;
+			break;
+		case DebugType::Message:
+			if(set_print_message_)
+				return std::cout;
+			break;
+		case DebugType::Base:
+			if(set_print_base_)
+				return std::cout;
+			break;
+		default:
+			break;
+		}
+
 		std::cout.setstate(std::ios_base::badbit);
 		return std::cout;
 	}

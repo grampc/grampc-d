@@ -11,597 +11,602 @@
  */
 
 #include "dmpc/agent/agent.hpp"
+#include "dmpc/agent/neighbor.hpp"
+
 #include "dmpc/optim/problem_description_local_default.hpp"
 #include "dmpc/optim/optim_util.hpp"
+
+#include "dmpc/model/agent_model.hpp"
+#include "dmpc/model/coupling_model.hpp"
 
 namespace dmpc
 {
 
-    ProblemDescriptionLocalDefault::ProblemDescriptionLocalDefault(Agent* agent)
-  : agent_(agent),
-    Nx_( agent->get_agentModel()->get_Nxi() ),
-    Nu_( agent->get_agentModel()->get_Nui() ),
-    Ng_( agent->get_agentModel()->get_Ngi() ),
-    Nh_( agent->get_agentModel()->get_Nhi() )
-{
-    // create mapping from neighbor number j to indices of xj and uj within u
-    int u_index = Nu_;
-    int x_index = Nx_;
-
-    // consider local copies of neighbors as controls
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+        ProblemDescriptionLocalDefault::ProblemDescriptionLocalDefault(Agent* agent)
+      : agent_(agent),
+        Nx_( agent->get_agentModel()->get_Nxi() ),
+        Nu_( agent->get_agentModel()->get_Nui() ),
+        Ng_( agent->get_agentModel()->get_Ngi() ),
+        Nh_( agent->get_agentModel()->get_Nhi() )
     {
-        const int j = neighbor->get_id();
-        if( neighbor->is_sendingNeighbor() || neighbor->is_approximating() )
-        {
-            Nu_ += neighbor->get_Nxj();
-            Nu_ += neighbor->get_Nuj();
+        // create mapping from neighbor number j to indices of xj and uj within u
+        int u_index = Nu_;
+        int x_index = Nx_;
 
-            // adjust size of index vectors
-            if(j >= u_index_xji_.size())
+        // consider local copies of neighbors as controls
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
+        {
+            const int j = neighbor->get_id();
+            if( neighbor->is_sendingNeighbor() || neighbor->is_approximating() )
             {
-                u_index_uji_.resize(j + 1);
-                u_index_xji_.resize(j + 1);
-            }
+                Nu_ += neighbor->get_Nxj();
+                Nu_ += neighbor->get_Nuj();
 
-            u_index_xji_.at(j) = u_index;
-            u_index += neighbor->get_Nxj();
+                // adjust size of index vectors
+                if(j >= u_index_xji_.size())
+                {
+                    u_index_uji_.resize(j + 1);
+                    u_index_xji_.resize(j + 1);
+                }
 
-            u_index_uji_.at(j) = u_index;
-            u_index += neighbor->get_Nuj();
-        }
-    }
+                u_index_xji_.at(j) = u_index;
+                u_index += neighbor->get_Nxj();
 
-    // determine number of constraints
-    Ng_ = agent_->get_agentModel()->get_Ngi();
-    Nh_ = agent_->get_agentModel()->get_Nhi();
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
-    {
-        if( neighbor->is_sendingNeighbor())
-        {
-            Ng_ += neighbor->get_couplingModel()->get_Ngij();
-            Nh_ += neighbor->get_couplingModel()->get_Nhij();
-        }
-        if( agent->is_approximatingConstraints() )
-        {
-            // aproximate neighbors agent constraints
-            Ng_ += neighbor->get_agentModel()->get_Ngi();
-            Nh_ += neighbor->get_agentModel()->get_Nhi();
-            if(neighbor->is_receivingNeighbor())
-            {
-                // approximate neighbors coupling constraints
-                Ng_ += neighbor->get_copied_couplingModel()->get_Ngij();
-                Nh_ += neighbor->get_copied_couplingModel()->get_Nhij();
+                u_index_uji_.at(j) = u_index;
+                u_index += neighbor->get_Nuj();
             }
         }
-    }
-}
 
-const std::vector<int>& ProblemDescriptionLocalDefault::get_u_index_uji() const
-{
-    return u_index_uji_;
-}
-
-const std::vector<int>& ProblemDescriptionLocalDefault::get_u_index_xji() const
-{
-    return u_index_xji_;
-}
-
-const int ProblemDescriptionLocalDefault::get_u_index_uji(int agent_id) const
-{
-    return u_index_uji_.at(agent_id);
-}
-
-const int ProblemDescriptionLocalDefault::get_u_index_xji(int agent_id) const
-{
-    return u_index_xji_.at(agent_id);
-}
-
-const int ProblemDescriptionLocalDefault::get_u_index_vji(int agent_id) const
-{
-    return u_index_vji_.at(agent_id);
-}
-
-const int ProblemDescriptionLocalDefault::get_x_index_xji(int agent_id) const
-{
-    return x_index_xji_.at(agent_id);
-}
-
-void ProblemDescriptionLocalDefault::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
-{
-    *Nx = Nx_;
-    *Nu = Nu_;
-    *Np = 0;
-    *Ng = Ng_;
-    *Nh = Nh_;
-    *NgT = 0;
-    *NhT = 0;
-}
-
-void ProblemDescriptionLocalDefault::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
-{
-	MatSetScalar(out, 0, 1, Nx_);
-
-    // agent dynamics f_i(x_i, u_i)
-    agent_->get_agentModel()->ffct(out, t, x, u);
-
-    for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
-    {
-        const auto j = neighbor->get_id();
-
-        // coupling dynamics f_{ij}(x_i, u_i, x_j, u_j)
-        neighbor->get_couplingModel()->ffct(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
-    }
-}
-
-void ProblemDescriptionLocalDefault::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
-{
-    MatSetScalar(out, 0, 1, Nx_);
-
-    // agent dynamics \partial f_i(x_i, u_i) / \partial x_i
-    agent_->get_agentModel()->dfdx_vec(out, t, x, u, vec);
-
-    for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
-    {
-        const auto j = neighbor->get_id();
-
-        // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
-        neighbor->get_couplingModel()->dfdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
-    }
-}
-
-void ProblemDescriptionLocalDefault::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
-{
-	MatSetScalar(out, 0, 1, Nu_);
-
-    // agent dynamics \partial f_i(x_i, u_i) / \partial u_i
-    agent_->get_agentModel()->dfdu_vec(out, t, x, u, vec);
-
-    for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
-    {
-        const auto j = neighbor->get_id();
-
-        // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
-        neighbor->get_couplingModel()->dfdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
-
-        // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
-        neighbor->get_couplingModel()->dfdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
-
-        // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
-        neighbor->get_couplingModel()->dfduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
-    }
-}
-
-void ProblemDescriptionLocalDefault::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
-{
-    MatSetScalar(out, 0, 1, 1);
-
-    // consider cost function l
-    {
-        interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
-
-        // l_i( x_i, u_i )
-        agent_->get_agentModel()->lfct(out, t, x, u, &desired_state_.x_[0]);
-
-        // consider cost approximation
-        if( agent_->is_approximatingCost() )
+        // determine number of constraints
+        Ng_ = agent_->get_agentModel()->get_Ngi();
+        Nh_ = agent_->get_agentModel()->get_Nhi();
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            // rescale agent cost
-            out[0] /= ( 1.0 + agent_->get_neighbors().size() );
-            // add the neighbors approximated cost
-            for( const NeighborPtr& neighbor : agent_->get_neighbors() )
+            if( neighbor->is_sendingNeighbor())
             {
-                const auto j = neighbor->get_id();
-                typeRNum lj = 0.0;
-
-                interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
-                neighbor->get_agentModel()->lfct( &lj, t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
-                out[0] += lj / ( 1.0 + neighbor->get_numberOfNeighbors() );
+                Ng_ += neighbor->get_couplingModel()->get_Ngij();
+                Nh_ += neighbor->get_couplingModel()->get_Nhij();
+            }
+            if( agent->is_approximatingConstraints() )
+            {
+                // aproximate neighbors agent constraints
+                Ng_ += neighbor->get_agentModel()->get_Ngi();
+                Nh_ += neighbor->get_agentModel()->get_Nhi();
+                if(neighbor->is_receivingNeighbor())
+                {
+                    // approximate neighbors coupling constraints
+                    Ng_ += neighbor->get_copied_couplingModel()->get_Ngij();
+                    Nh_ += neighbor->get_copied_couplingModel()->get_Nhij();
+                }
             }
         }
     }
+
+    const std::vector<int>& ProblemDescriptionLocalDefault::get_u_index_uji() const
     {
-        interpolateState(agent_->get_couplingState(), t, couplingState_);
-        interpolateState(agent_->get_multiplierState(), t, multiplierState_);
-        interpolateState(agent_->get_penaltyState(), t, penaltyState_);
+        return u_index_uji_;
+    }
 
-        const PenaltyState& penalty = agent_->get_penaltyState();
+    const std::vector<int>& ProblemDescriptionLocalDefault::get_u_index_xji() const
+    {
+        return u_index_xji_;
+    }
 
-        // consistency constraints ( zx_i - x_i )
-        for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
+    const int ProblemDescriptionLocalDefault::get_u_index_uji(int agent_id) const
+    {
+        return u_index_uji_.at(agent_id);
+    }
+
+    const int ProblemDescriptionLocalDefault::get_u_index_xji(int agent_id) const
+    {
+        return u_index_xji_.at(agent_id);
+    }
+
+    const int ProblemDescriptionLocalDefault::get_u_index_vji(int agent_id) const
+    {
+        return u_index_vji_.at(agent_id);
+    }
+
+    const int ProblemDescriptionLocalDefault::get_x_index_xji(int agent_id) const
+    {
+        return x_index_xji_.at(agent_id);
+    }
+
+    void ProblemDescriptionLocalDefault::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
+    {
+        *Nx = Nx_;
+        *Nu = Nu_;
+        *Np = 0;
+        *Ng = Ng_;
+        *Nh = Nh_;
+        *NgT = 0;
+        *NhT = 0;
+    }
+
+    void ProblemDescriptionLocalDefault::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    {
+	    MatSetScalar(out, 0, 1, Nx_);
+
+        // agent dynamics f_i(x_i, u_i)
+        agent_->get_agentModel()->ffct(out, t, x, u);
+
+        for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
         {
-            const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
-            out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penalty.rho_x_[k] * zx_min_x * zx_min_x;
-        }
+            const auto j = neighbor->get_id();
 
-        // consistency constraints ( zu_i - u_i )
-        for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
-        {
-            const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
-            out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penalty.rho_u_[k] * zu_min_u * zu_min_u;
+            // coupling dynamics f_{ij}(x_i, u_i, x_j, u_j)
+            neighbor->get_couplingModel()->ffct(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
         }
     }
 
-    // consistency constraints for neighbors
-    for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
+    void ProblemDescriptionLocalDefault::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nx_);
 
-        interpolateState(neighbor->get_neighbors_couplingState(), t, couplingState_);
-        interpolateState(neighbor->get_coupled_multiplierState(), t, multiplierState_);
-        interpolateState(neighbor->get_coupled_penaltyState(), t, penaltyState_);
+        // agent dynamics \partial f_i(x_i, u_i) / \partial x_i
+        agent_->get_agentModel()->dfdx_vec(out, t, x, u, vec);
 
-        // consistency constraints (zx_j - x_{ji})
-        for(unsigned int k = 0; k < neighbor->get_Nxj(); ++k)
+        for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
         {
-            const typeRNum zx_min_x = couplingState_.z_x_[k] - (u + u_index_xji_[j])[k];
-            out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penaltyState_.rho_x_[k] * zx_min_x * zx_min_x;
-        }
+            const auto j = neighbor->get_id();
 
-        // consistency constraints (zu_j - u_{ji})
-        for(unsigned int k = 0; k < neighbor->get_Nuj(); ++k)
-        {
-            const typeRNum zu_min_u = couplingState_.z_u_[k] - (u + u_index_uji_[j])[k];
-            out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penaltyState_.rho_u_[k] * zu_min_u * zu_min_u;
+            // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
+            neighbor->get_couplingModel()->dfdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
-{
-    MatSetScalar(out, 0, 1, Nx_);
-
-    // consider cost function l
+    void ProblemDescriptionLocalDefault::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
     {
-        interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
-        // \partial l_i( x_i, u_i ) / \partial x_i
-        agent_->get_agentModel()->dldx(out, t, x, u, &desired_state_.x_[0]);
+	    MatSetScalar(out, 0, 1, Nu_);
 
-        // consider neighbor approximation
-        if( agent_->is_approximatingCost() )
+        // agent dynamics \partial f_i(x_i, u_i) / \partial u_i
+        agent_->get_agentModel()->dfdu_vec(out, t, x, u, vec);
+
+        for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
         {
-            // rescale cost
+            const auto j = neighbor->get_id();
+
+            // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
+            neighbor->get_couplingModel()->dfdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
+
+            // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
+            neighbor->get_couplingModel()->dfdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
+
+            // coupling dynamics \partial f_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
+            neighbor->get_couplingModel()->dfduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec);
+        }
+    }
+
+    void ProblemDescriptionLocalDefault::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    {
+        MatSetScalar(out, 0, 1, 1);
+
+        // consider cost function l
+        {
+            interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+
+            // l_i( x_i, u_i )
+            agent_->get_agentModel()->lfct(out, t, x, u, &desired_state_.x_[0]);
+
+            // consider cost approximation
+            if( agent_->is_approximatingCost() )
+            {
+                // rescale agent cost
+                out[0] /= ( 1.0 + agent_->get_neighbors().size() );
+                // add the neighbors approximated cost
+                for( const NeighborPtr& neighbor : agent_->get_neighbors() )
+                {
+                    const auto j = neighbor->get_id();
+                    typeRNum lj = 0.0;
+
+                    interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
+                    neighbor->get_agentModel()->lfct( &lj, t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+                    out[0] += lj / ( 1.0 + neighbor->get_numberOfNeighbors() );
+                }
+            }
+        }
+        {
+            interpolateState(agent_->get_couplingState(), t, couplingState_);
+            interpolateState(agent_->get_multiplierState(), t, multiplierState_);
+            interpolateState(agent_->get_penaltyState(), t, penaltyState_);
+
+            const PenaltyState& penalty = agent_->get_penaltyState();
+
+            // consistency constraints ( zx_i - x_i )
             for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
-                out[k] /= (1.0 + agent_->get_neighbors().size());
-        }
-    }
-
-    // consider constraints
-    {
-        interpolateState(agent_->get_couplingState(), t, couplingState_);
-        interpolateState(agent_->get_multiplierState(), t, multiplierState_);
-        interpolateState(agent_->get_penaltyState(), t, penaltyState_);
-
-        // consistency constraint ( zx_i - x_i )
-        // derivative w.r.t. x_i
-        for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
-        {
-            const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
-            out[k] += (multiplierState_.mu_x_[k] + penaltyState_.rho_x_[k] * zx_min_x) * (-1);
-        }
-    }
-}
-
-void ProblemDescriptionLocalDefault::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
-{
-
-    MatSetScalar(out, 0, 1, Nu_);
-
-    // consider cost function l
-    {
-        interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
-        // \partial l_i( x_i, u_i ) / \partial u_i
-        agent_->get_agentModel()->dldu(out, t, x, u, &desired_state_.x_[0]);
-
-        // consider cost approximation
-        if( agent_->is_approximatingCost() )
-        {
-            // rescale cost
-            for(unsigned int k = 0; k < agent_->get_Nui(); ++k )
-                out[k] /= (1.0 + agent_->get_neighbors().size());
-
-            // add approximated cost
-            for( const NeighborPtr& neighbor : agent_->get_neighbors() )
             {
-                interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
+                const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
+                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penalty.rho_x_[k] * zx_min_x * zx_min_x;
+            }
 
-                const auto j = neighbor->get_id();
-                const auto Nxj = neighbor->get_Nxj();
-                const auto Nuj = neighbor->get_Nuj();
+            // consistency constraints ( zu_i - u_i )
+            for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
+            {
+                const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
+                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penalty.rho_u_[k] * zu_min_u * zu_min_u;
+            }
+        }
 
-                // consider local copies x_{ji} as control
-                std::vector<typeRNum> l_j(Nxj, 0.0);
-                neighbor->get_agentModel()->dldx( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+        // consistency constraints for neighbors
+        for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
+        {
+            const auto j = neighbor->get_id();
 
-                // rescale
-                for(unsigned int k = 0; k < Nxj; ++k)
-                    (out + u_index_xji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+            interpolateState(neighbor->get_neighbors_couplingState(), t, couplingState_);
+            interpolateState(neighbor->get_coupled_multiplierState(), t, multiplierState_);
+            interpolateState(neighbor->get_coupled_penaltyState(), t, penaltyState_);
 
-                // consider local copies u_{ji} as control
-                l_j.clear();
-                l_j.resize(Nuj, 0.0);
-                neighbor->get_agentModel()->dldu( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+            // consistency constraints (zx_j - x_{ji})
+            for(unsigned int k = 0; k < neighbor->get_Nxj(); ++k)
+            {
+                const typeRNum zx_min_x = couplingState_.z_x_[k] - (u + u_index_xji_[j])[k];
+                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penaltyState_.rho_x_[k] * zx_min_x * zx_min_x;
+            }
 
-                // rescale
-                for(unsigned int k = 0; k < Nuj; ++k)
-                    (out + u_index_uji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+            // consistency constraints (zu_j - u_{ji})
+            for(unsigned int k = 0; k < neighbor->get_Nuj(); ++k)
+            {
+                const typeRNum zu_min_u = couplingState_.z_u_[k] - (u + u_index_uji_[j])[k];
+                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penaltyState_.rho_u_[k] * zu_min_u * zu_min_u;
             }
         }
     }
 
-    // consider own constraints
+    void ProblemDescriptionLocalDefault::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
-        interpolateState(agent_->get_couplingState(), t, couplingState_);
-        interpolateState(agent_->get_multiplierState(), t, multiplierState_);
-        interpolateState(agent_->get_penaltyState(), t, penaltyState_);
+        MatSetScalar(out, 0, 1, Nx_);
 
-        // consistency constraints ( zu_i - u_i )
-        // derivative w.r.t. u_i
-        for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
+        // consider cost function l
         {
-            const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
-            out[k] += (multiplierState_.mu_u_[k] + penaltyState_.rho_u_[k] * zu_min_u) * (-1);
+            interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+            // \partial l_i( x_i, u_i ) / \partial x_i
+            agent_->get_agentModel()->dldx(out, t, x, u, &desired_state_.x_[0]);
+
+            // consider neighbor approximation
+            if( agent_->is_approximatingCost() )
+            {
+                // rescale cost
+                for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
+                    out[k] /= (1.0 + agent_->get_neighbors().size());
+            }
+        }
+
+        // consider constraints
+        {
+            interpolateState(agent_->get_couplingState(), t, couplingState_);
+            interpolateState(agent_->get_multiplierState(), t, multiplierState_);
+            interpolateState(agent_->get_penaltyState(), t, penaltyState_);
+
+            // consistency constraint ( zx_i - x_i )
+            // derivative w.r.t. x_i
+            for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
+            {
+                const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
+                out[k] += (multiplierState_.mu_x_[k] + penaltyState_.rho_x_[k] * zx_min_x) * (-1);
+            }
         }
     }
 
-    // consistency constraints for neighbors
-    for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
+    void ProblemDescriptionLocalDefault::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
-        interpolateState(neighbor->get_neighbors_couplingState(), t, couplingState_);
-        interpolateState(neighbor->get_coupled_multiplierState(), t, multiplierState_);
-        interpolateState(neighbor->get_coupled_penaltyState(), t, penaltyState_);
 
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nu_);
 
-        // consistency constraint ( zx_j - x_{ji} )
-        // derivative w.r.t. x_{ji}
-        for(unsigned int k = 0; k < couplingState_.z_x_.size(); ++k)
+        // consider cost function l
         {
-            const typeRNum zx_min_x = couplingState_.z_x_[k] - (u + u_index_xji_[j])[k];
-            (out + u_index_xji_[j])[k] += (multiplierState_.mu_x_[k] + penaltyState_.rho_x_[k] * zx_min_x) * (-1);
+            interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+            // \partial l_i( x_i, u_i ) / \partial u_i
+            agent_->get_agentModel()->dldu(out, t, x, u, &desired_state_.x_[0]);
+
+            // consider cost approximation
+            if( agent_->is_approximatingCost() )
+            {
+                // rescale cost
+                for(unsigned int k = 0; k < agent_->get_Nui(); ++k )
+                    out[k] /= (1.0 + agent_->get_neighbors().size());
+
+                // add approximated cost
+                for( const NeighborPtr& neighbor : agent_->get_neighbors() )
+                {
+                    interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
+
+                    const auto j = neighbor->get_id();
+                    const auto Nxj = neighbor->get_Nxj();
+                    const auto Nuj = neighbor->get_Nuj();
+
+                    // consider local copies x_{ji} as control
+                    std::vector<typeRNum> l_j(Nxj, 0.0);
+                    neighbor->get_agentModel()->dldx( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+
+                    // rescale
+                    for(unsigned int k = 0; k < Nxj; ++k)
+                        (out + u_index_xji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+
+                    // consider local copies u_{ji} as control
+                    l_j.clear();
+                    l_j.resize(Nuj, 0.0);
+                    neighbor->get_agentModel()->dldu( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+
+                    // rescale
+                    for(unsigned int k = 0; k < Nuj; ++k)
+                        (out + u_index_uji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+                }
+            }
         }
-        // consistency constraint ( zu_j - u_{ji} )
-        // derivative w.r.t. u_{ji}
-        for(unsigned int k = 0; k < couplingState_.z_u_.size(); ++k)
+
+        // consider own constraints
         {
-            const typeRNum zu_min_u = couplingState_.z_u_[k] - (u + u_index_uji_[j])[k];
-            (out + u_index_uji_[j])[k] += (multiplierState_.mu_u_[k] + penaltyState_.rho_u_[k] * zu_min_u) * (-1);
+            interpolateState(agent_->get_couplingState(), t, couplingState_);
+            interpolateState(agent_->get_multiplierState(), t, multiplierState_);
+            interpolateState(agent_->get_penaltyState(), t, penaltyState_);
+
+            // consistency constraints ( zu_i - u_i )
+            // derivative w.r.t. u_i
+            for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
+            {
+                const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
+                out[k] += (multiplierState_.mu_u_[k] + penaltyState_.rho_u_[k] * zu_min_u) * (-1);
+            }
+        }
+
+        // consistency constraints for neighbors
+        for(const NeighborPtr& neighbor : agent_->get_sendingNeighbors())
+        {
+            interpolateState(neighbor->get_neighbors_couplingState(), t, couplingState_);
+            interpolateState(neighbor->get_coupled_multiplierState(), t, multiplierState_);
+            interpolateState(neighbor->get_coupled_penaltyState(), t, penaltyState_);
+
+            const auto j = neighbor->get_id();
+
+            // consistency constraint ( zx_j - x_{ji} )
+            // derivative w.r.t. x_{ji}
+            for(unsigned int k = 0; k < couplingState_.z_x_.size(); ++k)
+            {
+                const typeRNum zx_min_x = couplingState_.z_x_[k] - (u + u_index_xji_[j])[k];
+                (out + u_index_xji_[j])[k] += (multiplierState_.mu_x_[k] + penaltyState_.rho_x_[k] * zx_min_x) * (-1);
+            }
+            // consistency constraint ( zu_j - u_{ji} )
+            // derivative w.r.t. u_{ji}
+            for(unsigned int k = 0; k < couplingState_.z_u_.size(); ++k)
+            {
+                const typeRNum zu_min_u = couplingState_.z_u_[k] - (u + u_index_uji_[j])[k];
+                (out + u_index_uji_[j])[k] += (multiplierState_.mu_u_[k] + penaltyState_.rho_u_[k] * zu_min_u) * (-1);
+            }
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
-{
-    MatSetScalar(out, 0, 1, 1);
-    interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
-
-    agent_->get_agentModel()->Vfct(out, t, x, &desired_state_.x_[0]);
-}
-
-void ProblemDescriptionLocalDefault::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
-{
-    MatSetScalar(out, 0, 1, Nx_);
-    interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
-
-    agent_->get_agentModel()->dVdx(out, t, x, &desired_state_.x_[0]);
-}
-
-void ProblemDescriptionLocalDefault::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
-{
-    MatSetScalar(out, 0, 1, Ng_);
-
-    // equality constraints g_i(x_i, u_i) = 0
-    agent_->get_agentModel()->gfct(out, t, x, u);
-    int idx = agent_->get_agentModel()->get_Ngi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, 1);
+        interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
 
-        // equality constraints g_{ij}(x_i, u_i, x_j, u_j) = 0
-       if( neighbor->is_sendingNeighbor() )
-       {
-           neighbor->get_couplingModel()->gfct(out + idx, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
-           idx += neighbor->get_couplingModel()->get_Ngij();
-       }
-
-       if( agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
-       {
-           // equality constraints g_j(x_{ji}, u_{ji})
-           neighbor->get_agentModel()->gfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j]);
-           idx += neighbor->get_agentModel()->get_Ngi();
-
-           // equality constraints g_{ji}(x_{ji}, u_{ji}, x_i, u_i)
-           neighbor->get_copied_couplingModel()->gfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
-           idx += neighbor->get_copied_couplingModel()->get_Ngij();
-       }
+        agent_->get_agentModel()->Vfct(out, t, x, &desired_state_.x_[0]);
     }
-}
 
-void ProblemDescriptionLocalDefault::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
-{
-    MatSetScalar(out, 0, 1, Nx_);
-
-    // equality constraints \partial g_i(x_i, u_i) / \partial x_i
-    agent_->get_agentModel()->dgdx_vec(out, t, x, u, vec);
-    int idx = agent_->get_agentModel()->get_Ngi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nx_);
+        interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
 
-        // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
-        if(neighbor->is_sendingNeighbor())
-        {
-            neighbor->get_couplingModel()->dgdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-            idx += neighbor->get_couplingModel()->get_Ngij();
-        }
+        agent_->get_agentModel()->dVdx(out, t, x, &desired_state_.x_[0]);
+    }
 
-        if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+    void ProblemDescriptionLocalDefault::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    {
+        MatSetScalar(out, 0, 1, Ng_);
+
+        // equality constraints g_i(x_i, u_i) = 0
+        agent_->get_agentModel()->gfct(out, t, x, u);
+        int idx = agent_->get_agentModel()->get_Ngi();
+
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_i
-            neighbor->get_copied_couplingModel()->dgdxj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-            idx += neighbor->get_copied_couplingModel()->get_Ngij();
+            const auto j = neighbor->get_id();
+
+            // equality constraints g_{ij}(x_i, u_i, x_j, u_j) = 0
+           if( neighbor->is_sendingNeighbor() )
+           {
+               neighbor->get_couplingModel()->gfct(out + idx, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+               idx += neighbor->get_couplingModel()->get_Ngij();
+           }
+
+           if( agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+           {
+               // equality constraints g_j(x_{ji}, u_{ji})
+               neighbor->get_agentModel()->gfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j]);
+               idx += neighbor->get_agentModel()->get_Ngi();
+
+               // equality constraints g_{ji}(x_{ji}, u_{ji}, x_i, u_i)
+               neighbor->get_copied_couplingModel()->gfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+               idx += neighbor->get_copied_couplingModel()->get_Ngij();
+           }
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
-{
-    MatSetScalar(out, 0, 1, Nu_);
-    // equality constraints \partial g_i(x_i, u_i) / \partial u_i
-    agent_->get_agentModel()->dgdu_vec(out, t, x, u, vec);
-    int idx = agent_->get_agentModel()->get_Ngi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
-        const auto j = neighbor->get_id();
-        if( neighbor->is_sendingNeighbor() )
+        MatSetScalar(out, 0, 1, Nx_);
+
+        // equality constraints \partial g_i(x_i, u_i) / \partial x_i
+        agent_->get_agentModel()->dgdx_vec(out, t, x, u, vec);
+        int idx = agent_->get_agentModel()->get_Ngi();
+
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
-            neighbor->get_couplingModel()->dgdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+            const auto j = neighbor->get_id();
 
-            // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
-            neighbor->get_couplingModel()->dgdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+            // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
+            if(neighbor->is_sendingNeighbor())
+            {
+                neighbor->get_couplingModel()->dgdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+                idx += neighbor->get_couplingModel()->get_Ngij();
+            }
 
-            // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
-            neighbor->get_couplingModel()->dgduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-
-            // increase index
-            idx += neighbor->get_couplingModel()->get_Ngij();
-        }
-        if( agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
-        {
-            // equality constraints \partial g_j(x_{ji}, u_{ji}) / \partial x_{ji}
-            neighbor->get_agentModel()->dgdx_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-
-            // equality constraints \partial g_j(x_{ji}, u_{ji}) / \partial u_{ji
-            neighbor->get_agentModel()->dgdu_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-            idx += neighbor->get_agentModel()->get_Ngi();
-
-            // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_i
-            neighbor->get_copied_couplingModel()->dgduj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_{ji}
-            neighbor->get_copied_couplingModel()->dgdxi_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_{ji}
-            neighbor->get_copied_couplingModel()->dgdui_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // increase index
-            idx += neighbor->get_copied_couplingModel()->get_Ngij();
+            if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+            {
+                // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_i
+                neighbor->get_copied_couplingModel()->dgdxj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+                idx += neighbor->get_copied_couplingModel()->get_Ngij();
+            }
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
-{
-    MatSetScalar(out, 0, 1, Nh_);
-    // inequality constraints h_i(x_i, u_i) <= 0
-    agent_->get_agentModel()->hfct(out, t, x, u);
-    int idx = agent_->get_agentModel()->get_Nhi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nu_);
+        // equality constraints \partial g_i(x_i, u_i) / \partial u_i
+        agent_->get_agentModel()->dgdu_vec(out, t, x, u, vec);
+        int idx = agent_->get_agentModel()->get_Ngi();
 
-        // inequality constraints h_{ij}(x_i, u_i, x_j, u_j) <= 0
-        if(neighbor->is_sendingNeighbor())
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            neighbor->get_couplingModel()->hfct(out + idx, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
-            idx += neighbor->get_couplingModel()->get_Nhij();
-        }
+            const auto j = neighbor->get_id();
+            if( neighbor->is_sendingNeighbor() )
+            {
+                // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
+                neighbor->get_couplingModel()->dgdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
 
-        if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
-        {
-            // inequality constraint h_j(x_{ji}, u_{ji})
-            neighbor->get_agentModel()->hfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j]);
-            idx += neighbor->get_agentModel()->get_Nhi();
+                // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
+                neighbor->get_couplingModel()->dgdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
 
-            // inequality constraint h_{ji}(x_{ji}, u_{ji}, x_i, u_i)
-            neighbor->get_copied_couplingModel()->hfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
-            idx += neighbor->get_copied_couplingModel()->get_Nhij();
+                // equality constraints \partial g_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
+                neighbor->get_couplingModel()->dgduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // increase index
+                idx += neighbor->get_couplingModel()->get_Ngij();
+            }
+            if( agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+            {
+                // equality constraints \partial g_j(x_{ji}, u_{ji}) / \partial x_{ji}
+                neighbor->get_agentModel()->dgdx_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // equality constraints \partial g_j(x_{ji}, u_{ji}) / \partial u_{ji
+                neighbor->get_agentModel()->dgdu_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+                idx += neighbor->get_agentModel()->get_Ngi();
+
+                // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_i
+                neighbor->get_copied_couplingModel()->dgduj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_{ji}
+                neighbor->get_copied_couplingModel()->dgdxi_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // equality constraints \partial g_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_{ji}
+                neighbor->get_copied_couplingModel()->dgdui_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // increase index
+                idx += neighbor->get_copied_couplingModel()->get_Ngij();
+            }
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
-{
-    MatSetScalar(out, 0, 1, Nx_);
-    // inequality constraints \partial h_i(x_i, u_i) / \partial x_i
-    agent_->get_agentModel()->dhdx_vec(out, t, x, u, vec);
-    int idx = agent_->get_agentModel()->get_Nhi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nh_);
+        // inequality constraints h_i(x_i, u_i) <= 0
+        agent_->get_agentModel()->hfct(out, t, x, u);
+        int idx = agent_->get_agentModel()->get_Nhi();
 
-        // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
-        if(neighbor->is_sendingNeighbor())
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            neighbor->get_couplingModel()->dhdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-            idx += neighbor->get_couplingModel()->get_Nhij();
-        }
+            const auto j = neighbor->get_id();
 
-        if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
-        {
-            // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_i
-            neighbor->get_copied_couplingModel()->dhdxj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-            idx += neighbor->get_copied_couplingModel()->get_Nhij();
+            // inequality constraints h_{ij}(x_i, u_i, x_j, u_j) <= 0
+            if(neighbor->is_sendingNeighbor())
+            {
+                neighbor->get_couplingModel()->hfct(out + idx, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+                idx += neighbor->get_couplingModel()->get_Nhij();
+            }
+
+            if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+            {
+                // inequality constraint h_j(x_{ji}, u_{ji})
+                neighbor->get_agentModel()->hfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j]);
+                idx += neighbor->get_agentModel()->get_Nhi();
+
+                // inequality constraint h_{ji}(x_{ji}, u_{ji}, x_i, u_i)
+                neighbor->get_copied_couplingModel()->hfct(out + idx, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+                idx += neighbor->get_copied_couplingModel()->get_Nhij();
+            }
         }
     }
-}
 
-void ProblemDescriptionLocalDefault::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
-{
-    MatSetScalar(out, 0, 1, Nu_);
-    // inequality constraints \partial h_i(x_i, u_i) / \partial u_i
-    agent_->get_agentModel()->dhdu_vec(out, t, x, u, vec);
-    int idx = agent_->get_agentModel()->get_Nhi();
-
-    for(const NeighborPtr& neighbor : agent_->get_neighbors())
+    void ProblemDescriptionLocalDefault::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
-        const auto j = neighbor->get_id();
+        MatSetScalar(out, 0, 1, Nx_);
+        // inequality constraints \partial h_i(x_i, u_i) / \partial x_i
+        agent_->get_agentModel()->dhdx_vec(out, t, x, u, vec);
+        int idx = agent_->get_agentModel()->get_Nhi();
 
-        if(neighbor->is_sendingNeighbor())
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
         {
-            // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
-            neighbor->get_couplingModel()->dhdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+            const auto j = neighbor->get_id();
 
-            // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
-            neighbor->get_couplingModel()->dhdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+            // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial x_i
+            if(neighbor->is_sendingNeighbor())
+            {
+                neighbor->get_couplingModel()->dhdxi_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+                idx += neighbor->get_couplingModel()->get_Nhij();
+            }
 
-            // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
-            neighbor->get_couplingModel()->dhduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-
-            // increase index
-            idx += neighbor->get_couplingModel()->get_Nhij();
-        }
-
-        if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
-        {
-            // inequality constraint \partial h_j(x_{ji}, u_{ji}) / \partial x_{ji}
-            neighbor->get_agentModel()->dhdx_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-
-            // inequality constraint \partial h_j(x_{ji}, u_{ji}) / \partial u_{ji}
-            neighbor->get_agentModel()->dhdu_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
-
-            // increase index
-            idx += neighbor->get_agentModel()->get_Nhi();
-
-            // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_i
-            neighbor->get_copied_couplingModel()->dhduj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_{ji}
-            neighbor->get_copied_couplingModel()->dhdxi_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_{ji}
-            neighbor->get_copied_couplingModel()->dhdui_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
-
-            // increase index
-            idx += neighbor->get_copied_couplingModel()->get_Nhij();
+            if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+            {
+                // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_i
+                neighbor->get_copied_couplingModel()->dhdxj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+                idx += neighbor->get_copied_couplingModel()->get_Nhij();
+            }
         }
     }
-}
+
+    void ProblemDescriptionLocalDefault::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    {
+        MatSetScalar(out, 0, 1, Nu_);
+        // inequality constraints \partial h_i(x_i, u_i) / \partial u_i
+        agent_->get_agentModel()->dhdu_vec(out, t, x, u, vec);
+        int idx = agent_->get_agentModel()->get_Nhi();
+
+        for(const NeighborPtr& neighbor : agent_->get_neighbors())
+        {
+            const auto j = neighbor->get_id();
+
+            if(neighbor->is_sendingNeighbor())
+            {
+                // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial u_i
+                neighbor->get_couplingModel()->dhdui_vec(out, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial x_j
+                neighbor->get_couplingModel()->dhdxj_vec(out + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // inequality constraints \partial h_{ij}(x_i, u_i, x_j, u_j) / \partial u_j
+                neighbor->get_couplingModel()->dhduj_vec(out + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // increase index
+                idx += neighbor->get_couplingModel()->get_Nhij();
+            }
+
+            if(agent_->is_approximatingConstraints() && neighbor->is_receivingNeighbor())
+            {
+                // inequality constraint \partial h_j(x_{ji}, u_{ji}) / \partial x_{ji}
+                neighbor->get_agentModel()->dhdx_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // inequality constraint \partial h_j(x_{ji}, u_{ji}) / \partial u_{ji}
+                neighbor->get_agentModel()->dhdu_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], vec + idx);
+
+                // increase index
+                idx += neighbor->get_agentModel()->get_Nhi();
+
+                // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_i
+                neighbor->get_copied_couplingModel()->dhduj_vec(out, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial x_{ji}
+                neighbor->get_copied_couplingModel()->dhdxi_vec(out + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // inequality constraint \partial h_{ji}(x_{ji}, u_{ji}, x_i, u_i) / \partial u_{ji}
+                neighbor->get_copied_couplingModel()->dhdui_vec(out + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u, vec + idx);
+
+                // increase index
+                idx += neighbor->get_copied_couplingModel()->get_Nhij();
+            }
+        }
+    }
 
 }

@@ -15,8 +15,8 @@
 
 int main(int argc, char** argv)
 {
-    // create interface
-    dmpc::DmpcInterfacePtr interface(new dmpc::DmpcInterface());
+	// create interface
+	const auto interface = std::make_shared<dmpc::DmpcInterface>();
 
     // initialize communication interface
 	interface->initialize_central_communicationInterface();

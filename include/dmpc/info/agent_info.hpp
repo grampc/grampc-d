@@ -10,32 +10,27 @@
  *
  */
 
-#ifndef AGENT_INFO_HPP
-#define AGENT_INFO_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-/**
- * @brief Information about a single agent.
- */
-struct AgentInfo
-{
-public:
-    AgentInfo() {}
+    /**
+     * @brief Information about a single agent.
+     */
+    struct AgentInfo
+    {
+    public:
+        AgentInfo() {}
 
-    int id_ = -1;
-    std::string model_name_ = "";
-    std::vector<typeRNum> model_parameters_ = std::vector<typeRNum>(0, 0);
-    std::vector<typeRNum> cost_parameters_ = std::vector<typeRNum>(0, 0);
+        int id_ = -1;
+        std::string model_name_ = "";
+        std::vector<typeRNum> model_parameters_ = std::vector<typeRNum>(0, 0);
+        std::vector<typeRNum> cost_parameters_ = std::vector<typeRNum>(0, 0);
 
-    const bool operator== (const AgentInfo& info) const { return (id_ == info.id_) && (model_name_ == info.model_name_); }
-};
-
-typedef std::shared_ptr<AgentInfo> AgentInfoPtr;
+        const bool operator== (const AgentInfo& info) const { return (id_ == info.id_) && (model_name_ == info.model_name_); }
+    };
 
 }
-
-#endif // AGENT_INFO_HPP

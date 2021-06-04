@@ -17,9 +17,13 @@
 #include "dmpc/comm/communication_interface_local.hpp"
 #include "dmpc/comm/communication_interface_central.hpp"
 
+#include "dmpc/agent/agent.hpp"
+
 #include "dmpc/coord/coordinator.hpp"
 
 #include "dmpc/simulator/simulator.hpp"
+
+#include "dmpc/optim/solution.hpp"
 
 #include "dmpc/util/logging.hpp"
 #include "dmpc/util/data_conversion.hpp"
@@ -29,7 +33,9 @@
 
 namespace dmpc
 {
-	DmpcInterface::DmpcInterface() {}
+	DmpcInterface::DmpcInterface() :
+		log_(std::make_shared<Logging>())
+	{}
 
 	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents,
 		SimulatorPtr simulator,
@@ -46,7 +52,7 @@ namespace dmpc
 			agent->initialize(oi);
 
 		// main loop for centralized solution
-		log_->print_debug(Logging::Base) << "MPC running ..." << std::endl;
+		log_->print(DebugType::Base) << "MPC running ..." << std::endl;
 
 		for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
 		{
@@ -59,7 +65,7 @@ namespace dmpc
 			// update state and time
 			simulator->centralized_simulation(&solver, oi.COMMON_Integrator_, oi.COMMON_dt_);
 		}
-		log_->print_debug(Logging::Base) << "MPC finished. Average computation time: "
+		log_->print(DebugType::Base) << "MPC finished. Average computation time: "
 			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " ms." << std::endl;
 	}
 
@@ -73,7 +79,7 @@ namespace dmpc
 
 		unsigned int CPUtime_iteration(0);
 		const unsigned int dt_in_ms = static_cast<unsigned int>(oi.COMMON_dt_ * 1000);
-		log_->print_debug(Logging::Base) << "MPC running in endless mode." << std::endl;
+		log_->print(DebugType::Base) << "MPC running in endless mode." << std::endl;
 
 		// main loop for centralized solution
 		while (true)
@@ -107,7 +113,7 @@ namespace dmpc
 
 		// main loop for centralized solution
 		coordinator_->initialize_ADMM(oi);
-		log_->print_debug(Logging::Base) << "DMPC running ..." << std::endl;
+		log_->print(DebugType::Base) << "DMPC running ..." << std::endl;
 
 		simulator_->set_t0(t_0);
 
@@ -126,7 +132,7 @@ namespace dmpc
 			simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
 		}
 
-		log_->print_debug(Logging::Base) << "DMPC finished." << std::endl
+		log_->print(DebugType::Base) << "DMPC finished." << std::endl
 			<< "Maximum computation time : "
 			<< CPUtime_max << " ms in total or " << CPUtime_max / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl
 			<< "Average computation time : "
@@ -142,7 +148,7 @@ namespace dmpc
 		unsigned int CPUtime_iteration(0);
 		const unsigned int dt_in_ms = static_cast<unsigned int>(oi.COMMON_dt_ * 1000);
 
-		log_->print_debug(Logging::Base) << "DMPC running in endless mode..." << std::endl;
+		log_->print(DebugType::Base) << "DMPC running in endless mode..." << std::endl;
 
 		while (true)
 		{
@@ -224,7 +230,7 @@ namespace dmpc
 	{
 		if (info.id_ < 0)
 		{
-			log_->print_debug(Logging::Error) << "[DmpcInterface::register_agent] "
+			log_->print(DebugType::Error) << "[DmpcInterface::register_agent] "
 				<< "Agent registration rejected as negative agent ids are not allowed." << std::endl;
 
 			return;
@@ -398,7 +404,7 @@ namespace dmpc
 			outputFile << *solutions;
 		}
 		else
-			log_->print_debug(Logging::Error) << "[DmpcInterface::print_solution_to_file] "
+			log_->print(DebugType::Error) << "[DmpcInterface::print_solution_to_file] "
 			<< "Failed to open file." << std::endl;
 	}
 
@@ -418,7 +424,7 @@ namespace dmpc
 			if (outputFile)
 				outputFile << *solutions[k];
 			else
-				log_->print_debug(Logging::Error) << "[DmpcInterface::print_solution_to_file] "
+				log_->print(DebugType::Error) << "[DmpcInterface::print_solution_to_file] "
 				<< "Failed to open file." << std::endl;
 		}
 	}
@@ -456,7 +462,7 @@ namespace dmpc
 		}
 
 		// agent was not found
-		log_->print_debug(Logging::Error) << "[DmpcInterface::set_initialState]: "
+		log_->print(DebugType::Error) << "[DmpcInterface::set_initialState]: "
 			<< "Agent " << agent_id << " is not registered. " << std::endl;
 	}
 }

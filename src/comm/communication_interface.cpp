@@ -15,7 +15,7 @@
 namespace dmpc
 {
 
-CommunicationInterface::~CommunicationInterface()
-{}
+	CommunicationInterface::~CommunicationInterface()
+	{}
 
 }

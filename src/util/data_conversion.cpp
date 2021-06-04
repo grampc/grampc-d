@@ -12,39 +12,50 @@
 
 #include "dmpc/util/data_conversion.hpp"
 
-const int DataConversion::ADMMStep_to_int(dmpc::ADMMStep step)
+#include "dmpc/info/coupling_info.hpp"
+#include "dmpc/info/communication_data.hpp"
+
+#include "dmpc/optim/optim_util.hpp"
+#include "dmpc/optim/solution.hpp"
+
+#include "dmpc/agent/agent.hpp"
+#include "dmpc/agent/neighbor.hpp"
+
+namespace dmpc
+{
+	const int DataConversion::ADMMStep_to_int(ADMMStep step)
 	{
 		switch (step)
 		{
-		case dmpc::ADMMStep::UPDATE_AGENT_STATE: return 0;
-		case dmpc::ADMMStep::SEND_AGENT_STATE: return 1;
-		case dmpc::ADMMStep::UPDATE_COUPLING_STATE: return 2;
-		case dmpc::ADMMStep::SEND_COUPLING_STATE: return 3;
-		case dmpc::ADMMStep::UPDATE_MULTIPLIER_STATE: return 4;
-		case dmpc::ADMMStep::SEND_MULTIPLIER_STATE: return 5;
-		case dmpc::ADMMStep::SEND_CONVERGENCE_FLAG: return 6;
-		case dmpc::ADMMStep::INITIALIZE: return 7;
-		case dmpc::ADMMStep::SEND_TRUE_STATE: return 8;
-		case dmpc::ADMMStep::PRINT: return 9;
+		case ADMMStep::UPDATE_AGENT_STATE: return 0;
+		case ADMMStep::SEND_AGENT_STATE: return 1;
+		case ADMMStep::UPDATE_COUPLING_STATE: return 2;
+		case ADMMStep::SEND_COUPLING_STATE: return 3;
+		case ADMMStep::UPDATE_MULTIPLIER_STATE: return 4;
+		case ADMMStep::SEND_MULTIPLIER_STATE: return 5;
+		case ADMMStep::SEND_CONVERGENCE_FLAG: return 6;
+		case ADMMStep::INITIALIZE: return 7;
+		case ADMMStep::SEND_TRUE_STATE: return 8;
+		case ADMMStep::PRINT: return 9;
 		default: return -1;
 		}
 	}
 
-const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
+	const ADMMStep DataConversion::Int_to_ADMMStep(int a)
 	{
 		switch (a)
 		{
-		case 0: return dmpc::ADMMStep::UPDATE_AGENT_STATE;
-		case 1: return dmpc::ADMMStep::SEND_AGENT_STATE;
-		case 2: return dmpc::ADMMStep::UPDATE_COUPLING_STATE;
-		case 3: return dmpc::ADMMStep::SEND_COUPLING_STATE;
-		case 4: return dmpc::ADMMStep::UPDATE_MULTIPLIER_STATE;
-		case 5: return dmpc::ADMMStep::SEND_MULTIPLIER_STATE;
-		case 6: return dmpc::ADMMStep::SEND_CONVERGENCE_FLAG;
-		case 7: return dmpc::ADMMStep::INITIALIZE;
-		case 8: return dmpc::ADMMStep::SEND_TRUE_STATE;
-		case 9: return dmpc::ADMMStep::PRINT;
-		default: return dmpc::ADMMStep::UPDATE_AGENT_STATE;
+		case 0: return ADMMStep::UPDATE_AGENT_STATE;
+		case 1: return ADMMStep::SEND_AGENT_STATE;
+		case 2: return ADMMStep::UPDATE_COUPLING_STATE;
+		case 3: return ADMMStep::SEND_COUPLING_STATE;
+		case 4: return ADMMStep::UPDATE_MULTIPLIER_STATE;
+		case 5: return ADMMStep::SEND_MULTIPLIER_STATE;
+		case 6: return ADMMStep::SEND_CONVERGENCE_FLAG;
+		case 7: return ADMMStep::INITIALIZE;
+		case 8: return ADMMStep::SEND_TRUE_STATE;
+		case 9: return ADMMStep::PRINT;
+		default: return ADMMStep::UPDATE_AGENT_STATE;
 		}
 	}
 
@@ -84,10 +95,10 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 	void DataConversion::insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const std::vector<typeRNum>& a)
 	{
 		// insert length of array
-		const unsigned int size_of_array = static_cast<unsigned int>( sizeof(typeRNum) * a.size() );
+		const unsigned int size_of_array = static_cast<unsigned int>(sizeof(typeRNum) * a.size());
 		insert_into_charArray(data, pos, size_of_array);
 
-		if (size_of_array == 0) 
+		if (size_of_array == 0)
 			return;
 
 		// insert array
@@ -99,7 +110,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 	void DataConversion::insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const std::string& a)
 	{
 		// insert length of string
-		const unsigned int size_of_data = (int) a.size();
+		const unsigned int size_of_data = (int)a.size();
 		insert_into_charArray(data, pos, size_of_data);
 
 		// insert string
@@ -108,7 +119,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		for (unsigned int k = 0; k < size_of_data; ++k)
 			(*data)[pos + k] = *(ptr + k);
 
-		pos += static_cast<unsigned int>( a.size() );
+		pos += static_cast<unsigned int>(a.size());
 	}
 
 	void DataConversion::insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const char a)
@@ -143,7 +154,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 
 	void DataConversion::read_from_charArray(const std::vector<char>& data, unsigned int& pos, bool& a)
 	{
-		a = data[pos]==1;
+		a = data[pos] == 1;
 		++pos;
 	}
 
@@ -226,17 +237,17 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector<dmpc::NeighborPtr>& list, const int neighbor_id)
+	const bool DataConversion::is_element_in_vector(const std::vector<NeighborPtr>& list, const int neighbor_id)
 	{
 		for (const auto& neighbor : list)
 		{
-			if (neighbor->get_id() == neighbor_id) 
+			if (neighbor->get_id() == neighbor_id)
 				return true;
 		}
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector<dmpc::NeighborPtr>& list, const dmpc::NeighborPtr& element)
+	const bool DataConversion::is_element_in_vector(const std::vector<NeighborPtr>& list, const NeighborPtr& element)
 	{
 		for (const auto& neighbor : list)
 		{
@@ -246,27 +257,27 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector<std::shared_ptr<dmpc::CouplingInfo>>& list, const dmpc::CouplingInfo& element)
+	const bool DataConversion::is_element_in_vector(const std::vector<std::shared_ptr<CouplingInfo>>& list, const CouplingInfo& element)
 	{
 		for (const auto& info : list)
 		{
-			if (*info == element) 
+			if (*info == element)
 				return true;
 		}
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector< dmpc::CouplingInfo >& list, const dmpc::CouplingInfo& element)
+	const bool DataConversion::is_element_in_vector(const std::vector< CouplingInfo >& list, const CouplingInfo& element)
 	{
 		for (const auto& info : list)
 		{
-			if (info == element) 
+			if (info == element)
 				return true;
 		}
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector< dmpc::CommunicationDataPtr >& list, const std::shared_ptr<dmpc::CommunicationData>& element)
+	const bool DataConversion::is_element_in_vector(const std::vector< CommunicationDataPtr >& list, const std::shared_ptr<CommunicationData>& element)
 	{
 		for (const auto& comm_data : list)
 		{
@@ -276,17 +287,17 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		return false;
 	}
 
-	const bool DataConversion::is_element_in_vector(const std::vector<dmpc::AgentInfo>& list, const int id)
+	const bool DataConversion::is_element_in_vector(const std::vector<AgentInfo>& list, const int id)
 	{
 		for (const auto& info : list)
 		{
-			if (info.id_ == id) 
+			if (info.id_ == id)
 				return true;
 		}
 		return false;
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector< dmpc::NeighborPtr >& list, const dmpc::NeighborPtr& element)
+	void DataConversion::erase_element_from_vector(std::vector< NeighborPtr >& list, const NeighborPtr& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -298,7 +309,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector<dmpc::AgentPtr>& list, const dmpc::AgentInfo& element)
+	void DataConversion::erase_element_from_vector(std::vector<AgentPtr>& list, const AgentInfo& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -322,7 +333,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector< dmpc::AgentInfo >& list, const dmpc::AgentInfo& element)
+	void DataConversion::erase_element_from_vector(std::vector< AgentInfo >& list, const AgentInfo& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -334,7 +345,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector< dmpc::CouplingInfo >& list, const dmpc::CouplingInfo& element)
+	void DataConversion::erase_element_from_vector(std::vector< CouplingInfo >& list, const CouplingInfo& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -346,7 +357,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector<std::shared_ptr<dmpc::CouplingInfo>>& list, const dmpc::CouplingInfo& element)
+	void DataConversion::erase_element_from_vector(std::vector<std::shared_ptr<CouplingInfo>>& list, const CouplingInfo& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -358,7 +369,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	void DataConversion::erase_element_from_vector(std::vector< dmpc::CommunicationDataPtr >& list, const  dmpc::CommunicationDataPtr& element)
+	void DataConversion::erase_element_from_vector(std::vector< CommunicationDataPtr >& list, const  CommunicationDataPtr& element)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{
@@ -370,7 +381,7 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 	}
 
-	const dmpc::NeighborPtr DataConversion::get_element_from_vector(const std::vector<dmpc::NeighborPtr>& list, const int id)
+	const NeighborPtr DataConversion::get_element_from_vector(const std::vector<NeighborPtr>& list, const int id)
 	{
 		for (const auto& neighbor : list)
 		{
@@ -379,3 +390,4 @@ const dmpc::ADMMStep DataConversion::Int_to_ADMMStep(int a)
 		}
 		return nullptr;
 	}
+}

@@ -12,6 +12,18 @@
 
 #include "dmpc/comm/communication_interface_central.hpp"
 
+#include "dmpc/model/agent_model.hpp"
+
+#include "dmpc/agent/agent.hpp"
+
+#include "dmpc/coord/coordinator.hpp"
+
+#include "dmpc/optim/solution.hpp"
+
+#include "dmpc/simulator/simulator.hpp"
+
+#include "dmpc/util/logging.hpp"
+
 #include <algorithm>
 
 namespace dmpc
@@ -29,7 +41,7 @@ namespace dmpc
                 threads_.push_back(std::thread([this]() {ioService_.run(); }));
         }
 
-        log_->print_debug(Logging::Message) << "[CentralizedCommunicationInterface::CommunicationInterfaceCentral] "
+        log_->print(DebugType::Message) << "[CentralizedCommunicationInterface::CommunicationInterfaceCentral] "
             << "Communication interface is running." << std::endl;
     }
 
@@ -47,14 +59,14 @@ const bool CommunicationInterfaceCentral::register_agent(const AgentPtr& agent)
 {
     if(!coordinator_)
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::register_agent] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::register_agent] "
             << "Missing coordinator, call setCoordinator(...) first." << std::endl;
         return false;
     }
     
     if(!coordinator_->register_agent(agent->get_agentInfo()))
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::registerState] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::registerState] "
             << "Could not register agent with id " << agent->get_id() << "." << std::endl;
         return false; 
     }
@@ -71,21 +83,21 @@ const bool CommunicationInterfaceCentral::deregister_agent(const AgentInfo& agen
 {
 	if (!coordinator_)
 	{
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::deregister_agent] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::deregister_agent] "
             << "Missing coordinator, call setCoordinator(...) first." << std::endl;
 		return false;
 	}
 
     if (agent.id_ > agents_.size())
     {
-        log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::deregister_agent] "
+        log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::deregister_agent] "
             << "Failed to deregister agent as agent is not known." << std::endl;
         return false;
     }
 
 	if (!coordinator_->deregister_agent(agent))
 	{
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::registerState] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::registerState] "
             << "Could not deregister agent with id '" << agent.id_ << "'" << std::endl;
 		return false;
 	}
@@ -100,14 +112,14 @@ const bool CommunicationInterfaceCentral::register_coupling(const CouplingInfo& 
 {
     if(!coordinator_)
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::register_coupling] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::register_coupling] "
             << "Failed to register coupling as coordinator is missing." << std::endl;
         return false;
     }
 
     if(!coordinator_->register_coupling(coupling))
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::register_coupling] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::register_coupling] "
             << "Could not register coupling between " << coupling.agent_id_ << " and "
             << coupling.neighbor_id_ << "." << std::endl;
         return false; 
@@ -115,7 +127,7 @@ const bool CommunicationInterfaceCentral::register_coupling(const CouplingInfo& 
 
     if (std::max(coupling.agent_id_, coupling.neighbor_id_) >= agents_.size())
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::register_coupling] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::register_coupling] "
             << "Could not register coupling between " << coupling.agent_id_ << " and "
             << coupling.neighbor_id_ << "." << std::endl;
         return false;
@@ -134,7 +146,7 @@ const bool CommunicationInterfaceCentral::fromCommunication_deregistered_couplin
 {
     if (std::max(coupling.agent_id_, coupling.neighbor_id_) >= agents_.size())
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::register_coupling] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::register_coupling] "
             << "Could not deregister coupling between " << coupling.agent_id_ << " and "
             << coupling.neighbor_id_ << "." << std::endl;
         return false;
@@ -149,7 +161,7 @@ const bool CommunicationInterfaceCentral::deregister_coupling(const CouplingInfo
 {
     if(!coordinator_)
     {
-        log_->print_debug(Logging::Error) << "[CentralizedCommunicationInterface::deregister_coupling] "
+        log_->print(DebugType::Error) << "[CentralizedCommunicationInterface::deregister_coupling] "
             << "Missing coordinator, call setCoordinator(...) first." << std::endl;
         return false;
     }
@@ -161,7 +173,7 @@ const bool CommunicationInterfaceCentral::send_numberOfNeighbors(const int numbe
 {
     if (to >= agents_.size())
     {
-        log_->print_debug(Logging::Warning) << "[CommunicationInterfaceCentral::send_numberOfNeighbors] "
+        log_->print(DebugType::Warning) << "[CommunicationInterfaceCentral::send_numberOfNeighbors] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -174,7 +186,7 @@ const bool CommunicationInterfaceCentral::send_agentState(const AgentState& stat
 {
     if( to >= agents_.size() )
     {
-        log_->print_debug(Logging::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -187,7 +199,7 @@ const bool CommunicationInterfaceCentral::send_desiredAgentState(const AgentStat
 {
     if( to >= agents_.size() )
     {
-        log_->print_debug(Logging::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -235,7 +247,7 @@ const bool CommunicationInterfaceCentral::send_couplingState(const CouplingState
 {
     if( to >= agents_.size() )
     {
-        log_->print_debug(Logging::Warning) << "[CentralizedCommunicationInterface::sendCouplingState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendCouplingState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -248,7 +260,7 @@ const bool CommunicationInterfaceCentral::send_couplingState(const CouplingState
 {
     if( to >= agents_.size() )
     {
-        log_->print_debug(Logging::Warning) << "[CentralizedCommunicationInterface::sendCouplingState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendCouplingState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -261,7 +273,7 @@ const bool CommunicationInterfaceCentral::send_multiplierState(const MultiplierS
 {
     if( to >= agents_.size() )
     {
-        log_->print_debug(Logging::Warning) << "[CentralizedCommunicationInterface::sendMultiplierState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendMultiplierState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -348,7 +360,7 @@ const std::vector<SolutionPtr> CommunicationInterfaceCentral::get_solution(const
 {
     if (agents != "all")
     {
-        log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::get_solution] "
+        log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::get_solution] "
             << "Unknown set of agents." << std::endl;
 
         return std::vector<SolutionPtr>();
@@ -356,7 +368,7 @@ const std::vector<SolutionPtr> CommunicationInterfaceCentral::get_solution(const
 
     if (!coordinator_)
     {
-        log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::get_solution] "
+        log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::get_solution] "
             << "Coordinator is required to sample all solutions." << std::endl;
 
 		return std::vector<SolutionPtr>();
@@ -390,43 +402,43 @@ void CommunicationInterfaceCentral::reset_solution(const std::string& agents)
         for (const auto& agent : agents_)
             agent->reset_solution();
     else
-        log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::reset_solution] "
+        log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::reset_solution] "
         << "Set of agents is not known." << std::endl;
 }
 
 void CommunicationInterfaceCentral::waitFor_connection(const int agents, const int couplings)
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::waitForConnection] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::waitForConnection] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
 void CommunicationInterfaceCentral::set_passive()
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::set_passive] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::set_passive] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
 void CommunicationInterfaceCentral::send_flag_to_agents(const int agent_id) const
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
 void CommunicationInterfaceCentral::send_flag_to_agents(const std::vector<int>& agent_ids) const
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
 void CommunicationInterfaceCentral::send_flag_to_agents(const std::string& agents) const
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::send_flag_to_agents] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
 void CommunicationInterfaceCentral::waitFor_flag_from_coordinator()
 {
-    log_->print_debug(Logging::Error) << "[CommunicationInterfaceCentral::waitFor_flag_from_coordinator] "
+    log_->print(DebugType::Error) << "[CommunicationInterfaceCentral::waitFor_flag_from_coordinator] "
         << "This function is not implemented for the centralized communication interface." << std::endl;
 }
 
@@ -443,7 +455,7 @@ const unsigned int CommunicationInterfaceCentral::get_numberOfAgents() const
 {
     if (!coordinator_)
     {
-        log_->print_debug(Logging::Error) << "CommunicationInterfaceCentral::get_numberOfAgents"
+        log_->print(DebugType::Error) << "CommunicationInterfaceCentral::get_numberOfAgents"
             << "This method requires the coordinator." << std::endl;
         return 1;
     }

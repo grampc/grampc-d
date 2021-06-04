@@ -10,30 +10,27 @@
  *
  */
 
-#ifndef VDP_NONLINEAR_couplingModel_HPP
-#define VDP_NONLINEAR_couplingModel_HPP
+#pragma once
 
 #include "dmpc/model/coupling_model.hpp"
 
 class VDPNonlinearCouplingModel : public dmpc::CouplingModel
 {
 public:
-    VDPNonlinearCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name);
+	VDPNonlinearCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name);
 
-    static dmpc::CouplingModelPtr create(const std::vector<typeRNum>& model_parameters, const std::string& name);
+	static dmpc::CouplingModelPtr create(const std::vector<typeRNum>& model_parameters, const std::string& name);
 
-    virtual void ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) override;
+	virtual void ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) override;
 
-    virtual void dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
 
-    virtual void dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
 
-    virtual void dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
 
-    virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
+	virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) override;
 
 private:
-    typeRNum p1_;
+	typeRNum p1_;
 };
-
-#endif // VDP_NONLINEAR_couplingModel_HPP

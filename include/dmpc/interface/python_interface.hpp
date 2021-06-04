@@ -10,11 +10,11 @@
  *
  */
 
-#ifndef PYTHON_INTERFACE_HPP
-#define PYTHON_INTERFACE_HPP
+#pragma once
 
 #include "dmpc/interface/interface.hpp"
-#include "dmpc/interface/dmpc_interface.hpp"
+
+#include "dmpc/util/class_forwarding.hpp"
 
 namespace dmpc
 {
@@ -101,11 +101,9 @@ namespace dmpc
 		void set_print_error(bool print) override;
 
 	private:
-		DmpcInterface* dmpc_interface_;
+		const DmpcInterfacePtr dmpc_interface_;
 
 		bool realtime_ = false;
 		unsigned int cap_data_at = 0;
 	};
 }
-
-#endif // PYTHON_INTERFACE_HPP

@@ -10,17 +10,15 @@
  *
  */
 
-#ifndef Logging_HPP
-#define Logging_HPP
+#pragma once
 
 #include <iostream>
 
 #include <memory>
 
-class Logging
+namespace dmpc
 {
-public:
-	enum MessageType
+	enum class DebugType
 	{
 		Error,
 		Warning,
@@ -28,25 +26,24 @@ public:
 		Base
 	};
 
-	/*Activate printing messages of type base*/
-	void set_print_base(bool print) { set_print_base_ = print; }
-	/*Activate printing messages of type message*/
-	void set_print_message(bool print) { set_print_message_ = print; }
-	/*Activate printing messages of type warning*/
-	void set_print_warning(bool print) { set_print_warning_ = print; }
-	/*Activate printing messages of type error*/
-	void set_print_error(bool print) { set_print_error_ = print; }
+	class Logging
+	{
+	public:
+		/*Activate printing messages of type base*/
+		void set_print_base(bool print) { set_print_base_ = print; }
+		/*Activate printing messages of type message*/
+		void set_print_message(bool print) { set_print_message_ = print; }
+		/*Activate printing messages of type warning*/
+		void set_print_warning(bool print) { set_print_warning_ = print; }
+		/*Activate printing messages of type error*/
+		void set_print_error(bool print) { set_print_error_ = print; }
 
-	std::ostream& print_debug(MessageType type) const;
+		std::ostream& print(const DebugType type) const;
 
-private:
-	bool set_print_base_ = true;
-	bool set_print_message_ = false;
-	bool set_print_warning_ = false;
-	bool set_print_error_ = false;
-};
-
-typedef std::shared_ptr<Logging> LoggingPtr;
-
-#endif // Logging_HPP
-
+	private:
+		bool set_print_base_ = true;
+		bool set_print_message_ = false;
+		bool set_print_warning_ = false;
+		bool set_print_error_ = false;
+	};
+}

@@ -9,37 +9,31 @@
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
  *
  */
-
-#ifndef AGENT_STATE_HPP
-#define AGENT_STATE_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-struct AgentState
-{
-public:
+    struct AgentState
+    {
+    public:
 
-    /*Agent id*/
-    int i_;
+        /*Agent id*/
+        int i_;
 
-    /*Initial time step*/
-    typeRNum t0_;
-    /*Time vector*/
-    std::vector<typeRNum> t_;
+        /*Initial time step*/
+        typeRNum t0_;
+        /*Time vector*/
+        std::vector<typeRNum> t_;
 
-    /*Vector that contains states*/
-    std::vector<typeRNum> x_;
-    /*Vector that contains controls*/
-    std::vector<typeRNum> u_;
-    /*Vector that contains external influence*/
-    std::vector<typeRNum> v_;
-};
-
-typedef std::shared_ptr<AgentState> AgentStatePtr;
+        /*Vector that contains states*/
+        std::vector<typeRNum> x_;
+        /*Vector that contains controls*/
+        std::vector<typeRNum> u_;
+        /*Vector that contains external influence*/
+        std::vector<typeRNum> v_;
+    };
 
 }
-
-#endif // AGENT_STATE_HPP

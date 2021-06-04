@@ -10,82 +10,75 @@
  *
  */
 
-#ifndef COORDINATOR_HPP
-#define COORDINATOR_HPP
+#pragma once
 
-#include "dmpc/util/types.hpp"
-#include "dmpc/util/logging.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
-#include "dmpc/comm/communication_interface.hpp"
-#include "dmpc/info/agent_info.hpp"
+#include "dmpc/info/optimization_info.hpp"
 
 namespace dmpc
 {
 
-/**
- * @brief The coordinator is the central node that knows all agents.
- * Its central purpose is to synchronize the actions of the agents.
- */
-class Coordinator
-{
-public:
-    Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, LoggingPtr& log);
+    /**
+     * @brief The coordinator is the central node that knows all agents.
+     * Its central purpose is to synchronize the actions of the agents.
+     */
+    class Coordinator
+    {
+    public:
+        Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, LoggingPtr& log);
 
-    /* Register agent in the network */
-    const bool register_agent(const AgentInfo& agent_info);
-    /* Register coupling in the network */
-    const bool register_coupling(const CouplingInfo& coupling_info);
+        /* Register agent in the network */
+        const bool register_agent(const AgentInfo& agent_info);
+        /* Register coupling in the network */
+        const bool register_coupling(const CouplingInfo& coupling_info);
 
-    /* Remove coupling from the network */
-    const bool deregister_agent(const AgentInfo& agent_info);
-    const bool deregister_coupling(CouplingInfoPtr coupling_info);
+        /* Remove coupling from the network */
+        const bool deregister_agent(const AgentInfo& agent_info);
+        const bool deregister_coupling(CouplingInfoPtr coupling_info);
 
-    /* Print network structure */
-    void print_network() const;
+        /* Print network structure */
+        void print_network() const;
 
-    /* Return the number of agents in the network */
-    const unsigned int get_numberOfAgents() const;
-    /*Returns map with agent infos.*/
-    const std::map<unsigned int, AgentInfoPtr >& get_agentInfos() const;
-    /*Returns map with sending neighbors.*/
-    const std::map< unsigned int, std::vector< CouplingInfoPtr > >& get_sendingNeighbors() const;
-    /*Returns map with receiving neighbors.*/
-    const std::map< unsigned int, std::vector< CouplingInfoPtr > >& get_receivingNeighbors() const;
+        /* Return the number of agents in the network */
+        const unsigned int get_numberOfAgents() const;
+        /*Returns map with agent infos.*/
+        const std::map<unsigned int, AgentInfoPtr >& get_agentInfos() const;
+        /*Returns map with sending neighbors.*/
+        const std::map< unsigned int, std::vector< CouplingInfoPtr > >& get_sendingNeighbors() const;
+        /*Returns map with receiving neighbors.*/
+        const std::map< unsigned int, std::vector< CouplingInfoPtr > >& get_receivingNeighbors() const;
 
-    /*************************************************************************
-     coordination of alternating direction method of multipliers
-     *************************************************************************/
+        /*************************************************************************
+         coordination of alternating direction method of multipliers
+         *************************************************************************/
 
-    /* Initialize agents for alternating direction method of multipliers (ADMM) */
-    void initialize_ADMM(const OptimizationInfo& oi);
+        /* Initialize agents for alternating direction method of multipliers (ADMM) */
+        void initialize_ADMM(const OptimizationInfo& oi);
 
-    /* Solve optimization problem using alternating direction method of multipliers (ADMM) */
-    void solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
+        /* Solve optimization problem using alternating direction method of multipliers (ADMM) */
+        void solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
 
-    /* Received convergence flag from agent */
-    void fromCommunication_received_convergenceFlag(bool converged, int from);
+        /* Received convergence flag from agent */
+        void fromCommunication_received_convergenceFlag(bool converged, int from);
 
-    /* Advance all agents to next sampling step */
-    void trigger_simulation(const std::string& Integrator, typeRNum dt) const;
+        /* Advance all agents to next sampling step */
+        void trigger_simulation(const std::string& Integrator, typeRNum dt) const;
 
-    /*Returns optimization info.*/
-    const OptimizationInfo& get_optimizationInfo() const;
+        /*Returns optimization info.*/
+        const OptimizationInfo& get_optimizationInfo() const;
 
-private:
-	std::map<unsigned int, AgentInfoPtr > agents_;
-    CommunicationInterfacePtr communication_interface_;
-    std::map< unsigned int, std::vector< CouplingInfoPtr > > sending_neighbors_;
-    std::map< unsigned int, std::vector< CouplingInfoPtr > > receiving_neighbors_;
+    private:
+	    std::map<unsigned int, AgentInfoPtr > agents_;
+        CommunicationInterfacePtr communication_interface_;
+        std::map< unsigned int, std::vector< CouplingInfoPtr > > sending_neighbors_;
+        std::map< unsigned int, std::vector< CouplingInfoPtr > > receiving_neighbors_;
 
-    LoggingPtr log_;
+        LoggingPtr log_;
 
-    bool ADMM_converged_ = false;
-    bool simulation_ = false;
-    OptimizationInfo optimizationInfo_;
-};
-
-typedef std::shared_ptr<Coordinator> CoordinatorPtr;
+        bool ADMM_converged_ = false;
+        bool simulation_ = false;
+        OptimizationInfo optimizationInfo_;
+    };
 
 }
-
-#endif // COORDINATOR_HPP

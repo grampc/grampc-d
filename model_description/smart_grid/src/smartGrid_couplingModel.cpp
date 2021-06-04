@@ -13,50 +13,50 @@
 #include "../include/smartGrid_couplingModel.hpp"
 #include <math.h>
 
-// https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
+ // https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
 template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
+	return (T(0) < val) - (val < T(0));
 }
 
 SmartGridCouplingModel::SmartGridCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
-    : CouplingModel(2, 1, 2, 1, 0, 0,
-                    model_parameters,
-                    name)
+	: CouplingModel(2, 1, 2, 1, 0, 0,
+		model_parameters,
+		name)
 {
-    I_ = model_parameters[0]; // inertia
-    Omega_ = model_parameters[1]; // frequency
-    P_max_ij_ = model_parameters[2]; 
+	I_ = model_parameters[0]; // inertia
+	Omega_ = model_parameters[1]; // frequency
+	P_max_ij_ = model_parameters[2];
 }
 
 dmpc::CouplingModelPtr SmartGridCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
 {
-    return dmpc::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, name));
+	return dmpc::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, name));
 }
 
 void SmartGridCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
-    out[0] += 0.0;
-    out[1] += P_max_ij_ / (I_ * Omega_) * sin(xi[0] - xj[0]);
+	out[0] += 0.0;
+	out[1] += P_max_ij_ / (I_ * Omega_) * sin(xi[0] - xj[0]);
 }
 
 void SmartGridCouplingModel::dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
-    out[1] += 0.0;
+	out[0] += P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
+	out[1] += 0.0;
 }
 
 void SmartGridCouplingModel::dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += 0.0;
+	out[0] += 0.0;
 }
 
 void SmartGridCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += - P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
-    out[1] += 0.0;
+	out[0] += -P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
+	out[1] += 0.0;
 }
 
 void SmartGridCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    out[0] += 0.0;
+	out[0] += 0.0;
 }

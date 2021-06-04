@@ -14,16 +14,19 @@
 #include <pybind11/stl.h>
 
 #include <dmpc/interface/python_interface.hpp>
+#include "dmpc/interface/dmpc_interface.hpp"
 
+#include "dmpc/state/agent_state.hpp"
+
+#include "dmpc/optim/solution.hpp"
 
 namespace dmpc
 {
 	namespace py = pybind11;
 
 	PythonInterface::PythonInterface()
-	{
-		dmpc_interface_ = new DmpcInterface();
-	}
+		: dmpc_interface_(std::make_shared<DmpcInterface>())
+	{}
 
 	void PythonInterface::initialize_central_communicationInterface(int number_of_threads)
 	{

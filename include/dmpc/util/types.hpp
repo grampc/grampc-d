@@ -10,8 +10,7 @@
  *
  */
 
-#ifndef TYPES_HPP
-#define TYPES_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -24,22 +23,25 @@
 namespace dmpc
 {
 
-// Macro that defines shared_ptr to type
-#define DMPC_DECLARE_PTR(Name, Type) \
-    typedef std::shared_ptr<Type> Name##Ptr; \
-    typedef std::shared_ptr<const Type> Name##ConstPtr;
+    // Macro that defines shared_ptr to type
+    #define DMPC_DECLARE_PTR(Name, Type) \
+        typedef std::shared_ptr<Type> Name##Ptr; \
+        typedef std::shared_ptr<const Type> Name##ConstPtr;
 
-// Macro that forward declares a class
-#define DMPC_CLASS_FORWARD(C) \
-    class C; \
-    DMPC_DECLARE_PTR(C, C);
+    // Macro that forward declares a class
+    #define DMPC_CLASS_FORWARD(C) \
+        class C; \
+        DMPC_DECLARE_PTR(C, C);
 
-// Define ProblemDescriptionPtr
-DMPC_DECLARE_PTR(ProblemDescription, grampc::ProblemDescription)
+    // Macro that forward declares a struct
+    #define DMPC_STRUCT_FORWARD(C) \
+        struct C; \
+        DMPC_DECLARE_PTR(C, C);
 
-// Define SolverPtr
-DMPC_DECLARE_PTR(Solver, grampc::Grampc)
+    // Define ProblemDescriptionPtr
+    DMPC_DECLARE_PTR(ProblemDescription, grampc::ProblemDescription)
+
+    // Define SolverPtr
+    DMPC_DECLARE_PTR(Solver, grampc::Grampc)
 
 }
-
-#endif // TYPES_HPP

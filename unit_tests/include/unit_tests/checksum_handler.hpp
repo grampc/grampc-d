@@ -1,11 +1,24 @@
+/* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
+ *
+ * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
+ * based on the alternating direction method of multipliers (ADMM).
+ *
+ * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * All rights reserved.
+ *
+ * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
+ *
+ */
+
 #pragma once
+
 #include <vector>
 #include <map>
 #include <string>
 #include <memory>
 #include "dmpc/util/types.hpp"
 
-DMPC_CLASS_FORWARD(Logging)
+#include "dmpc/util/logging.hpp"
 
 namespace unit_test 
 {
@@ -20,7 +33,7 @@ namespace unit_test
 		};
 
 		// constructor initializes Logging
-		ChecksumHandler(const LoggingPtr&);
+		ChecksumHandler(const std::shared_ptr<dmpc::Logging>&);
 
 		// returns a map of reference data; the keys are the solution file names of the given simulation, 
 		// the values are the reference checksums of the according simulation files
@@ -45,7 +58,7 @@ namespace unit_test
 		void add_unit_test(const std::string& executableName) const;
 
 	private:
-		const LoggingPtr log_;
+		const std::shared_ptr<dmpc::Logging> log_;
 
 		//path relative to bin
 		const std::string PATH_REFERENCE_CHECKSUMS_ = "../unit_tests/referenceChecksums.csv";

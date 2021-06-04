@@ -12,6 +12,8 @@
 
 #include "dmpc/optim/solution.hpp"
 
+#include <algorithm>
+
 namespace dmpc
 {
 	Solution::Solution() {}

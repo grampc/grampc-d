@@ -10,19 +10,17 @@
  *
  */
 
-#ifndef NEIGHBOR_HPP
-#define NEIGHBOR_HPP
+#pragma once
 
-#include "dmpc/model/agent_model.hpp"
-#include "dmpc/model/coupling_model.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
-#include "dmpc/util/logging.hpp"
-
-#include "dmpc/optim/approximate_neighbor.hpp"
+#include "dmpc/state/agent_state.hpp"
+#include "dmpc/state/coupling_state.hpp"
+#include "dmpc/state/multiplier_state.hpp"
+#include "dmpc/state/penalty_state.hpp"
 
 namespace dmpc
 {
-
 /**
  * @brief Coupled agents are implemented in form of a neighbor.
  */
@@ -254,8 +252,4 @@ private:
 
 };
 
-typedef std::shared_ptr<Neighbor> NeighborPtr;
-
 }
-
-#endif // NEIGHBOR_HPP

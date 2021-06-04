@@ -10,18 +10,16 @@
  *
  */
 
-#ifndef DMPC_INTERFACE_HPP
-#define DMPC_INTERFACE_HPP
+#pragma once
 
 #include "dmpc/interface/interface.hpp"
-#include "dmpc/info/optimization_info.hpp"
+
 #include "dmpc/info/communication_info.hpp"
-#include "dmpc/comm/communication_interface_central.hpp"
-#include "dmpc/coord/coordinator.hpp"
-#include "dmpc/util/logging.hpp"
+#include "dmpc/info/optimization_info.hpp"
 #include "dmpc/info/agent_info.hpp"
 #include "dmpc/info/coupling_info.hpp"
-#include "general_model_factory.hpp"
+
+#include "dmpc/util/class_forwarding.hpp"
 
 namespace dmpc
 {
@@ -127,8 +125,7 @@ namespace dmpc
 		/*Run a centralized distributed in endless model*/
 		void run_DMPC(SimulatorPtr simulator, const OptimizationInfo& oi);
 
-		LoggingPtr log_ = LoggingPtr(new Logging());
-		std::ostringstream stream_;
+		LoggingPtr log_;
 
 		OptimizationInfo optimizationInfo_;
 		CommunicationInfo communication_info_;
@@ -142,7 +139,4 @@ namespace dmpc
 
 		bool realtime_ = false;
 	};
-	typedef std::shared_ptr<DmpcInterface> DmpcInterfacePtr;
 }
-
-#endif // DMPC_INTERFACE_HPP

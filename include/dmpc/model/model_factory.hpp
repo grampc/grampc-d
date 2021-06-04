@@ -10,34 +10,25 @@
  *
  */
 
-#ifndef MODEL_FACTORY_HPP
-#define MODEL_FACTORY_HPP
+#pragma once
 
-#include "dmpc/info/agent_info.hpp"
-#include "dmpc/info/coupling_info.hpp"
-
-#include "dmpc/model/agent_model.hpp"
-#include "dmpc/model/coupling_model.hpp"
+#include "dmpc/util/class_forwarding.hpp"
 
 namespace dmpc
 {
 
-/* @brief The model factory creates AgentModels and CouplingModels given AgentInfo and CouplingInfo.*/
-class ModelFactory
-{
-public:
+    /* @brief The model factory creates AgentModels and CouplingModels given AgentInfo and CouplingInfo.*/
+    class ModelFactory
+    {
+    public:
 
-	virtual ~ModelFactory();
+	    virtual ~ModelFactory();
 
-    /*Creates and returns an agent model regarding the agent info.*/
-    virtual AgentModelPtr create_agentModel(const AgentInfo& info) const = 0;
+        /*Creates and returns an agent model regarding the agent info.*/
+        virtual AgentModelPtr create_agentModel(const AgentInfo& info) const = 0;
 
-	/*Creates and returns a coupling model regarding the coupling info.*/
-    virtual CouplingModelPtr create_couplingModel(const CouplingInfo& info) const = 0;
-};
-
-typedef std::shared_ptr<ModelFactory> ModelFactoryPtr;
+	    /*Creates and returns a coupling model regarding the coupling info.*/
+        virtual CouplingModelPtr create_couplingModel(const CouplingInfo& info) const = 0;
+    };
 
 }
-
-#endif // MODEL_FACTORY_HPP

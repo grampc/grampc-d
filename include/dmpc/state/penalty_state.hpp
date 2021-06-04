@@ -10,33 +10,28 @@
  *
  */
 
-#ifndef PENALTY_STATE_HPP
-#define PENALTY_STATE_HPP
+#pragma once
 
 #include "dmpc/util/types.hpp"
 
 namespace dmpc
 {
 
-/**
- * @brief Lagrangian multiplier $ mu = [mu_x, mu_u] $.
- */
-struct PenaltyState
-{
-public:
+	/**
+	 * @brief Lagrangian multiplier $ mu = [mu_x, mu_u] $.
+	 */
+	struct PenaltyState
+	{
+	public:
 
-    int i_;
+		int i_;
 
-    typeRNum t0_;
-    std::vector<typeRNum> t_;
+		typeRNum t0_;
+		std::vector<typeRNum> t_;
 
-    std::vector<typeRNum> rho_x_;
-    std::vector<typeRNum> rho_u_;
-    std::vector<typeRNum> rho_v_;
-};
-
-typedef std::shared_ptr<PenaltyState> PenaltyStatePtr;
+		std::vector<typeRNum> rho_x_;
+		std::vector<typeRNum> rho_u_;
+		std::vector<typeRNum> rho_v_;
+	};
 
 }
-
-#endif // PENALTY_STATE_HPP
