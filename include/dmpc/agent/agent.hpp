@@ -109,7 +109,8 @@ public:
 	/*Sets the agents desired agent state.*/
     void set_desiredAgentState(const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des);
 
-    /*Sets the initial state.*/
+	/*Sets the initial state.*/
+	void set_initialState(const std::vector<typeRNum>& x_init);
     void set_initialState(const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init);
 
     /*Return the agents agent state.*/

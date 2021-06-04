@@ -813,6 +813,20 @@ void Agent::reset_solution()
     solution_.reset(new Solution());
 }
 
+void Agent::set_initialState(const std::vector<typeRNum>& x_init)
+{
+    if (x_init_.size() != x_init.size())
+    {
+        log_->print_debug(Logging::Error) << "[Agent::set_initialState]: "
+            << "Dimension of new initial state differs from "
+            << "dimension of old initial state." << std::endl;
+
+        return;
+    }
+
+    x_init_ = x_init;
+}
+
 void Agent::set_initialState(const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init)
 {
     x_init_ = x_init;

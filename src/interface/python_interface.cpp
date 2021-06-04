@@ -190,6 +190,11 @@ namespace dmpc
 		dmpc_interface_->print_solution_to_file(agents, prefix);
 	}
 
+	void PythonInterface::set_initialState(const unsigned int agent_id, const std::vector<typeRNum>& x_init)
+	{
+		dmpc_interface_->set_initialState(agent_id, x_init);
+	}
+
 	PYBIND11_MODULE(grampcd_interface, m) {
 
 		py::class_<AgentState>(m, "AgentState")
@@ -217,6 +222,7 @@ namespace dmpc
 			.def("register_agent", &PythonInterface::register_agent)
 			.def("deregister_agent", &PythonInterface::deregister_agent)
 			.def("set_desiredAgentState", &PythonInterface::set_desiredAgentState)
+			.def("set_initialState", &PythonInterface::set_initialState)
 			.def("register_coupling", &PythonInterface::register_coupling)
 			.def("deregister_coupling", &PythonInterface::deregister_coupling)
 			.def("run_MPC", (void (PythonInterface::*)(void)) & PythonInterface::run_MPC)

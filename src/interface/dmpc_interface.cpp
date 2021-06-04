@@ -442,4 +442,21 @@ namespace dmpc
 	{
 		return CommunicationInfo();
 	}
+
+	void DmpcInterface::set_initialState(const unsigned int agent_id, const std::vector<typeRNum>& x_init)
+	{
+		// search for agent
+		for (const auto& agent : agents_)
+		{
+			if (agent->get_id() == agent_id)
+			{
+				agent->set_initialState(x_init);
+				return;
+			}
+		}
+
+		// agent was not found
+		log_->print_debug(Logging::Error) << "[DmpcInterface::set_initialState]: "
+			<< "Agent " << agent_id << " is not registered. " << std::endl;
+	}
 }

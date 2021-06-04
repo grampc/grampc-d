@@ -53,6 +53,8 @@ namespace dmpc
 		void set_desiredAgentState(int agent_id, std::vector<typeRNum> x_des, std::vector<typeRNum> u_des) override;
 		/*De-register an agent.*/
 		void deregister_agent(AgentInfo info) override;
+		/*Set initial state*/
+		void set_initialState(const unsigned int agent_id, const std::vector<typeRNum>& x_init) override;
 
 		/*Register a coupling between agents.*/
 		void register_coupling(CouplingInfo info) override;
