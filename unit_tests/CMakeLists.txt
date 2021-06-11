@@ -8,10 +8,6 @@
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
-include_directories(
-    ${CMAKE_SOURCE_DIR}/libs/sha/src/sha
-)
-
 include(ExternalProject)
 find_package(Git REQUIRED)
 
@@ -32,7 +28,10 @@ add_library(unit_test_handler
     src/file_handler.cpp
 )
 
-target_include_directories(unit_test_handler PUBLIC ${CMAKE_SOURCE_DIR}/grampcd/include)
+target_include_directories(unit_test_handler PUBLIC
+    include
+    ${CMAKE_SOURCE_DIR}/grampcd/include
+    ${CMAKE_SOURCE_DIR}/libs/sha/src/sha)
 
 target_link_libraries(unit_test_handler
     grampcd
