@@ -10,14 +10,14 @@
  *
  */
 
-#include "dmpc/util/logging.hpp"
+#include "grampcd/util/logging.hpp"
 
 #include "unit_tests/checksum_handler.hpp"
 #include "unit_tests/file_handler.hpp"
 
 int main(int argc, char* argv[]) 
 {
-	const auto log = std::make_shared<dmpc::Logging>();
+	const auto log = std::make_shared<grampcd::Logging>();
 	unit_test::ChecksumHandler checksumHandler(log);
 
 	checksumHandler.add_unit_test("coupled_watertanks");

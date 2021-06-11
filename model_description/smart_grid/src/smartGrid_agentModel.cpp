@@ -16,7 +16,7 @@ SmartGridAgentModel::SmartGridAgentModel(
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
 	const std::string& name,
-	const dmpc::LoggingPtr& log)
+	const grampcd::LoggingPtr& log)
 	: AgentModel(2, 1, 0, 0, { -1e6 }, { 1e6 },
 		model_parameters,
 		cost_parameters,
@@ -36,13 +36,13 @@ SmartGridAgentModel::SmartGridAgentModel(
 	R_.push_back(cost_parameters[4]); // integral control weight
 }
 
-dmpc::AgentModelPtr SmartGridAgentModel::create(
+grampcd::AgentModelPtr SmartGridAgentModel::create(
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
 	const std::string& name,
-	const dmpc::LoggingPtr& log)
+	const grampcd::LoggingPtr& log)
 {
-	return dmpc::AgentModelPtr(new SmartGridAgentModel(model_parameters, cost_parameters, name, log));
+	return grampcd::AgentModelPtr(new SmartGridAgentModel(model_parameters, cost_parameters, name, log));
 }
 
 void SmartGridAgentModel::ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u)

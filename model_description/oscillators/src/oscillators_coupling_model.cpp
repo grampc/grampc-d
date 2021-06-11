@@ -27,7 +27,7 @@ OscillatorsCouplingModel::OscillatorsCouplingModel
 	c_ = model_parameters[1]; // pipe area
 }
 
-dmpc::CouplingModelPtr OscillatorsCouplingModel::create
+grampcd::CouplingModelPtr OscillatorsCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

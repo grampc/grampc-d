@@ -30,7 +30,7 @@ SSMS2DCouplingModel::SSMS2DCouplingModel
 	dmin = 0.2;
 }
 
-dmpc::CouplingModelPtr SSMS2DCouplingModel::create
+grampcd::CouplingModelPtr SSMS2DCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

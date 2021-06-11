@@ -30,7 +30,7 @@ VDPSynchronizeCouplingModel::VDPSynchronizeCouplingModel
 	Q_ = cost_parameters[0];
 }
 
-dmpc::CouplingModelPtr VDPSynchronizeCouplingModel::create
+grampcd::CouplingModelPtr VDPSynchronizeCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

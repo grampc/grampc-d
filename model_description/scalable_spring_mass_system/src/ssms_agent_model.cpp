@@ -16,7 +16,7 @@ SSMSAgentModel::SSMSAgentModel(
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
 	const std::string& name,
-	const dmpc::LoggingPtr& log)
+	const grampcd::LoggingPtr& log)
 	: AgentModel(2, 1, 0, 0, { -100 }, { 100 },
 		model_parameters,
 		cost_parameters,
@@ -33,11 +33,11 @@ SSMSAgentModel::SSMSAgentModel(
 	R_.push_back(cost_parameters[4]);
 }
 
-dmpc::AgentModelPtr SSMSAgentModel::create(
+grampcd::AgentModelPtr SSMSAgentModel::create(
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
 	const std::string& name,
-	const dmpc::LoggingPtr& log)
+	const grampcd::LoggingPtr& log)
 {
 	return std::shared_ptr<AgentModel>(new SSMSAgentModel(model_parameters, cost_parameters, name, log));
 }

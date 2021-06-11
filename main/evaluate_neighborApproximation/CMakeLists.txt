@@ -9,4 +9,4 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(evaluate_neighborApproximation evaluate_neighborApproximation.cpp)
-target_link_libraries(evaluate_neighborApproximation dmpc)
+target_link_libraries(evaluate_neighborApproximation grampcd)

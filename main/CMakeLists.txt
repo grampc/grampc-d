@@ -8,6 +8,8 @@
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
+include_directories(${CMAKE_SOURCE_DIR}/grampcd/include)
+
 add_subdirectory(evaluate_neighborApproximation)
 add_subdirectory(distributed_optimization)
 add_subdirectory(endless_mode)

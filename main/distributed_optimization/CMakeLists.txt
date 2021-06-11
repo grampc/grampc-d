@@ -9,13 +9,13 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(distributed_optimization_coordinator coordinator.cpp)
-target_link_libraries(distributed_optimization_coordinator dmpc)
+target_link_libraries(distributed_optimization_coordinator grampcd)
 
 add_executable(distributed_optimization_agent0 agent0.cpp)
-target_link_libraries(distributed_optimization_agent0 dmpc)
+target_link_libraries(distributed_optimization_agent0 grampcd)
 
 add_executable(distributed_optimization_agent1 agent1.cpp)
-target_link_libraries(distributed_optimization_agent1 dmpc)
+target_link_libraries(distributed_optimization_agent1 grampcd)
 
 add_executable(distributed_optimization_agent2 agent2.cpp)
-target_link_libraries(distributed_optimization_agent2 dmpc)
+target_link_libraries(distributed_optimization_agent2 grampcd)

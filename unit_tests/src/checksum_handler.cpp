@@ -21,7 +21,7 @@
 
 namespace unit_test
 {
-	ChecksumHandler::ChecksumHandler(const std::shared_ptr<dmpc::Logging>& log) : log_(log) 
+	ChecksumHandler::ChecksumHandler(const std::shared_ptr<grampcd::Logging>& log) : log_(log) 
 	{
 	};
 
@@ -53,7 +53,7 @@ namespace unit_test
 		// check if file is successfully opened
 		if (!file_including_checksums->is_open())
 		{
-			log_->print(dmpc::DebugType::Error) << "[ChecksumHandler::open_file_including_checksums]: "
+			log_->print(grampcd::DebugType::Error) << "[ChecksumHandler::open_file_including_checksums]: "
 				<< "Error: file 'referenceChecksums.csv' not found at " << PATH_REFERENCE_CHECKSUMS_ << std::endl;
 			return nullptr;
 		}
@@ -65,7 +65,7 @@ namespace unit_test
 		std::ifstream file_to_read_to_string(SIM_DIR_ + filename);
 		if (!file_to_read_to_string.is_open())
 		{
-			log_->print(dmpc::DebugType::Error) << "[ChecksumHandler::read_file_to_string]: "
+			log_->print(grampcd::DebugType::Error) << "[ChecksumHandler::read_file_to_string]: "
 				<< "Error: file '" << filename << "' cannot be opened at " << SIM_DIR_ + filename << std::endl;
 			return nullptr;
 		}
@@ -89,7 +89,7 @@ namespace unit_test
 		auto file_content = read_file_to_string(filename);
 		if (file_content == nullptr)
 		{
-			log_->print(dmpc::DebugType::Error) << "[ChecksumHandler::generate_checksum]: "
+			log_->print(grampcd::DebugType::Error) << "[ChecksumHandler::generate_checksum]: "
 				<< "Error: cannot generate checksum for file '" << filename << "' because reading the file failed." << std::endl;
 			return "";
 		}
@@ -108,7 +108,7 @@ namespace unit_test
 		// check if file was found
 		if (file_including_checksums == nullptr)
 		{
-			log_->print(dmpc::DebugType::Error) << "File including the reference checksums "
+			log_->print(grampcd::DebugType::Error) << "File including the reference checksums "
 				<< "could not be opened." << std::endl;
 			return nullptr;
 		}
@@ -161,7 +161,7 @@ namespace unit_test
 		// check if names are successfully read
 		if (!sucessful_read)
 		{
-			log_->print(dmpc::DebugType::Error) << "[ChecksumHandler::get_reference_checksums]: File for executable '" + name + "' not found";
+			log_->print(grampcd::DebugType::Error) << "[ChecksumHandler::get_reference_checksums]: File for executable '" + name + "' not found";
 			file_including_checksums->close();
 			return nullptr;
 		}
@@ -233,14 +233,14 @@ namespace unit_test
 
 		//if there is already an entry for that simulation, ask user what to do
 		if (linesOfSimEntry->first > 0) {
-			log_->print(dmpc::DebugType::Base) << "There is already a entry for \"" << nameOfSimExecutable
+			log_->print(grampcd::DebugType::Base) << "There is already a entry for \"" << nameOfSimExecutable
 				<< "\"\nWhat do you want to do?\nc = cancel (will stop the whole executable)\ns"
 				<< "= skip (will skip this operation, but continue the program)\nu = update entry"
 				<< " (will run the simulation and update the entry files with the new data)" << std::endl;
 			char input_option;
 
 			while (std::cin >> input_option, input_option != 'c' && input_option != 's' && input_option != 'u')
-				log_->print(dmpc::DebugType::Base) << "unknown option. Please choose c (cancel), s (skip) or u (update)" << std::endl;
+				log_->print(grampcd::DebugType::Base) << "unknown option. Please choose c (cancel), s (skip) or u (update)" << std::endl;
 
 			if (input_option == 'c')
 				std::exit(EXIT_FAILURE);
@@ -249,7 +249,7 @@ namespace unit_test
 			//if input_option is u, resume with program
 		}
 
-		log_->print(dmpc::DebugType::Base) << "running simulation " << nameOfSimExecutable << std::endl;
+		log_->print(grampcd::DebugType::Base) << "running simulation " << nameOfSimExecutable << std::endl;
 
 		//remove all .txt files before running simulation to make sure that there are no old simulation files  
 		FileHandler::remove_text_files(".");
@@ -284,7 +284,7 @@ namespace unit_test
 			//check if opening file was successful
 			if (!referenceChecksums_file.is_open())
 			{
-				log_->print(dmpc::DebugType::Error) << "[ChecksumHandler::addUnitTest]: "
+				log_->print(grampcd::DebugType::Error) << "[ChecksumHandler::addUnitTest]: "
 					<< "ReferenceChecksums.csv could not be opened. Path: " << PATH_REFERENCE_CHECKSUMS_ << std::endl;
 				return;
 			}
@@ -294,7 +294,7 @@ namespace unit_test
 			referenceChecksums_file.close();
 		}
 
-		log_->print(dmpc::DebugType::Base) << std::endl;
+		log_->print(grampcd::DebugType::Base) << std::endl;
 	}
 
 	//returns the number of the line containing the string <entry_name>

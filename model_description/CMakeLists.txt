@@ -8,6 +8,8 @@
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
+include_directories(${CMAKE_SOURCE_DIR}/grampcd/include)
+
 add_library(factory
 	"general_model_factory.cpp"
 
@@ -35,7 +37,9 @@ add_library(factory
 	smart_grid/src/smartGrid_couplingModel.cpp
 )
 
-target_link_libraries(factory dmpc)
+target_include_directories(factory PUBLIC include)
+
+target_link_libraries(factory grampcd)
 
 include_directories(water_tank)
 

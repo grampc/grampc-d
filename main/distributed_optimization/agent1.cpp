@@ -10,12 +10,12 @@
  *
  */
 
-#include "dmpc/interface/dmpc_interface.hpp"
+#include "grampcd/interface/dmpc_interface.hpp"
 
 int main(int argc, char** argv)
 {
 	// create interface
-	const auto interface = std::make_shared<dmpc::DmpcInterface>();
+	const auto interface = std::make_shared<grampcd::DmpcInterface>();
 
 	// show logging
 	interface->set_print_message(true);

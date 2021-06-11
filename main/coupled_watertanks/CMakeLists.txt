@@ -9,4 +9,4 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(coupled_watertanks coupled_watertanks.cpp)
-target_link_libraries(coupled_watertanks dmpc)
+target_link_libraries(coupled_watertanks grampcd)

@@ -9,4 +9,4 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(high_scaled_system high_scaled_system.cpp)
-target_link_libraries(high_scaled_system dmpc)
+target_link_libraries(high_scaled_system grampcd)

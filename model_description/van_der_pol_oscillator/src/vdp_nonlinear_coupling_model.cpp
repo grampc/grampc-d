@@ -26,7 +26,7 @@ VDPNonlinearCouplingModel::VDPNonlinearCouplingModel
 	p1_ = model_parameters[0];
 }
 
-dmpc::CouplingModelPtr VDPNonlinearCouplingModel::create
+grampcd::CouplingModelPtr VDPNonlinearCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

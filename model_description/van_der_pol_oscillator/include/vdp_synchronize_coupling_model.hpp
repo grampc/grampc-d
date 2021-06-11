@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "dmpc/model/coupling_model.hpp"
+#include "grampcd/model/coupling_model.hpp"
 
-class VDPSynchronizeCouplingModel : public dmpc::CouplingModel
+class VDPSynchronizeCouplingModel : public grampcd::CouplingModel
 {
 public:
 	VDPSynchronizeCouplingModel
@@ -24,7 +24,7 @@ public:
 		const std::string& name
 	);
 
-	static dmpc::CouplingModelPtr create
+	static grampcd::CouplingModelPtr create
 	(
 		const std::vector<typeRNum>& model_parameters,
 		const std::vector<typeRNum>& cost_parameters,

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "dmpc/model/agent_model.hpp"
+#include "grampcd/model/agent_model.hpp"
 
-#include "dmpc/util/logging.hpp"
+#include "grampcd/util/logging.hpp"
 
-class VDPAgentModel : public dmpc::AgentModel
+class VDPAgentModel : public grampcd::AgentModel
 {
 public:
 	VDPAgentModel
@@ -24,15 +24,15 @@ public:
 		const std::vector<typeRNum>& model_parameters,
 		const std::vector<typeRNum>& cost_parameters,
 		const std::string& name,
-		const dmpc::LoggingPtr& log
+		const grampcd::LoggingPtr& log
 	);
 
-	static dmpc::AgentModelPtr create
+	static grampcd::AgentModelPtr create
 	(
 		const std::vector<typeRNum>& model_parameters,
 		const std::vector<typeRNum>& cost_parameters,
 		const std::string& name,
-		const dmpc::LoggingPtr& log
+		const grampcd::LoggingPtr& log
 	);
 
 	virtual void ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u) override;

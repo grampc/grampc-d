@@ -9,10 +9,10 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(endless_mode_coordinator coordinator.cpp)
-target_link_libraries(endless_mode_coordinator dmpc)
+target_link_libraries(endless_mode_coordinator grampcd)
 
 add_executable(endless_mode_agent0 agent0.cpp)
-target_link_libraries(endless_mode_agent0 dmpc)
+target_link_libraries(endless_mode_agent0 grampcd)
 
 add_executable(endless_mode_agent1 agent1.cpp)
-target_link_libraries(endless_mode_agent1 dmpc)
+target_link_libraries(endless_mode_agent1 grampcd)

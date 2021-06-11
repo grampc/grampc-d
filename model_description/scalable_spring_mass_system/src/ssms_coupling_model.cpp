@@ -28,7 +28,7 @@ SSMSCouplingModel::SSMSCouplingModel
 	p2_ = model_parameters[1]; // c
 }
 
-dmpc::CouplingModelPtr SSMSCouplingModel::create
+grampcd::CouplingModelPtr SSMSCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

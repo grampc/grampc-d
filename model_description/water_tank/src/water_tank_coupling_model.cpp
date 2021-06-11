@@ -41,7 +41,7 @@ WaterTankCouplingModel::WaterTankCouplingModel
 	poly_param2_ = dqdeps / (2 * eps_ * eps_) - q / (2 * eps_ * eps_ * eps_);
 }
 
-dmpc::CouplingModelPtr WaterTankCouplingModel::create
+grampcd::CouplingModelPtr WaterTankCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

@@ -34,14 +34,14 @@ SmartGridCouplingModel::SmartGridCouplingModel
 	P_max_ij_ = model_parameters[2];
 }
 
-dmpc::CouplingModelPtr SmartGridCouplingModel::create
+grampcd::CouplingModelPtr SmartGridCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
 	const std::string& name
 )
 {
-	return dmpc::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, cost_parameters, name));
+	return grampcd::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, cost_parameters, name));
 }
 
 void SmartGridCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)

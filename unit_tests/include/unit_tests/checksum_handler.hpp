@@ -16,9 +16,9 @@
 #include <map>
 #include <string>
 #include <memory>
-#include "dmpc/util/types.hpp"
+#include "grampcd/util/types.hpp"
 
-#include "dmpc/util/logging.hpp"
+#include "grampcd/util/logging.hpp"
 
 namespace unit_test 
 {
@@ -33,7 +33,7 @@ namespace unit_test
 		};
 
 		// constructor initializes Logging
-		ChecksumHandler(const std::shared_ptr<dmpc::Logging>&);
+		ChecksumHandler(const std::shared_ptr<grampcd::Logging>&);
 
 		// returns a map of reference data; the keys are the solution file names of the given simulation, 
 		// the values are the reference checksums of the according simulation files
@@ -58,7 +58,7 @@ namespace unit_test
 		void add_unit_test(const std::string& executableName) const;
 
 	private:
-		const std::shared_ptr<dmpc::Logging> log_;
+		const std::shared_ptr<grampcd::Logging> log_;
 
 		//path relative to bin
 		const std::string PATH_REFERENCE_CHECKSUMS_ = "../unit_tests/referenceChecksums.csv";

@@ -9,4 +9,4 @@
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
 add_executable(plug-and-play plug-and-play.cpp)
-target_link_libraries(plug-and-play dmpc)
+target_link_libraries(plug-and-play grampcd)

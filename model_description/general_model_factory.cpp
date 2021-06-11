@@ -12,11 +12,11 @@
 
 #include "general_model_factory.hpp"
 
-#include "dmpc/info/agent_info.hpp"
-#include "dmpc/info/coupling_info.hpp"
+#include "grampcd/info/agent_info.hpp"
+#include "grampcd/info/coupling_info.hpp"
 
-#include "dmpc/model/agent_model.hpp"
-#include "dmpc/model/coupling_model.hpp"
+#include "grampcd/model/agent_model.hpp"
+#include "grampcd/model/coupling_model.hpp"
 
 #include "water_tank/include/water_tank_agent_model.hpp"
 #include "water_tank/include/water_tank_coupling_model.hpp"
@@ -41,7 +41,7 @@
 #include "smart_grid/include/smartGrid_agentModel.hpp"
 #include "smart_grid/include/smartGrid_couplingModel.hpp"
 
-GeneralModelFactory::GeneralModelFactory(const dmpc::LoggingPtr& log) :
+GeneralModelFactory::GeneralModelFactory(const grampcd::LoggingPtr& log) :
 	log_(log)
 {
 	map_agentModels_["vdp_agentModel"] = VDPAgentModel::create;
@@ -68,22 +68,22 @@ GeneralModelFactory::GeneralModelFactory(const dmpc::LoggingPtr& log) :
 	map_couplingModels_["smartGrid_couplingModel"] = SmartGridCouplingModel::create;
 }
 
-dmpc::AgentModelPtr GeneralModelFactory::create_agentModel(const dmpc::AgentInfo& info) const
+grampcd::AgentModelPtr GeneralModelFactory::create_agentModel(const grampcd::AgentInfo& info) const
 {
 	auto iterator = map_agentModels_.find(info.model_name_);
 
 	if (iterator == map_agentModels_.end())
-		log_->print(dmpc::DebugType::Error) << "Invalid model name '" << info.model_name_ << "'" << std::endl;
+		log_->print(grampcd::DebugType::Error) << "Invalid model name '" << info.model_name_ << "'" << std::endl;
 
 	return (*(iterator->second))(info.model_parameters_, info.cost_parameters_, info.model_name_, log_);
 }
 
-dmpc::CouplingModelPtr GeneralModelFactory::create_couplingModel(const dmpc::CouplingInfo& info) const
+grampcd::CouplingModelPtr GeneralModelFactory::create_couplingModel(const grampcd::CouplingInfo& info) const
 {
 	auto iterator = map_couplingModels_.find(info.model_name_);
 
 	if (iterator == map_couplingModels_.end())
-		log_->print(dmpc::DebugType::Error) << "Invalid model name '" << info.model_name_ << "'" << std::endl;
+		log_->print(grampcd::DebugType::Error) << "Invalid model name '" << info.model_name_ << "'" << std::endl;
 
 	return (*(iterator->second))(info.model_parameters_, info.cost_parameters_, info.model_name_);
 }

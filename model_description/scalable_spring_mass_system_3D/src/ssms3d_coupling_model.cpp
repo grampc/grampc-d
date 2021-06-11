@@ -29,7 +29,7 @@ SSMS3DCouplingModel::SSMS3DCouplingModel
     d0_ = 1;
 }
 
-dmpc::CouplingModelPtr SSMS3DCouplingModel::create
+grampcd::CouplingModelPtr SSMS3DCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,

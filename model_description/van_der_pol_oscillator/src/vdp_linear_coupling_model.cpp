@@ -26,7 +26,7 @@ VDPLinearCouplingModel::VDPLinearCouplingModel
 	p1_ = model_parameters[0];
 }
 
-dmpc::CouplingModelPtr VDPLinearCouplingModel::create
+grampcd::CouplingModelPtr VDPLinearCouplingModel::create
 (
 	const std::vector<typeRNum>& model_parameters,
 	const std::vector<typeRNum>& cost_parameters,
