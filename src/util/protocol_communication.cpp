@@ -133,9 +133,13 @@ namespace dmpc
             communication_interface->fromCommunication_send_couplingModel(comm_data, ProtocolCommunication::buildFromProtocol_couplingModel(data, communication_interface->get_log()));
             break;
         case index::send_simulatedState:
-            communication_interface->fromCommunication_send_simulatedState(comm_data, ProtocolCommunication::buildFromProtocol_xnext_from_simulatedState(data),
+            communication_interface->fromCommunication_send_simulatedState
+            (
+                comm_data, ProtocolCommunication::buildFromProtocol_xnext_from_simulatedState(data),
                 ProtocolCommunication::buildFromProtocol_dt_from_simulatedState(data),
-                ProtocolCommunication::buildFromProtocol_t0_from_simulatedState(data));
+				ProtocolCommunication::buildFromProtocol_t0_from_simulatedState(data),
+				ProtocolCommunication::buildFromProtocol_cost_from_simulatedState(data)
+            );
             break;
         case index::get_desiredAgentStateFromAgent:
             communication_interface->fromCommunication_get_desiredAgentStateFromAgent(comm_data);
@@ -374,7 +378,13 @@ namespace dmpc
         return data;
     }
 
-    const std::shared_ptr< std::vector<char> > ProtocolCommunication::buildProtocol_send_simulatedState(const std::vector<typeRNum>& x_next, typeRNum dt, typeRNum t0)
+    const std::shared_ptr< std::vector<char> > ProtocolCommunication::buildProtocol_send_simulatedState
+    (
+        const std::vector<typeRNum>& x_next, 
+        typeRNum dt, 
+        typeRNum t0,
+        typeRNum cost
+    )
     {
         const char index = static_cast<char>(index::send_simulatedState);
 		unsigned int pos = 0;
@@ -386,7 +396,9 @@ namespace dmpc
                 // dt
                 + sizeof(typeRNum)
                 // t0
-                + sizeof(typeRNum));
+				+ sizeof(typeRNum)
+				// cost
+				+ sizeof(typeRNum));
 
         std::shared_ptr< std::vector<char> > data(new std::vector<char>(size_of_data, 0));
 
@@ -401,7 +413,9 @@ namespace dmpc
         //dt
         DataConversion::insert_into_charArray(data, pos, dt);
         // t0
-        DataConversion::insert_into_charArray(data, pos, t0);
+		DataConversion::insert_into_charArray(data, pos, t0);
+		// cost
+		DataConversion::insert_into_charArray(data, pos, cost);
 
         return data;
     }
@@ -1194,7 +1208,26 @@ namespace dmpc
         typeRNum dt = 0;
         DataConversion::read_from_charArray(data, pos, dt);
         return dt;
-    }
+	}
+
+	const typeRNum ProtocolCommunication::buildFromProtocol_cost_from_simulatedState(const std::vector<char>& data)
+	{
+		unsigned int pos = static_cast<char>(first_element_with_data_);
+
+		// skip xnext
+		DataConversion::skip_in_charArray_vecTypeRNum(data, pos);
+
+		// skip dt
+		DataConversion::skip_in_charArray_typeRNum(data, pos);
+
+		// skip t0
+		DataConversion::skip_in_charArray_typeRNum(data, pos);
+
+		// read cost
+		typeRNum cost = 0;
+		DataConversion::read_from_charArray(data, pos, cost);
+		return cost;
+	}
 
     const std::shared_ptr< std::vector<typeRNum> > ProtocolCommunication::buildFromProtocol_xnext_from_simulatedState(const std::vector<char>& data)
     {

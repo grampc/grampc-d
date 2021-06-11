@@ -340,9 +340,16 @@ void CommunicationInterfaceCentral::trigger_simulation(const std::string& Integr
     simulator_->distributed_simulation(Integrator, dt);
 }
 
-void CommunicationInterfaceCentral::set_simulatedState_for_agent(const int agentId, const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0)
+void CommunicationInterfaceCentral::set_simulatedState_for_agent
+(
+    const int agentId, 
+    const std::vector<typeRNum>& new_state, 
+    const typeRNum dt, 
+	const typeRNum t0,
+	const typeRNum cost
+)
 {
-    agents_[ agentId ]->set_updatedState( new_state, dt, t0 );
+    agents_[ agentId ]->set_updatedState( new_state, dt, t0, cost);
 }
 
 const SolutionPtr CommunicationInterfaceCentral::get_solution(const unsigned int agent_id) const

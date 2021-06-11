@@ -159,6 +159,13 @@ namespace dmpc
 
             interpolateState(agent->get_desiredAgentState(), t, desired_);
             agent->get_agentModel()->lfct(out, t, x + x_index_[i], u + u_index_[i], &desired_.x_[0]);
+
+            for (const auto& neighbor : agent->get_sendingNeighbors())
+            {
+                const unsigned int j = neighbor->get_id();
+
+                neighbor->get_couplingModel()->lfct(out, t, x + x_index_[i], u + u_index_[i], x + x_index_[j], u + u_index_[j]);
+            }
         }
     }
 
@@ -170,7 +177,16 @@ namespace dmpc
             const unsigned int i = agent->get_id();
 
             interpolateState(agent->get_desiredAgentState(), t, desired_);
-            agent->get_agentModel()->dldx(out + x_index_[i], t, x + x_index_[i], u + u_index_[i], &desired_.x_[0]);
+			agent->get_agentModel()->dldx(out + x_index_[i], t, x + x_index_[i], u + u_index_[i], &desired_.x_[0]);
+
+			for (const auto& neighbor : agent->get_sendingNeighbors())
+			{
+				const unsigned int j = neighbor->get_id();
+
+				neighbor->get_couplingModel()->dldxi(out + x_index_[i], t, x + x_index_[i], u + u_index_[i], x + x_index_[j], u + u_index_[j]);
+
+				neighbor->get_couplingModel()->dldxj(out + x_index_[j], t, x + x_index_[i], u + u_index_[i], x + x_index_[j], u + u_index_[j]);
+			}
         }
     }
 
@@ -182,7 +198,16 @@ namespace dmpc
             const unsigned int i = agent->get_id();
 
             interpolateState(agent->get_desiredAgentState(), t, desired_);
-            agent->get_agentModel()->dldu(out + u_index_[i], t, x + x_index_[i], u + u_index_[i], &desired_.x_[0]);
+			agent->get_agentModel()->dldu(out + u_index_[i], t, x + x_index_[i], u + u_index_[i], &desired_.x_[0]);
+
+			for (const auto& neighbor : agent->get_sendingNeighbors())
+			{
+				const unsigned int j = neighbor->get_id();
+
+				neighbor->get_couplingModel()->dldui(out + u_index_[i], t, x + x_index_[i], u + u_index_[i], x + x_index_[j], u + u_index_[j]);
+
+				neighbor->get_couplingModel()->dlduj(out + u_index_[j], t, x + x_index_[i], u + u_index_[i], x + x_index_[j], u + u_index_[j]);
+			}
         }
     }
 
@@ -194,7 +219,14 @@ namespace dmpc
             const unsigned int i = agent->get_id();
 
             interpolateState(agent->get_desiredAgentState(), t, desired_);
-            agent->get_agentModel()->Vfct(out, t, x + x_index_[i], &desired_.x_[0]);
+			agent->get_agentModel()->Vfct(out, t, x + x_index_[i], &desired_.x_[0]);
+
+			for (const auto& neighbor : agent->get_sendingNeighbors())
+			{
+				const unsigned int j = neighbor->get_id();
+
+				neighbor->get_couplingModel()->Vfct(out, t, x + x_index_[i], x + x_index_[j]);
+			}
         }
     }
 
@@ -206,7 +238,16 @@ namespace dmpc
             const unsigned int i = agent->get_id();
 
             interpolateState(agent->get_desiredAgentState(), t, desired_);
-            agent->get_agentModel()->dVdx(out + x_index_[i], t, x + x_index_[i], &desired_.x_[0]);
+			agent->get_agentModel()->dVdx(out + x_index_[i], t, x + x_index_[i], &desired_.x_[0]);
+
+			for (const auto& neighbor : agent->get_sendingNeighbors())
+			{
+				const unsigned int j = neighbor->get_id();
+
+				neighbor->get_couplingModel()->dVdxi(out + x_index_[i], t, x + x_index_[i], x + x_index_[j]);
+
+				neighbor->get_couplingModel()->dVdxj(out + x_index_[j], t, x + x_index_[i], x + x_index_[j]);
+			}
         }
     }
 

@@ -108,7 +108,14 @@ namespace dmpc
 		const std::shared_ptr< std::map<int, CouplingModelPtr> > get_couplingModels_from_agent(const int agentId) const override;
 
 		/*Set simulated state of an agent.*/
-		void set_simulatedState_for_agent(const int agentId, const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0) override;
+		void set_simulatedState_for_agent
+		(
+			const int agentId, 
+			const std::vector<typeRNum>& new_state, 
+			const typeRNum dt, 
+			const typeRNum t0,
+			const typeRNum cost
+		) override;
 		/*Returns the current solution of an agent.*/
 		const SolutionPtr get_solution(const unsigned int agent_id) const override;
 		/*Return the current solution of a set of agents.*/
@@ -172,7 +179,14 @@ namespace dmpc
 		/*This function is called if agent state for simulation is received.*/
 		void fromCommunication_send_agentState_for_simulation(const CommunicationDataPtr& comm_data, const dmpc::AgentStatePtr& state) const;
 		/*This function is called if simulated state is received.*/
-		void fromCommunication_send_simulatedState(const CommunicationDataPtr& comm_data, const std::shared_ptr< std::vector<typeRNum> >& x_next, const typeRNum dt, const typeRNum t0);
+		void fromCommunication_send_simulatedState
+		(
+			const CommunicationDataPtr& comm_data, 
+			const std::shared_ptr< std::vector<typeRNum> >& x_next, 
+			const typeRNum dt, 
+			const typeRNum t0,
+			const typeRNum cost
+		);
 		/*This function is called if requirement for agent state is received.*/
 		void fromCommunication_get_desiredAgentStateFromAgent(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if coupling state is received.*/

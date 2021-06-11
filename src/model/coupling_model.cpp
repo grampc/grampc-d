@@ -16,7 +16,8 @@ namespace dmpc
 {
 
     CouplingModel::CouplingModel(unsigned int Nxi, unsigned int Nui, unsigned int Nxj, unsigned int Nuj, unsigned int Ngij, unsigned int Nhij,
-                                 const std::vector<typeRNum>& model_parameters,
+		const std::vector<typeRNum>& model_parameters,
+		const std::vector<typeRNum>& cost_parameters,
                                  const std::string& model_name)
         : Nxi_(Nxi), Nui_(Nui), Nxj_(Nxj), Nuj_(Nuj), Ngij_(Ngij), Nhij_(Nhij),
           model_parameters_(model_parameters),

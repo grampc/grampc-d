@@ -266,7 +266,8 @@ namespace dmpc
 			.def_readwrite("agent_id_", &CouplingInfo::agent_id_)
 			.def_readwrite("neighbor_id_", &CouplingInfo::neighbor_id_)
 			.def_readwrite("model_name_", &CouplingInfo::model_name_)
-			.def_readwrite("model_parameters_", &CouplingInfo::model_parameters_);
+			.def_readwrite("model_parameters_", &CouplingInfo::model_parameters_)
+			.def_readwrite("cost_parameters_", &CouplingInfo::cost_parameters_);
 
 		py::class_<CommunicationInfo>(m, "CommunicationInfo")
 			.def(py::init<>())

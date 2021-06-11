@@ -8,12 +8,5 @@
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
-add_subdirectory(evaluate_neighborApproximation)
-add_subdirectory(distributed_optimization)
-add_subdirectory(endless_mode)
-add_subdirectory(high_scaled_system)
-add_subdirectory(plug-and-play)
-add_subdirectory(coupled_watertanks)
-add_subdirectory(coupled_cost_functions)
-
-
+add_executable(coupled_cost_functions coupled_cost_functions.cpp)
+target_link_libraries(coupled_cost_functions dmpc)

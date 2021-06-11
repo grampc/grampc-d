@@ -80,7 +80,14 @@ namespace dmpc
         virtual const std::shared_ptr< std::map<int, CouplingModelPtr> > get_couplingModels_from_agent(const int agentId ) const = 0;
 
         /*Set simulated state of an agent.*/
-        virtual void set_simulatedState_for_agent( const int agentId, const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0 ) = 0;
+        virtual void set_simulatedState_for_agent
+        ( 
+            const int agentId, 
+            const std::vector<typeRNum>& new_state, 
+            const typeRNum dt, 
+			const typeRNum t0,
+			const typeRNum cost
+        ) = 0;
         /*Returns the current solution of an agent.*/
 	    virtual const SolutionPtr get_solution(const unsigned int agent_id) const = 0;
         /*Return the current solution of a set of agents.*/

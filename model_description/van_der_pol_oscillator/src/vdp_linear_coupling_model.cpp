@@ -12,17 +12,28 @@
 
 #include "../include/vdp_linear_coupling_model.hpp"
 
-VDPLinearCouplingModel::VDPLinearCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
+VDPLinearCouplingModel::VDPLinearCouplingModel
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 	: CouplingModel(2, 1, 2, 1, 0, 0,
 		model_parameters,
+		cost_parameters,
 		name)
 {
 	p1_ = model_parameters[0];
 }
 
-dmpc::CouplingModelPtr VDPLinearCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
+dmpc::CouplingModelPtr VDPLinearCouplingModel::create
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 {
-	return std::shared_ptr<CouplingModel>(new VDPLinearCouplingModel(model_parameters, name));
+	return std::shared_ptr<CouplingModel>(new VDPLinearCouplingModel(model_parameters, cost_parameters, name));
 }
 
 void VDPLinearCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
@@ -51,4 +62,44 @@ void VDPLinearCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi,
 void VDPLinearCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
 	out[0] += 0.0;
+}
+
+void VDPLinearCouplingModel::lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void VDPLinearCouplingModel::dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void VDPLinearCouplingModel::dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void VDPLinearCouplingModel::dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void VDPLinearCouplingModel::dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void VDPLinearCouplingModel::Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void VDPLinearCouplingModel::dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void VDPLinearCouplingModel::dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
 }

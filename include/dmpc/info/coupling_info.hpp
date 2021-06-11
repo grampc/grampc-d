@@ -28,7 +28,9 @@ namespace dmpc
         /*Name of the coupling model.*/
         std::string model_name_;
         /*Parameters for the coupling model.*/
-        std::vector<typeRNum> model_parameters_;
+		std::vector<typeRNum> model_parameters_;
+		/*Parameters for the coupling model.*/
+		std::vector<typeRNum> cost_parameters_;
 
         const bool operator== (const CouplingInfo &info) const
         {

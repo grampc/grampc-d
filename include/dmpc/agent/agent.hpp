@@ -125,7 +125,7 @@ namespace dmpc
         const std::shared_ptr< std::map<int, CouplingModelPtr> > get_couplingModels() const;
 
         /*Sets the simulated state.*/
-        void set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0 );
+        void set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0, const typeRNum cost);
 
         /*Returns the agents neighbors.*/
         const std::vector<NeighborPtr>& get_neighbors() const;

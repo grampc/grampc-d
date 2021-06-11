@@ -18,9 +18,15 @@ const int signum(typeRNum a)
 	return (a >= 0) ? 1 : -1;
 }
 
-WaterTankCouplingModel::WaterTankCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
+WaterTankCouplingModel::WaterTankCouplingModel
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 	: CouplingModel(1, 1, 1, 1, 0, 0,
 		model_parameters,
+		cost_parameters,
 		name)
 {
 	Ai_ = model_parameters[0]; // tank area
@@ -35,9 +41,14 @@ WaterTankCouplingModel::WaterTankCouplingModel(const std::vector<typeRNum>& mode
 	poly_param2_ = dqdeps / (2 * eps_ * eps_) - q / (2 * eps_ * eps_ * eps_);
 }
 
-dmpc::CouplingModelPtr WaterTankCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
+dmpc::CouplingModelPtr WaterTankCouplingModel::create
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 {
-	return std::shared_ptr<CouplingModel>(new WaterTankCouplingModel(model_parameters, name));
+	return std::shared_ptr<CouplingModel>(new WaterTankCouplingModel(model_parameters, cost_parameters, name));
 }
 
 void WaterTankCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
@@ -76,4 +87,44 @@ void WaterTankCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi,
 void WaterTankCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
 	out[0] += 0.0;
+}
+
+void WaterTankCouplingModel::lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void WaterTankCouplingModel::dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void WaterTankCouplingModel::dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void WaterTankCouplingModel::dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void WaterTankCouplingModel::dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void WaterTankCouplingModel::Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void WaterTankCouplingModel::dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void WaterTankCouplingModel::dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
 }

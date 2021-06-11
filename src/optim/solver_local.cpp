@@ -21,6 +21,7 @@
 
 #include "dmpc/util/logging.hpp"
 
+#include <cmath>
 #include <algorithm>
 
 namespace dmpc
@@ -528,17 +529,11 @@ namespace dmpc
 		    const CouplingState& coupling = agent_->get_couplingState();
 
 		    for ( k = 0; k < coupling.z_x_.size(); ++k)
-		    {
-			    primal_residuum += (coupling.z_x_[k] - state.x_[k])
-				    * (coupling.z_x_[k] - state.x_[k]);
-		    }
+                primal_residuum += std::pow(coupling.z_x_[k] - state.x_[k], 2);
 		    cnt += coupling.z_x_.size();
 
-		    for ( k = 0; k < coupling.z_u_.size(); ++k)
-		    {
-			    primal_residuum += (coupling.z_u_[k] - state.u_[k])
-				    * (coupling.z_u_[k] - state.u_[k]);
-		    }
+            for (k = 0; k < coupling.z_u_.size(); ++k)
+                primal_residuum += std::pow(coupling.z_u_[k] - state.u_[k], 2);
 		    cnt += coupling.z_u_.size();
 	    }
 	    for (const auto& neighbor : agent_->get_neighbors())
@@ -548,44 +543,34 @@ namespace dmpc
 			    const AgentState& local_copies = neighbor->get_localCopies();
 			    const CouplingState& neighbors_coupling = neighbor->get_neighbors_couplingState();
 
-			    for ( k = 0; k < neighbors_coupling.z_x_.size(); ++k)
-			    {
-				    primal_residuum += (neighbors_coupling.z_x_[k] - local_copies.x_[k])
-					    * (neighbors_coupling.z_x_[k] - local_copies.x_[k]);
-			    }
+				for (k = 0; k < neighbors_coupling.z_x_.size(); ++k)
+					primal_residuum += std::pow(neighbors_coupling.z_x_[k] - local_copies.x_[k], 2);
 			    cnt += neighbors_coupling.z_x_.size();
 
-			    for ( k = 0; k < neighbors_coupling.z_u_.size(); ++k)
-			    {
-				    primal_residuum += (neighbors_coupling.z_u_[k] - local_copies.u_[k])
-					    * (neighbors_coupling.z_u_[k] - local_copies.u_[k]);
-			    }
+				for (k = 0; k < neighbors_coupling.z_u_.size(); ++k)
+					primal_residuum += std::pow(neighbors_coupling.z_u_[k] - local_copies.u_[k], 2);
 			    cnt += neighbors_coupling.z_u_.size();
 		    }
 		    if (neighbor->is_approximatingDynamics())
 		    {
 			    const CouplingState& ext_infl_coupling = neighbor->get_externalInfluence_couplingState();
 			    const AgentState& ext_infl_state = neighbor->get_externalInfluence_agentState();
-			    for ( k = 0; k < ext_infl_coupling.z_v_.size(); ++k)
-			    {
-				    primal_residuum += (ext_infl_coupling.z_v_[k] - ext_infl_state.v_[k])
-					    * (ext_infl_coupling.z_v_[k] - ext_infl_state.v_[k]);
-			    }
+
+				for (k = 0; k < ext_infl_coupling.z_v_.size(); ++k)
+					primal_residuum += std::pow(ext_infl_coupling.z_v_[k] - ext_infl_state.v_[k], 2);
 			    cnt += ext_infl_coupling.z_v_.size();
 
 			    const CouplingState& neigh_ext_infl_coupling = neighbor->get_neighbors_externalInfluence_couplingState();
 			    const AgentState& local_copies = neighbor->get_localCopies();
-			    for ( k = 0; k < neigh_ext_infl_coupling.z_v_.size(); ++k)
-			    {
-				    primal_residuum += (neigh_ext_infl_coupling.z_v_[k] - local_copies.v_[k])
-					    * (neigh_ext_infl_coupling.z_v_[k] - local_copies.v_[k]);
-			    }
+
+				for (k = 0; k < neigh_ext_infl_coupling.z_v_.size(); ++k)
+					primal_residuum += std::pow(neigh_ext_infl_coupling.z_v_[k] - local_copies.v_[k], 2);
 			    cnt += neigh_ext_infl_coupling.z_v_.size();
 		    }
 	    }
 	    primal_residuum = primal_residuum / cnt;
 
-	    return primal_residuum < (info_.ADMM_ConvergenceTolerance_ * info_.ADMM_ConvergenceTolerance_);
+	    return primal_residuum < std::pow(info_.ADMM_ConvergenceTolerance_, 2);
     }
 
     void SolverLocal::initialize_ADMM()

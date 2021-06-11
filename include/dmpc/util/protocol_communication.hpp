@@ -46,7 +46,12 @@ namespace dmpc
 		static const std::shared_ptr< std::vector<char> > buildProtocol_successfully_deregistered_agent(const AgentInfo& info);
 		static const std::shared_ptr< std::vector<char> > buildProtocol_deregister_coupling(const CouplingInfo& info);
 		static const std::shared_ptr< std::vector<char> > buildProtocol_fromCommunication_deregistered_coupling(const CouplingInfo& info);
-		static const std::shared_ptr< std::vector<char> > buildProtocol_successfully_registered_coupling(const CouplingInfo& coupling_info, const AgentInfo& agent_info, const CommunicationInfo& comm_info);
+		static const std::shared_ptr< std::vector<char> > buildProtocol_successfully_registered_coupling
+		(
+			const CouplingInfo& coupling_info, 
+			const AgentInfo& agent_info, 
+			const CommunicationInfo& comm_info
+		);
 		static const std::shared_ptr< std::vector<char> > buildProtocol_register_coupling(const CouplingInfo& coupling_info);
 
 		// states
@@ -58,7 +63,13 @@ namespace dmpc
 		static const std::shared_ptr< std::vector<char> > buildProtocol_get_desiredAgentState_from_agent();
 		static const std::shared_ptr< std::vector<char> > buildProtocol_send_agentState_for_simulation(const AgentState& state, const int from);
 		static const std::shared_ptr< std::vector<char> > buildProtocol_send_desiredAgentState(const AgentState& state, const int from);
-		static const std::shared_ptr< std::vector<char> > buildProtocol_send_simulatedState(const std::vector<typeRNum>& x_next, typeRNum dt, typeRNum t0);
+		static const std::shared_ptr< std::vector<char> > buildProtocol_send_simulatedState
+		(
+			const std::vector<typeRNum>& x_next, 
+			typeRNum dt, 
+			typeRNum t0,
+			typeRNum cost
+		);
 
 		// acknowledgments
 		static const std::shared_ptr< std::vector<char> > buildProtocol_acknowledge_received_optimizationInfo();
@@ -95,6 +106,7 @@ namespace dmpc
 		static const PenaltyStatePtr buildFromProtocol_penaltyState(const std::vector<char>& data);
 		static const typeRNum buildFromProtocol_t0_from_simulatedState(const std::vector<char>& data);
 		static const typeRNum buildFromProtocol_dt_from_simulatedState(const std::vector<char>& data);
+		static const typeRNum buildFromProtocol_cost_from_simulatedState(const std::vector<char>& data);
 		static const std::shared_ptr< std::vector<typeRNum> > buildFromProtocol_xnext_from_simulatedState(const std::vector<char>& data);
 
 		// models

@@ -24,6 +24,7 @@
 #include "van_der_pol_oscillator/include/vdp_agent_model.hpp"
 #include "van_der_pol_oscillator/include/vdp_linear_coupling_model.hpp"
 #include "van_der_pol_oscillator/include/vdp_nonlinear_coupling_model.hpp"
+#include "van_der_pol_oscillator/include/vdp_synchronize_coupling_model.hpp"
 
 #include "scalable_spring_mass_system/include/ssms_agent_model.hpp"
 #include "scalable_spring_mass_system/include/ssms_coupling_model.hpp"
@@ -46,10 +47,10 @@ GeneralModelFactory::GeneralModelFactory(const dmpc::LoggingPtr& log) :
 	map_agentModels_["vdp_agentModel"] = VDPAgentModel::create;
 	map_couplingModels_["vdp_linear_couplingModel"] = VDPLinearCouplingModel::create;
 	map_couplingModels_["vdp_nonlinear_couplingModel"] = VDPNonlinearCouplingModel::create;
+	map_couplingModels_["vdp_synchronize_couplingModel"] = VDPSynchronizeCouplingModel::create;
 
 	map_agentModels_["water_tank_agentModel"] = WaterTankAgentModel::create;
 	map_couplingModels_["water_tank_couplingModel"] = WaterTankCouplingModel::create;
-	map_couplingModels_["vdp_linear_couplingModel"] = VDPLinearCouplingModel::create;
 
 	map_agentModels_["ssms_agentModel"] = SSMSAgentModel::create;
 	map_couplingModels_["ssms_couplingModel"] = SSMSCouplingModel::create;
@@ -84,5 +85,5 @@ dmpc::CouplingModelPtr GeneralModelFactory::create_couplingModel(const dmpc::Cou
 	if (iterator == map_couplingModels_.end())
 		log_->print(dmpc::DebugType::Error) << "Invalid model name '" << info.model_name_ << "'" << std::endl;
 
-	return (*(iterator->second))(info.model_parameters_, info.model_name_);
+	return (*(iterator->second))(info.model_parameters_, info.cost_parameters_, info.model_name_);
 }

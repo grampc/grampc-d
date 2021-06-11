@@ -775,7 +775,7 @@ namespace dmpc
         }    
     }
 
-    void Agent::set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0)
+    void Agent::set_updatedState(const std::vector<typeRNum>& new_state, const typeRNum dt, const typeRNum t0, const typeRNum cost)
     {
         // shift all states
         shift_states(dt, t0);    
@@ -788,7 +788,7 @@ namespace dmpc
         }
 
         // update solution
-        solution_->update_state(new_state, t0, get_id(), get_predicted_cost());
+        solution_->update_state(new_state, t0, get_id(), cost);
     }
 
     const std::vector<NeighborPtr>& Agent::get_sendingNeighbors() const
@@ -879,14 +879,46 @@ namespace dmpc
 	    typeRNum cost = 0.0;
 
 	    // consider horizon
-	    for (unsigned int i = 0; i < Nhor; ++i)
-		    get_agentModel()->lfct(&cost, agentState_.t_[i], &agentState_.x_[i * Nxi], &agentState_.u_[i * Nui], &desired_agentState_.x_[0]);
+        for (unsigned int i = 0; i < Nhor; ++i)
+        {
+            get_agentModel()->lfct(&cost, agentState_.t_[i], &agentState_.x_[i * Nxi], &agentState_.u_[i * Nui], &desired_agentState_.x_[0]);
+
+            for (const auto& neighbor : get_sendingNeighbors())
+            {
+                const auto Nxj = neighbor->get_Nxj();
+                const auto Nuj = neighbor->get_Nuj();
+                const auto& local_copies = neighbor->get_localCopies();
+
+                neighbor->get_couplingModel()->lfct
+                (
+                    &cost, agentState_.t_[i], 
+                    &agentState_.x_[i * Nxi], 
+                    &agentState_.u_[i * Nui], 
+                    &local_copies.x_[i * Nxj], 
+                    &local_copies.u_[i * Nuj]
+                );
+            }
+        }
 
 	    // multiply sum with timestep
 	    cost *= agentState_.t_[1] - agentState_.t_[0];
 
 	    // consider terminal cost
 	    get_agentModel()->Vfct(&cost, agentState_.t_[Nhor - 1], &agentState_.x_[Nxi * (Nhor - 1)], &desired_agentState_.x_[0]);
+
+		for (const auto& neighbor : get_sendingNeighbors())
+		{
+			const auto Nxj = neighbor->get_Nxj();
+			const auto Nuj = neighbor->get_Nuj();
+			const auto& local_copies = neighbor->get_localCopies();
+
+			neighbor->get_couplingModel()->Vfct
+			(
+				&cost, agentState_.t_[Nhor - 1],
+				&agentState_.x_[(Nhor - 1) * Nxi],
+				&local_copies.x_[(Nhor - 1) * Nxj]
+			);
+		}
 
 	    return cost;
     }

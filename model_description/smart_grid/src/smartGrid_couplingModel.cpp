@@ -18,9 +18,15 @@ template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
 }
 
-SmartGridCouplingModel::SmartGridCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
+SmartGridCouplingModel::SmartGridCouplingModel
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 	: CouplingModel(2, 1, 2, 1, 0, 0,
 		model_parameters,
+		cost_parameters,
 		name)
 {
 	I_ = model_parameters[0]; // inertia
@@ -28,9 +34,14 @@ SmartGridCouplingModel::SmartGridCouplingModel(const std::vector<typeRNum>& mode
 	P_max_ij_ = model_parameters[2];
 }
 
-dmpc::CouplingModelPtr SmartGridCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
+dmpc::CouplingModelPtr SmartGridCouplingModel::create
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 {
-	return dmpc::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, name));
+	return dmpc::CouplingModelPtr(new SmartGridCouplingModel(model_parameters, cost_parameters, name));
 }
 
 void SmartGridCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
@@ -59,4 +70,44 @@ void SmartGridCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi,
 void SmartGridCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
 	out[0] += 0.0;
+}
+
+void SmartGridCouplingModel::lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SmartGridCouplingModel::dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SmartGridCouplingModel::dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SmartGridCouplingModel::dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SmartGridCouplingModel::dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SmartGridCouplingModel::Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void SmartGridCouplingModel::dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void SmartGridCouplingModel::dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
 }

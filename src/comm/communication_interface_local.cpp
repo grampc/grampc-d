@@ -988,7 +988,14 @@ namespace dmpc
         simulator_->distributed_simulation(Integrator, dt);
     }
 
-    void CommunicationInterfaceLocal::set_simulatedState_for_agent(int agentId, const std::vector<typeRNum>& new_state, typeRNum dt, typeRNum t0)
+    void CommunicationInterfaceLocal::set_simulatedState_for_agent
+    (
+        int agentId, 
+        const std::vector<typeRNum>& new_state, 
+        typeRNum dt, 
+		typeRNum t0,
+		const typeRNum cost
+    )
     {
         const auto comm_data = get_communicationData(agentId);
 
@@ -996,7 +1003,7 @@ namespace dmpc
         numberOfNotifications_triggerStep_ = 0;
         ++numberOfNotifications_triggerStep_;
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_simulatedState(new_state, dt, t0));
+        async_send(comm_data, ProtocolCommunication::buildProtocol_send_simulatedState(new_state, dt, t0, cost));
 
         // wait for response
         conditionVariable_triggerStep_.wait_for(guard_triggerStep, std::chrono::seconds(general_waiting_time_s_),
@@ -1055,6 +1062,9 @@ namespace dmpc
 
             // read size of data
             DataConversion::read_from_charArray(comm_data->data_, pos, size_of_data);
+
+            if (size_of_data == 41)
+                bool TEST = true;
 
             // if enough data is read, evaluate it
             if (comm_data->data_.size() >= size_of_data)
@@ -1472,10 +1482,17 @@ namespace dmpc
         async_send(comm_data, ProtocolCommunication::buildProtocol_send_desiredAgentState(agent_->get_desiredAgentState(), agent_->get_id()));
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_simulatedState(const CommunicationDataPtr& comm_data, const std::shared_ptr< std::vector<typeRNum> >& x_next, typeRNum dt, typeRNum t0)
+    void CommunicationInterfaceLocal::fromCommunication_send_simulatedState
+    (
+        const CommunicationDataPtr& comm_data, 
+        const std::shared_ptr< std::vector<typeRNum> >& x_next, 
+        typeRNum dt, 
+        typeRNum t0,
+        typeRNum cost
+    )
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->set_updatedState(*x_next, dt, t0);
+        agent_->set_updatedState(*x_next, dt, t0, cost);
         async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_acknowledge_executed_ADMMstep());
     }
 

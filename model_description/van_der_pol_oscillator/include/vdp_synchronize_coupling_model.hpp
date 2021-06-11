@@ -14,10 +14,10 @@
 
 #include "dmpc/model/coupling_model.hpp"
 
-class WaterTankCouplingModel : public dmpc::CouplingModel
+class VDPSynchronizeCouplingModel : public dmpc::CouplingModel
 {
 public:
-	WaterTankCouplingModel
+	VDPSynchronizeCouplingModel
 	(
 		const std::vector<typeRNum>& model_parameters,
 		const std::vector<typeRNum>& cost_parameters,
@@ -48,10 +48,7 @@ public:
 	void dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) override;
 
 private:
-	typeRNum Ai_;
-	typeRNum aij_;
-	typeRNum g_;
-	typeRNum eps_;
-	typeRNum poly_param1_;
-	typeRNum poly_param2_;
+	typeRNum p1_;
+
+	typeRNum Q_;
 };

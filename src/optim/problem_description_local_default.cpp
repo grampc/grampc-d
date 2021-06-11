@@ -19,6 +19,8 @@
 #include "dmpc/model/agent_model.hpp"
 #include "dmpc/model/coupling_model.hpp"
 
+#include <cmath>
+
 namespace dmpc
 {
 
@@ -69,7 +71,7 @@ namespace dmpc
             }
             if( agent->is_approximatingConstraints() )
             {
-                // aproximate neighbors agent constraints
+                // approximate neighbors agent constraints
                 Ng_ += neighbor->get_agentModel()->get_Ngi();
                 Nh_ += neighbor->get_agentModel()->get_Nhi();
                 if(neighbor->is_receivingNeighbor())
@@ -183,26 +185,47 @@ namespace dmpc
 
         // consider cost function l
         {
+			typeRNum l_i = 0.0;
+			typeRNum l_ij = 0.0;
+
             interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
 
             // l_i( x_i, u_i )
-            agent_->get_agentModel()->lfct(out, t, x, u, &desired_state_.x_[0]);
+            agent_->get_agentModel()->lfct(&l_i, t, x, u, &desired_state_.x_[0]);
+
+            for (const auto& neighbor : agent_->get_sendingNeighbors())
+            {
+                const auto j = neighbor->get_id();
+
+                neighbor->get_couplingModel()->lfct(&l_ij, t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+            }
 
             // consider cost approximation
-            if( agent_->is_approximatingCost() )
+            if (!agent_->is_approximatingCost())
             {
-                // rescale agent cost
-                out[0] /= ( 1.0 + agent_->get_neighbors().size() );
+                out[0] += l_i + l_ij;
+            }
+            else
+			{
+				// rescale agent cost
+				out[0] += l_i / (1.0 + agent_->get_neighbors().size()) + l_ij / 2.0;
+
                 // add the neighbors approximated cost
                 for( const NeighborPtr& neighbor : agent_->get_neighbors() )
                 {
                     const auto j = neighbor->get_id();
-                    typeRNum lj = 0.0;
+					typeRNum l_j = 0.0;
+					typeRNum l_ji = 0.0;
 
                     interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
-                    neighbor->get_agentModel()->lfct( &lj, t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
-                    out[0] += lj / ( 1.0 + neighbor->get_numberOfNeighbors() );
-                }
+
+                    neighbor->get_agentModel()->lfct( &l_j, t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+
+                    if(neighbor->is_receivingNeighbor())
+                        neighbor->get_copied_couplingModel()->lfct(&l_ji, t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+
+                    out[0] += l_j / ( 1.0 + neighbor->get_numberOfNeighbors() ) + l_ji / 2.0;
+				}
             }
         }
         {
@@ -216,14 +239,14 @@ namespace dmpc
             for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
                 const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
-                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penalty.rho_x_[k] * zx_min_x * zx_min_x;
+                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penalty.rho_x_[k] * std::pow(zx_min_x, 2);
             }
 
             // consistency constraints ( zu_i - u_i )
             for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
             {
                 const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
-                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penalty.rho_u_[k] * zu_min_u * zu_min_u;
+                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penalty.rho_u_[k] * std::pow(zu_min_u, 2);
             }
         }
 
@@ -240,14 +263,14 @@ namespace dmpc
             for(unsigned int k = 0; k < neighbor->get_Nxj(); ++k)
             {
                 const typeRNum zx_min_x = couplingState_.z_x_[k] - (u + u_index_xji_[j])[k];
-                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penaltyState_.rho_x_[k] * zx_min_x * zx_min_x;
+                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penaltyState_.rho_x_[k] * std::pow(zx_min_x, 2);
             }
 
             // consistency constraints (zu_j - u_{ji})
             for(unsigned int k = 0; k < neighbor->get_Nuj(); ++k)
             {
                 const typeRNum zu_min_u = couplingState_.z_u_[k] - (u + u_index_uji_[j])[k];
-                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penaltyState_.rho_u_[k] * zu_min_u * zu_min_u;
+                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penaltyState_.rho_u_[k] * std::pow(zu_min_u, 2);
             }
         }
     }
@@ -258,16 +281,39 @@ namespace dmpc
 
         // consider cost function l
         {
-            interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+			std::vector<typeRNum> l_i(Nx_, 0.0);
+			std::vector<typeRNum> l_ij(Nx_, 0.0);
+
+			interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+
             // \partial l_i( x_i, u_i ) / \partial x_i
-            agent_->get_agentModel()->dldx(out, t, x, u, &desired_state_.x_[0]);
+            agent_->get_agentModel()->dldx(&l_i[0], t, x, u, &desired_state_.x_[0]);
+
+            for (const auto& neighbor : agent_->get_sendingNeighbors())
+            {
+                const auto j = neighbor->get_id();
+
+                neighbor->get_couplingModel()->dldxi(&l_ij[0], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+            }
 
             // consider neighbor approximation
-            if( agent_->is_approximatingCost() )
+            if (!agent_->is_approximatingCost())
             {
-                // rescale cost
-                for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
-                    out[k] /= (1.0 + agent_->get_neighbors().size());
+                for (unsigned int k = 0; k < Nx_; ++k)
+                    out[k] += l_i[k] + l_ij[k];
+            }
+            else
+            {
+				std::vector<typeRNum> l_ji(Nx_, 0.0);
+                for (const auto& neighbor : agent_->get_receivingNeighbors())
+                {
+					const auto j = neighbor->get_id();
+
+                    neighbor->get_copied_couplingModel()->dldxj(&l_ji[0], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+				}
+
+				for (unsigned int k = 0; k < Nx_; ++k)
+					out[k] += l_i[k] / (1.0 + agent_->get_neighbors().size()) + l_ij[k] / 2.0 + l_ji[k] / 2.0;
             }
         }
 
@@ -294,42 +340,68 @@ namespace dmpc
 
         // consider cost function l
         {
+			std::vector<typeRNum> l_i(Nu_, 0.0);
+			std::vector<typeRNum> l_ij(Nu_, 0.0);
+
             interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
+
             // \partial l_i( x_i, u_i ) / \partial u_i
-            agent_->get_agentModel()->dldu(out, t, x, u, &desired_state_.x_[0]);
+			agent_->get_agentModel()->dldu(&l_i[0], t, x, u, &desired_state_.x_[0]);
+
+			for (const auto& neighbor : agent_->get_sendingNeighbors())
+			{
+				const auto j = neighbor->get_id();
+                const auto& coupling_model = neighbor->get_couplingModel();
+
+                coupling_model->dldui(&l_ij[0], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+
+				coupling_model->dldxj(&l_ij[0] + u_index_xji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+
+				coupling_model->dlduj(&l_ij[0] + u_index_uji_[j], t, x, u, u + u_index_xji_[j], u + u_index_uji_[j]);
+			}
 
             // consider cost approximation
-            if( agent_->is_approximatingCost() )
+            if (!agent_->is_approximatingCost())
+            {
+                for (unsigned int k = 0; k < Nu_; ++k)
+                    out[k] += l_i[k] + l_ij[k];
+            }
+            else
             {
                 // rescale cost
-                for(unsigned int k = 0; k < agent_->get_Nui(); ++k )
-                    out[k] /= (1.0 + agent_->get_neighbors().size());
+				for (unsigned int k = 0; k < Nu_; ++k)
+					out[k] += l_i[k] / (1.0 + agent_->get_neighbors().size()) + l_ij[k] / 2.0;
 
                 // add approximated cost
-                for( const NeighborPtr& neighbor : agent_->get_neighbors() )
+                for( const auto& neighbor : agent_->get_neighbors() )
                 {
                     interpolateState(neighbor->get_neighbors_desiredAgentState(), t, desired_state_);
 
                     const auto j = neighbor->get_id();
                     const auto Nxj = neighbor->get_Nxj();
-                    const auto Nuj = neighbor->get_Nuj();
+					const auto Nuj = neighbor->get_Nuj();
+
+					std::vector<typeRNum> l_j(Nu_, 0.0);
+					std::vector<typeRNum> l_ji(Nu_, 0.0);
 
                     // consider local copies x_{ji} as control
-                    std::vector<typeRNum> l_j(Nxj, 0.0);
-                    neighbor->get_agentModel()->dldx( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
-
-                    // rescale
-                    for(unsigned int k = 0; k < Nxj; ++k)
-                        (out + u_index_xji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+                    neighbor->get_agentModel()->dldx( &l_j[0] + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
 
                     // consider local copies u_{ji} as control
-                    l_j.clear();
-                    l_j.resize(Nuj, 0.0);
-                    neighbor->get_agentModel()->dldu( &l_j[0], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+                    neighbor->get_agentModel()->dldu( &l_j[0] + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], &desired_state_.x_[0] );
+
+                    if (neighbor->is_receivingNeighbor())
+                    {
+						neighbor->get_copied_couplingModel()->dldxi(&l_ji[0] + u_index_xji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+
+						neighbor->get_copied_couplingModel()->dldui(&l_ji[0] + u_index_uji_[j], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+
+						neighbor->get_copied_couplingModel()->dlduj(&l_ji[0], t, u + u_index_xji_[j], u + u_index_uji_[j], x, u);
+                    }
 
                     // rescale
-                    for(unsigned int k = 0; k < Nuj; ++k)
-                        (out + u_index_uji_[j])[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors());
+                    for(unsigned int k = 0; k < Nu_; ++k)
+                        out[k] += l_j[k] / (1.0 + neighbor->get_numberOfNeighbors()) + l_ji[k] / 2.0;
                 }
             }
         }

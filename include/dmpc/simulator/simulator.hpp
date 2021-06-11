@@ -35,12 +35,19 @@ namespace dmpc
 
     private:
         void simulate();
+        const typeRNum evaluate_cost
+        (
+            const unsigned int agent_id,
+            const AgentModelPtr& agent_model, 
+            const std::shared_ptr< std::map<int, CouplingModelPtr> >& coupling_models
+        ) const;
 
         LoggingPtr log_;
         typeRNum dt_ = 0.0;
         typeRNum t0_ = 0.0;
-        std::string Integrator_ = "";
-        std::map<unsigned int, AgentStatePtr > agentStates_ = std::map<unsigned int, AgentStatePtr >();
+        std::string Integrator_;
+		std::map<unsigned int, AgentStatePtr > agentStates_;
+		std::map<unsigned int, AgentStatePtr > desired_agentStates_;
         CommunicationInterfacePtr communication_interface_;
     };
 

@@ -53,17 +53,19 @@ namespace dmpc
         for(const auto& [id, info] : *agents )
         {
             // get agentState
-            const auto agentStatePtr = communication_interface_->get_agentState_from_agent(id);
+			const auto agentStatePtr = communication_interface_->get_agentState_from_agent(id);
+			const auto desired_agentStatePtr = communication_interface_->get_desiredAgentState_from_agent(id);
 
             // stop simulation if pointer is nullptr
-            if (agentStatePtr == nullptr)
+            if (agentStatePtr == nullptr || desired_agentStatePtr == nullptr)
             {
                 log_->print(DebugType::Warning) << "[Simulator::distributed_simulation] Agent " << id
                     << " did not answer. Simulation is interrupted." << std::endl;
                 return;
             }
-        
-            agentStates_.insert(std::make_pair(id, agentStatePtr));
+
+			agentStates_.insert(std::make_pair(id, agentStatePtr));
+			desired_agentStates_.insert(std::make_pair(id, desired_agentStatePtr));
         }
 
         //start simulation
@@ -83,8 +85,11 @@ namespace dmpc
 
         // collect AgentStates
         agentStates_.clear();
-        for(const auto& agent : agents )
+        for (const auto& agent : agents)
+        {
             agentStates_.insert(std::make_pair(agent->get_id(), std::make_shared<AgentState>(agent->get_agentState())));
+            desired_agentStates_.insert(std::make_pair(agent->get_id(), std::make_shared<AgentState>(agent->get_desiredAgentState())));
+        }
 
 	    //start simulation
         simulate();
@@ -145,8 +150,10 @@ namespace dmpc
                 for( unsigned int i = 0; i < Nxi; ++i )
                     x_next[i] = state->x_[i] + dt_ * x_next[i];
 
+                const auto cost = evaluate_cost(id, agent_model, couplingModels);
+
                 // send simulated state to agent
-                communication_interface_->set_simulatedState_for_agent( id, x_next, dt_, t0_ );
+                communication_interface_->set_simulatedState_for_agent( id, x_next, dt_, t0_, cost);
             }
         }
         else if( Integrator_ == "heun" )
@@ -246,7 +253,10 @@ namespace dmpc
                 for(unsigned int i = 0; i < agent_model->get_Nxi(); ++i)
                     x_next_heun[i] = 0.5 * state->x_[i] + 0.5 * ((*ptr_to_data0)[i]) + 0.5 * dt_ * ((*ptr_to_data1)[i]);
 
-                communication_interface_->set_simulatedState_for_agent( id, x_next_heun, dt_, t0_ );
+
+				const auto cost = evaluate_cost(id, agent_model, couplingModels);
+
+                communication_interface_->set_simulatedState_for_agent( id, x_next_heun, dt_, t0_, cost);
             }
         }
         else
@@ -258,4 +268,64 @@ namespace dmpc
         t0_ = t0;
     }
 
+    const typeRNum Simulator::evaluate_cost
+	(
+        const unsigned int agent_id,
+        const AgentModelPtr& agent_model,
+        const std::shared_ptr< std::map<int, CouplingModelPtr> >& coupling_models
+    ) const
+    {
+        typeRNum cost = 0;
+
+		const auto& agent_states = agentStates_.find(agent_id)->second;
+		const auto& desired_agent_state = desired_agentStates_.find(agent_id)->second;
+        const auto& t = agent_states->t_;
+        const auto Nhor = t.size();
+
+        const auto Nxi = agent_model->get_Nxi();
+        const auto Nui = agent_model->get_Nui();
+
+        for (unsigned int i = 0; i < Nhor; ++i)
+        {
+            agent_model->lfct(&cost, t0_ + t[i], &agent_states->x_[i*Nxi], &agent_states->u_[i*Nui], &desired_agent_state->x_[i*Nxi]);
+
+            for (const auto& [neighbor_id, coupling_model] : *coupling_models)
+            {
+				const auto Nxj = coupling_model->get_Nxj();
+                const auto Nuj = coupling_model->get_Nuj();
+                const auto& neighbor_states = agentStates_.find(neighbor_id)->second;
+
+                coupling_model->lfct
+                (
+                    &cost,
+                    t0_ + t[i],
+                    &agent_states->x_[i * Nxi],
+                    &agent_states->u_[i * Nui],
+                    &neighbor_states->x_[i * Nxj],
+                    &neighbor_states->u_[i * Nuj]
+                );
+            }
+        }
+
+        cost *= t[1] - t[0];
+
+        agent_model->Vfct(&cost, t0_ + t.back(), &agent_states->x_[(Nhor - 1) * Nxi], &desired_agent_state->x_[(Nhor - 1) * Nxi]);
+
+		for (const auto& [neighbor_id, coupling_model] : *coupling_models)
+		{
+			const auto Nxj = coupling_model->get_Nxj();
+			const auto Nuj = coupling_model->get_Nuj();
+			const auto& neighbor_states = agentStates_.find(neighbor_id)->second;
+
+			coupling_model->Vfct
+			(
+				&cost,
+				t0_ + t.back(),
+				&agent_states->x_[(Nhor - 1) * Nxi],
+				&neighbor_states->x_[(Nhor - 1) * Nxj]
+			);
+		}
+
+        return cost;
+    }
 }

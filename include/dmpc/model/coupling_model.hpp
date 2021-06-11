@@ -27,7 +27,8 @@ namespace dmpc
             unsigned int Nxi, unsigned int Nui, 
             unsigned int Nxj, unsigned int Nuj, 
             unsigned int Ngij, unsigned int Nhij,
-            const std::vector<typeRNum>& model_parameters,
+			const std::vector<typeRNum>& model_parameters,
+			const std::vector<typeRNum>& cost_parameters,
             const std::string& model_name
         );
 
@@ -60,7 +61,25 @@ namespace dmpc
 	    /*Partial derivative of the coupling dynamics with respect to the neighbors states multiplied with Lagrangian multipliers.*/
 	    virtual void dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) = 0;
 	    /*Partial derivative of the coupling dynamics with respect to the neighbors controls multiplied with Lagrangian multipliers.*/
-        virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) = 0;
+		virtual void dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) = 0;
+
+		/*Coupling cost function l_{ij}(x_i, u_i, x_j, u_i, t)*/
+		virtual void lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) = 0;
+		/*Partial derivative of the cost function with respect to the agents states.*/
+		virtual void dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) = 0;
+		/*Partial derivative of the cost function with respect to the agents controls.*/
+		virtual void dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) = 0;
+		/*Partial derivative of the cost function with respect to the neighbors states.*/
+		virtual void dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) = 0;
+		/*Partial derivative of the cost function with respect to the neighbors controls.*/
+		virtual void dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) = 0;
+
+		/*Coupled terminating cost V_i(x_i(T))*/
+		virtual void Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) = 0;
+		/*Partial derivate of the coupled terminating cost with respect to the agents states.*/
+		virtual void dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) = 0;
+		/*Partial derivate of the coupled terminating cost with respect to the neighbors states.*/
+		virtual void dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) = 0;
 
         /*Equality constraints g_{ij}(x_i, u_i, x_j, u_j, t) = 0*/
 	    virtual void gfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj) {}
@@ -92,7 +111,8 @@ namespace dmpc
         unsigned int Ngij_;
         unsigned int Nhij_;
 
-        std::vector<typeRNum> model_parameters_;
+		std::vector<typeRNum> model_parameters_;
+		std::vector<typeRNum> cost_parameters_;
         std::string model_name_;
     };
 

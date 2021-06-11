@@ -17,6 +17,7 @@ add_library(factory
 	van_der_pol_oscillator/src/vdp_agent_model.cpp
 	van_der_pol_oscillator/src/vdp_linear_coupling_model.cpp
 	van_der_pol_oscillator/src/vdp_nonlinear_coupling_model.cpp
+	van_der_pol_oscillator/src/vdp_synchronize_coupling_model.cpp
 
 	scalable_spring_mass_system/src/ssms_agent_model.cpp
 	scalable_spring_mass_system/src/ssms_coupling_model.cpp

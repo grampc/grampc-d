@@ -21,7 +21,7 @@ class GeneralModelFactory : public dmpc::ModelFactory
 {
 public:
 	using create_agentModel_functionPtr = dmpc::AgentModelPtr(*)(const std::vector<typeRNum>&, const std::vector<typeRNum>&, const std::string&, const dmpc::LoggingPtr&);
-	using create_couplingModel_functionPtr = dmpc::CouplingModelPtr(*)(const std::vector<typeRNum>&, const std::string&);
+	using create_couplingModel_functionPtr = dmpc::CouplingModelPtr(*)(const std::vector<typeRNum>&, const std::vector<typeRNum>&, const std::string&);
 
 	GeneralModelFactory(const dmpc::LoggingPtr& log);
 

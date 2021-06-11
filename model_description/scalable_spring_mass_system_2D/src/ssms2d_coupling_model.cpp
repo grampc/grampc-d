@@ -12,9 +12,15 @@
 
 #include "../include/ssms2d_coupling_model.hpp"
 
-SSMS2DCouplingModel::SSMS2DCouplingModel(const std::vector<typeRNum>& model_parameters, const std::string& name)
+SSMS2DCouplingModel::SSMS2DCouplingModel
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 	: CouplingModel(4, 2, 4, 2, 0, 0,
 		model_parameters,
+		cost_parameters,
 		name)
 {
 	p1_ = model_parameters[0]; // m_i
@@ -24,9 +30,14 @@ SSMS2DCouplingModel::SSMS2DCouplingModel(const std::vector<typeRNum>& model_para
 	dmin = 0.2;
 }
 
-dmpc::CouplingModelPtr SSMS2DCouplingModel::create(const std::vector<typeRNum>& model_parameters, const std::string& name)
+dmpc::CouplingModelPtr SSMS2DCouplingModel::create
+(
+	const std::vector<typeRNum>& model_parameters,
+	const std::vector<typeRNum>& cost_parameters,
+	const std::string& name
+)
 {
-	return std::shared_ptr<CouplingModel>(new SSMS2DCouplingModel(model_parameters, name));
+	return std::shared_ptr<CouplingModel>(new SSMS2DCouplingModel(model_parameters, cost_parameters, name));
 }
 
 void SSMS2DCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
@@ -103,4 +114,44 @@ void SSMS2DCouplingModel::dfduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ct
 {
 	out[0] += 0.0;
 	out[1] += 0.0;
+}
+
+void SSMS2DCouplingModel::lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SSMS2DCouplingModel::dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SSMS2DCouplingModel::dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SSMS2DCouplingModel::dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SSMS2DCouplingModel::dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
+{
+
+}
+
+void SSMS2DCouplingModel::Vfct(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void SSMS2DCouplingModel::dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
+}
+
+void SSMS2DCouplingModel::dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj)
+{
+
 }
