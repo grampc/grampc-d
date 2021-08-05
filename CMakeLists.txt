@@ -41,7 +41,7 @@ add_subdirectory(libs)
 add_subdirectory(grampc-d)
 
 # add simulation examples
-add_subdirectory(main)
+add_subdirectory(examples)
 
 # add model descriptions
 add_subdirectory(model_description)
