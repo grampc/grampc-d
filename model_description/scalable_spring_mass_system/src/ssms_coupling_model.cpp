@@ -11,7 +11,7 @@
  */
 
 #include "../include/ssms_coupling_model.hpp"
-#include "math.h"
+#include <cmath>
 
 SSMSCouplingModel::SSMSCouplingModel
 (
@@ -40,7 +40,7 @@ grampcd::CouplingModelPtr SSMSCouplingModel::create
 
 void SSMSCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
-	const typeRNum dx = fabs(xj[0] - xi[0]);
+	const typeRNum dx = std::fabs(xj[0] - xi[0]);
 	if (dx > 1e-6)
 	{
 		out[0] += 0.0;

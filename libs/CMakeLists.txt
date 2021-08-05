@@ -29,10 +29,9 @@ add_library(grampc
 )
 
 target_include_directories(grampc PUBLIC
-    ${CMAKE_SOURCE_DIR}/libs/grampc/include
-    ${CMAKE_SOURCE_DIR}/libs/grampc/cpp/include)
-
-# include asio
+    grampc/include
+    grampc/cpp/include)
+    
 include(ExternalProject)
 find_package(Git REQUIRED)
 
@@ -47,7 +46,33 @@ ExternalProject_Add(asio
         PREFIX  ${CMAKE_SOURCE_DIR}/libs/asio
 )
 ExternalProject_Get_Property(asio source_dir)
-set(ASIO_INCLUDE_DIR ${source_dir}/asio/include)
+set(ASIO_INCLUDE_DIR ${source_dir}/asio/include CACHE INTERNAL "ASIO_INCLUDE_DIR")
 
-# define flag to use asio as standalone library
-add_definitions(-DASIO_STANDALONE )
+# include SHA1 as external project
+ExternalProject_Add(cereal
+    GIT_REPOSITORY https://github.com/USCiLab/cereal.git
+    GIT_TAG 46a4a910077bf9e9f8327c8f6ea761c89b06da53
+    UPDATE_COMMAND ""
+    CONFIGURE_COMMAND ""
+  	    BUILD_COMMAND ""
+  	    INSTALL_COMMAND ""
+	    LOG_DOWNLOAD ON
+        PREFIX  ${CMAKE_SOURCE_DIR}/libs/cereal
+)
+ExternalProject_Get_Property(cereal SOURCE_DIR)
+set(CEREAL_INCLUDE_DIR ${SOURCE_DIR}/include CACHE INTERNAL "CEREAL_INCLUDE_DIR")
+
+# include SHA1 as external project
+ExternalProject_Add(sha
+    GIT_REPOSITORY https://github.com/983/SHA1.git
+    GIT_TAG 0ec907360c70b7eac33ec87927d227c602bb1265
+    UPDATE_COMMAND ""
+    CONFIGURE_COMMAND ""
+  	    BUILD_COMMAND ""
+  	    INSTALL_COMMAND ""
+	    LOG_DOWNLOAD ON
+        PREFIX  ${CMAKE_SOURCE_DIR}/libs/sha
+)
+
+ExternalProject_Get_Property(sha SOURCE_DIR)
+set(SHA_INCLUDE_DIR ${SOURCE_DIR} CACHE INTERNAL "SHA_INCLUDE_DIR")

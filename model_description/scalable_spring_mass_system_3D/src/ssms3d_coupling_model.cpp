@@ -11,6 +11,7 @@
  */
 
 #include "../include/ssms3d_coupling_model.hpp"
+#include <cmath>
 
 SSMS3DCouplingModel::SSMS3DCouplingModel
 (
@@ -41,14 +42,14 @@ grampcd::CouplingModelPtr SSMS3DCouplingModel::create
 
 void SSMS3DCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
-    typeRNum d = sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
+    typeRNum d = std::sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
     typeRNum dx = ( xj[0] - xi[0] );
     typeRNum dy = ( xj[2] - xi[2] );
     typeRNum dz = ( xj[4] - xi[4] );
     out[0] += 0.0;
     out[2] += 0.0;
     out[4] += 0.0;
-    if( abs(d) < 1e-12 )
+    if( std::abs(d) < 1e-12 )
     {
         out[1] += 0.0;
         out[3] += 0.0;
@@ -65,14 +66,14 @@ void SSMS3DCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRN
 
 void SSMS3DCouplingModel::dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    typeRNum d = sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
+    typeRNum d = std::sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
     typeRNum dx = ( xj[0] - xi[0] );
     typeRNum dy = ( xj[2] - xi[2] );
     typeRNum dz = ( xj[4] - xi[4] );
     out[1] += 0;
     out[3] += 0;
     out[5] += 0;
-    if( abs(d) < 1e-12 )
+    if( std::abs(d) < 1e-12 )
     {
         out[0] += 0;
         out[2] += 0;
@@ -96,14 +97,14 @@ void SSMS3DCouplingModel::dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ct
 
 void SSMS3DCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-    typeRNum d = sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
+    typeRNum d = std::sqrt( ( xi[0] - xj[0] )*( xi[0] - xj[0] ) + ( xi[2] - xj[2] )*( xi[2] - xj[2] ) + ( xi[4] - xj[4] )*( xi[4] - xj[4] ) );
     typeRNum dx = ( xj[0] - xi[0] );
     typeRNum dy = ( xj[2] - xi[2] );
     typeRNum dz = ( xj[4] - xi[4] );
     out[1] += 0;
     out[3] += 0;
     out[5] += 0;
-    if( abs(d) < 1e-12 )
+    if( std::abs(d) < 1e-12 )
     {
         out[0] += 0;
         out[2] += 0;

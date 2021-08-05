@@ -11,12 +11,7 @@
  */
 
 #include "../include/smartGrid_couplingModel.hpp"
-#include <math.h>
-
- // https://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
-template <typename T> int sgn(T val) {
-	return (T(0) < val) - (val < T(0));
-}
+#include <cmath>
 
 SmartGridCouplingModel::SmartGridCouplingModel
 (
@@ -47,12 +42,12 @@ grampcd::CouplingModelPtr SmartGridCouplingModel::create
 void SmartGridCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
 	out[0] += 0.0;
-	out[1] += P_max_ij_ / (I_ * Omega_) * sin(xi[0] - xj[0]);
+	out[1] += P_max_ij_ / (I_ * Omega_) * std::sin(xi[0] - xj[0]);
 }
 
 void SmartGridCouplingModel::dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-	out[0] += P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
+	out[0] += P_max_ij_ / (I_ * Omega_) * vec[1] * std::cos(xi[0] - xj[0]);
 	out[1] += 0.0;
 }
 
@@ -63,7 +58,7 @@ void SmartGridCouplingModel::dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi,
 
 void SmartGridCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-	out[0] += -P_max_ij_ / (I_ * Omega_) * vec[1] * cos(xi[0] - xj[0]);
+	out[0] += -P_max_ij_ / (I_ * Omega_) * vec[1] * std::cos(xi[0] - xj[0]);
 	out[1] += 0.0;
 }
 

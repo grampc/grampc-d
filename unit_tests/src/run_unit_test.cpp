@@ -10,6 +10,7 @@
  *
  */
 
+
 #include "grampcd/util/logging.hpp"
 
 #include "unit_tests/checksum_handler.hpp"
@@ -17,23 +18,13 @@
 
 const bool evaluate
 (
-	const std::string& name_of_simulation, 
-	const unit_test::ChecksumHandler& checksumHandler, 
+	const std::shared_ptr<unit_test::SimulationResult> simulation_result_reference,
 	const std::shared_ptr<grampcd::Logging>& log
 ) 
 {
-	//obtain reference values of checksums for the current simulation from checksumHandler
-	const auto referenceValues = checksumHandler.get_reference_checksums(name_of_simulation);
-	if (referenceValues == nullptr)
-	{
-		log->print(grampcd::DebugType::Error) << "[Unit_Test]: " 
-			<< "Reference values not found for simulation "
-			<< name_of_simulation << std::endl;
-		return false;
-	}
 
 	// check number of files
-	const auto desired_number_of_files = referenceValues->size();
+	const auto desired_number_of_files = simulation_result_reference->simulationFile_References_.size();
 	const auto number_of_files = unit_test::FileHandler::get_number_of_text_files(".");
 	if (number_of_files != desired_number_of_files)
 	{
@@ -45,11 +36,11 @@ const bool evaluate
 	}
 
 	// check checksum
-	for (auto iter = referenceValues->begin(); iter != referenceValues->end(); ++iter)
+	for (const auto simulation_file_reference : simulation_result_reference->simulationFile_References_)
 	{
-		const auto& filename = iter->first;
-		const auto& desired_checksum = iter->second;
-		const auto checksum = checksumHandler.generate_checksum(filename);
+		const auto& filename = simulation_file_reference->filename_;
+		const auto& desired_checksum = simulation_file_reference->hash_code_;
+		const auto checksum = unit_test::ChecksumHandler::generate_checksum(filename, log);
 
 		if (desired_checksum != checksum)
 		{
@@ -69,33 +60,33 @@ int main(int argc, char* argv[])
 	log->set_print_error(true);
 	log->set_print_message(true);
 
-	//setup checksumHandler and specify the output stream that should be used to print errors
-	const unit_test::ChecksumHandler checksumHandler(log);
-
 	//obtain the names of executable simulation files from checksumHandler
-	const auto names_of_executables = checksumHandler.get_names_of_executables();
+	const auto results_of_all_unittests = unit_test::ChecksumHandler::get_results_of_all_unittests(log);
 	
-	// catch nullptr
-	if (names_of_executables == nullptr)
-		return -1;
+	// catch case that referenceChecksums.txt could not be read
+	if (results_of_all_unittests == nullptr)
+		return unit_test::ChecksumHandler::REFERENCE_CHECKSUM_FILE_NOT_READABLE_;
 	
 	// flag that indicates, whether the unit test succeeded of failed
 	bool whole_unit_test_suceeded = true;
 
-	for(const auto& filename : *names_of_executables)
+	for(const auto& simulation_result_reference : results_of_all_unittests->simulationResults)
 	{
+		if (!simulation_result_reference->runtest_)
+			continue;
+	
 		// delete old solution files
-		unit_test::FileHandler::remove_text_files(".");
+		unit_test::FileHandler::remove_text_files(".", log);
 		
 		//start simulation executable
 		log->print(grampcd::DebugType::Message) << "[Unit test]: unit test starts for " 
-			<< filename << " ..." << std::endl;
+			<< simulation_result_reference->executable_name_ << " ..." << std::endl;
 
-		// call .exe
-		system(filename.c_str());
+		// call executable
+		unit_test::FileHandler::run_simulation_executable_in_working_directory(simulation_result_reference->executable_name_, log);
 
 		// evaluate solution files
-		const bool individual_test_succeeded = evaluate(filename, checksumHandler, log);
+		const bool individual_test_succeeded = evaluate(simulation_result_reference, log);
 
 		if(individual_test_succeeded)
 			log->print(grampcd::DebugType::Error) << "[Unit_Test]: Passed" << std::endl;

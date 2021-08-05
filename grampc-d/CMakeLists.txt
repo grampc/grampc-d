@@ -42,12 +42,23 @@ add_library(grampcd
 )
 
 target_include_directories(grampcd PUBLIC 
-    ${CMAKE_SOURCE_DIR}/libs/asio/src/asio/asio/include
-    include)
+    include
+    ${ASIO_INCLUDE_DIR}
+    ${CEREAL_INCLUDE_DIR}
+)
 
-add_dependencies(grampcd asio)
+add_dependencies(grampcd 
+    asio
+    cereal
+)
 
-target_link_libraries(grampcd grampc factory)
+# define flag to use asio as standalone library
+target_compile_definitions(grampcd PRIVATE -DASIO_STANDALONE )
+
+target_link_libraries(grampcd 
+    grampc 
+    factory
+)
 
 if(MSVC)
 else()
@@ -61,6 +72,8 @@ if(PYTHON_AVAILABLE)
         src/interface/python_interface.cpp 
     ) 
 
-    target_link_libraries(grampcd_interface PRIVATE grampcd )
-    target_link_libraries(grampcd_interface PRIVATE factory )
+    target_link_libraries(grampcd_interface PRIVATE
+        grampcd
+        factory
+    )
 endif()

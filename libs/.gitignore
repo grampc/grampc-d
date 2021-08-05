@@ -1,2 +1,6 @@
-grampc
 grampc.zip
+asio/
+cereal/
+grampc/
+pybind11/
+sha/

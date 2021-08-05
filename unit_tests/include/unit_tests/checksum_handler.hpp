@@ -1,73 +1,69 @@
-/* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
- *
- * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
- *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
- * All rights reserved.
- *
- * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
- *
- */
-
 #pragma once
-
-#include <vector>
-#include <map>
-#include <string>
-#include <memory>
 #include "grampcd/util/types.hpp"
 
-#include "grampcd/util/logging.hpp"
+#include <cereal/archives/binary.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/polymorphic.hpp>
 
-namespace unit_test 
+namespace grampcd {
+	DMPC_CLASS_FORWARD(Logging)
+}
+
+namespace unit_test
 {
 
-	class ChecksumHandler 
+	struct SimulationFile_Reference
 	{
-	public:
-		enum error_codes 
+		std::string filename_ = "";
+		std::string hash_code_ = "";
+
+		template <class Archive>
+		void serialize(Archive& ar)
 		{
-			referenceChecksum_file_could_not_be_opened = -1,
-			no_match_for_requested_simulation_found = -2
-		};
+			ar(filename_, hash_code_);
+		}
+	};
 
-		// constructor initializes Logging
-		ChecksumHandler(const std::shared_ptr<grampcd::Logging>&);
+	struct SimulationResult
+	{
+		std::string executable_name_ = "";
+		std::vector<std::shared_ptr<SimulationFile_Reference>> simulationFile_References_;
+		bool runtest_ = "false";
 
-		// returns a map of reference data; the keys are the solution file names of the given simulation, 
-		// the values are the reference checksums of the according simulation files
-		const std::shared_ptr<std::map<std::string, std::string>> get_reference_checksums(const std::string& name) const;
+		template <class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(executable_name_, simulationFile_References_, runtest_);
+		}
+	};
 
-		// returns a shared pointer to a string holding the content of the given file
-		const std::shared_ptr<std::string> read_file_to_string(const std::string& filename) const;
+	struct Results_of_UnitTests
+	{
+		std::vector<std::shared_ptr<SimulationResult>> simulationResults;
 
-		// creates a checksum from the given file and returns it
-		const std::string generate_checksum(const std::string& filename) const;
+		template <class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(simulationResults);
+		}
+	};
 
-		// searches the referenceChecksums.csv file for the given entry_name and returns a pair int values, 
-		// where the first value is -2, if the referenceChecksums.csv was not opened successfully and -1, if the entry name was not found
-		// otherwise the first value corresponds to the first line of the given entry and the second value corresponds to the last line 
-		// that is part of the given entry
-		const std::shared_ptr<std::pair<int, int>> evaluate_row_in_checksum_file(const std::string& entry_name) const;
-
-		// returns the names of every simEntry that is not commented out
-		const std::shared_ptr<std::vector<std::string>> get_names_of_executables() const;
-
-		// adds a unitTest for the simulation which executable is called <executableName>.exe
-		void add_unit_test(const std::string& executableName) const;
-
+	class ChecksumHandler {
 	private:
-		const std::shared_ptr<grampcd::Logging> log_;
+		static const std::string PATH_REFERENCE_CHECKSUMS_;
+		static const std::shared_ptr<std::string> read_file_to_string(const std::string& filename, grampcd::LoggingPtr log_);
+	public:
+		static const int REFERENCE_CHECKSUM_FILE_NOT_READABLE_;
 
-		//path relative to bin
-		const std::string PATH_REFERENCE_CHECKSUMS_ = "../unit_tests/referenceChecksums.csv";
-		const std::string SIM_DIR_ = "./";
+		//generates checksum from file
+		static const std::string generate_checksum(const std::string& filename, const grampcd::LoggingPtr log_);
 
-		void strip(std::string& s) const;
-		const std::shared_ptr<std::ifstream> open_file_including_checksums() const;
-		void update_file_including_checksums(const unsigned int startDel, const unsigned int endDel, const std::string& textToInsert) const;
-		const std::vector<std::string> split(const std::string& inputString, const char delimiter) const;
+		//obtains the reference data of all simulations
+		static const std::shared_ptr<Results_of_UnitTests> get_results_of_all_unittests(const grampcd::LoggingPtr log_);
+
+		//add a new unit test
+		static void serialize_reference_data(std::shared_ptr<unit_test::Results_of_UnitTests> simulationResult, grampcd::LoggingPtr log_);
 	};
 
 }

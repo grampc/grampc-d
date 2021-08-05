@@ -41,7 +41,7 @@ optimization_info.COMMON_dt_ = 0.02
 optimization_info.GRAMPC_MaxGradIter_ = 15
 optimization_info.GRAMPC_MaxMultIter_ = 1
 optimization_info.ADMM_maxIterations_ = 10;
-optimization_info.ADMM_ConvergenceTolerance_ = 0.002;
+optimization_info.ADMM_ConvergenceTolerance_ = 0.001;
 
 interface.set_optimizationInfo(optimization_info)
 
@@ -72,7 +72,12 @@ for i in range(0, n_agents_x) :
         id = i*n_agents_x + j;
 
         seed(time.time())
-        initial = [i + random(), 0, j + 0.4*random(), 0];
+
+        #define offset in x and y
+        offset_x = 0.2 * (1-2*(i%2));
+        offset_y = 0.2 * (1-2*(j%2));
+
+        initial = [i + offset_x, 0, j + offset_y, 0];
 
         for k in range(0, 4) :
             x_init[id][k] = initial[k];

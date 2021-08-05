@@ -11,6 +11,7 @@
  */
 
 #include "../include/ssms2d_coupling_model.hpp"
+#include <cmath>
 
 SSMS2DCouplingModel::SSMS2DCouplingModel
 (
@@ -42,7 +43,7 @@ grampcd::CouplingModelPtr SSMS2DCouplingModel::create
 
 void SSMS2DCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
 {
-	typeRNum d = sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
+	typeRNum d = std::sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
 	typeRNum dx = (xj[0] - xi[0]);
 	typeRNum dy = (xj[2] - xi[2]);
 	if (d < dmin)
@@ -64,7 +65,7 @@ void SSMS2DCouplingModel::ffct(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRN
 
 void SSMS2DCouplingModel::dfdxi_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-	typeRNum d = sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
+	typeRNum d = std::sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
 	typeRNum dx = (xj[0] - xi[0]);
 	typeRNum dy = (xj[2] - xi[2]);
 	if (d < dmin)
@@ -91,7 +92,7 @@ void SSMS2DCouplingModel::dfdui_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ct
 
 void SSMS2DCouplingModel::dfdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec)
 {
-	typeRNum d = sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
+	typeRNum d = std::sqrt((xi[0] - xj[0]) * (xi[0] - xj[0]) + (xi[2] - xj[2]) * (xi[2] - xj[2]));
 	typeRNum dx = (xj[0] - xi[0]);
 	typeRNum dy = (xj[2] - xi[2]);
 	if (d < dmin)
