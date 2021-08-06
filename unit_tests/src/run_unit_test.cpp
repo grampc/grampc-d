@@ -10,7 +10,6 @@
  *
  */
 
-
 #include "grampcd/util/logging.hpp"
 
 #include "unit_tests/checksum_handler.hpp"
