@@ -389,8 +389,12 @@ namespace grampcd
 
         // evaluate predicted cost
 	    std::vector< typeRNum > predicted_cost(optimizationInfo_.COMMON_Nhor_, 0.0);
-	    for (unsigned int i = 0; i < predicted_cost.size(); ++i)
-            model_->lfct(&predicted_cost[i], agentState_.t_[i], &agentState_.x_[i], &agentState_.u_[i], &desired_agentState_.x_[i]);
+        for (unsigned int i = 0; i < predicted_cost.size(); ++i)
+        {
+            //check if the number of inputs of the agent is greater than 0
+            ctypeRNum* u = agentState_.u_.size() > 0 ? &agentState_.u_[i] : nullptr;
+            model_->lfct(&predicted_cost[i], agentState_.t_[i], &agentState_.x_[i], u, &desired_agentState_.x_[i]);
+        }
 
         // update solution
 	    solution_->update_predicted_state(state, predicted_cost);

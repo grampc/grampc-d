@@ -133,8 +133,13 @@ namespace grampcd
                 // initialize vector for new states
                 std::vector<typeRNum> x_next( Nxi, 0.0 );
 
-                // evaluate f_i( x_i, u_i )
-                agent_model->ffct( &x_next[0], state->t_[0], &state->x_[0], &state->u_[0] );
+                {
+                    // check if the agent has inputs before accessing elements of its input vector to avoid assertion failures
+                    ctypeRNum* ui = state->u_.empty() ? nullptr : &state->u_[0];
+
+                    // evaluate f_i( x_i, u_i )
+                    agent_model->ffct(&x_next[0], state->t_[0], &state->x_[0], ui);
+                }
 
                 // consider each sending neighbor
                 for( const auto& [neighbor_id, neighbor_model] : *couplingModels )
@@ -142,8 +147,12 @@ namespace grampcd
                     // get neighbor state
                     const auto& neighbor_state = agentStates_.find(neighbor_id)->second;
 
+                    // check if the agent and neighbor have inputs before accessing elements of their input vectors
+                    ctypeRNum* ui = state->u_.empty() ? nullptr : &state->u_[0];
+                    ctypeRNum* uj = neighbor_state->u_.empty() ? nullptr : &neighbor_state->u_[0];
+
                     // evaluate f_{ij}( xi, ui, x_j, u_j )
-                    neighbor_model->ffct( &x_next[0], state->t_[0], &state->x_[0], &state->u_[0], &neighbor_state->x_[0], &neighbor_state->u_[0] );
+                    neighbor_model->ffct( &x_next[0], state->t_[0], &state->x_[0], ui, &neighbor_state->x_[0], uj );
                 }
 
                 // x_{k+1} = x_k + dt*x'_k
@@ -188,8 +197,13 @@ namespace grampcd
 
                 out0.insert(std::make_pair(id, ptr_to_data));
 
-                // evaluate f_i( x_i, u_i )
-                agent_model->ffct( &((*ptr_to_data)[0]), state->t_[0], &state->x_[0], &state->u_[0] );
+                {
+                    // check if the agent has inputs before accessing elements of its input vector to avoid assertion failures
+                    ctypeRNum* ui = state->u_.empty() ? nullptr : &state->u_[0];
+
+                    // evaluate f_i( x_i, u_i )
+                    agent_model->ffct(&((*ptr_to_data)[0]), state->t_[0], &state->x_[0], ui);
+                }
 
                 // consider each sending neighbor
                 for(const auto& [neighbor_id, neighbor_model] : *couplingModels)
@@ -197,8 +211,14 @@ namespace grampcd
                     // get neighbor state
                     const auto& neighbor_state = agentStates_.find(neighbor_id)->second;
 
-                    // evaluate f_{ij}( xi, ui, x_j, u_j )
-                    neighbor_model->ffct( &((*ptr_to_data)[0]), state->t_[0], &state->x_[0], &state->u_[0], &neighbor_state->x_[0], &neighbor_state->u_[0] );
+                    {
+                        // check if the agent and neighbor have inputs before accessing elements of their input vectors
+                        ctypeRNum* ui = state->u_.empty() ? nullptr : &state->u_[0];
+                        ctypeRNum* uj = neighbor_state->u_.empty() ? nullptr : &neighbor_state->u_[0];
+
+                        // evaluate f_{ij}( xi, ui, x_j, u_j )
+                        neighbor_model->ffct(&((*ptr_to_data)[0]), state->t_[0], &state->x_[0], ui, &neighbor_state->x_[0], uj);
+                    }           
                 }
 
                 // compute euler
@@ -234,18 +254,29 @@ namespace grampcd
                 std::shared_ptr<std::vector<typeRNum>> ptr_to_data1(new std::vector<typeRNum>(agent_model->get_Nxi(), 0.0));
 			    out1.insert(std::make_pair(id, ptr_to_data1));
 
-                // evaluate f_i( x_i, u_i )
-                agent_model->ffct( &((*ptr_to_data1)[0]), state->t_[0], &((*ptr_to_data0)[0]), &state->u_[0] );
-
+                {
+                    // check if the agent has inputs before accessing elements of its input vector to avoid assertion failures
+                    ctypeRNum* ui = state->u_.empty() ? nullptr : &state->u_[0];
+                
+                    // evaluate f_i( x_i, u_i )
+                    agent_model->ffct(&((*ptr_to_data1)[0]), state->t_[0], &((*ptr_to_data0)[0]), ui);
+                }
+                
                 // consider each sending neighbor
                 for(const auto& [neighbor_id, neighbor_model] : *couplingModels)
                 {
                     // get neighbor state
                     const auto& neighbor_state = agentStates_.find(neighbor_id)->second;
                     const auto& ptr_to_data_of_neighbor = out0.find(neighbor_id)->second;
+                   
+                    {
+                        // check if the agent and neighbor have inputs before accessing elements of their input vectors
+                        ctypeRNum * ui = state->u_.empty() ? nullptr : &state->u_[0];
+                        ctypeRNum * uj = neighbor_state->u_.empty() ? nullptr : &neighbor_state->u_[0];
 
-                    // evaluate f_{ij}( xi, ui, x_j, u_j )
-                    neighbor_model->ffct( &((*ptr_to_data1)[0]), state->t_[0], &((*ptr_to_data0)[0]), &state->u_[0], &((*ptr_to_data_of_neighbor)[0]), &neighbor_state->u_[0] );
+                        // evaluate f_{ij}( xi, ui, x_j, u_j )
+                        neighbor_model->ffct(&((*ptr_to_data1)[0]), state->t_[0], &((*ptr_to_data0)[0]), ui, &((*ptr_to_data_of_neighbor)[0]), uj);
+                    }
                 }
 
                 // compute heun
@@ -287,7 +318,12 @@ namespace grampcd
 
         for (unsigned int i = 0; i < Nhor; ++i)
         {
-            agent_model->lfct(&cost, t0_ + t[i], &agent_states->x_[i*Nxi], &agent_states->u_[i*Nui], &desired_agent_state->x_[i*Nxi]);
+
+            {
+                // check if the agent has inputs before accessing elements of the input vector
+                ctypeRNum* ui = agent_states->u_.empty() ? nullptr : &agent_states->u_[i * Nui];
+                agent_model->lfct(&cost, t0_ + t[i], &agent_states->x_[i * Nxi], ui, &desired_agent_state->x_[i * Nxi]);
+            }
 
             for (const auto& [neighbor_id, coupling_model] : *coupling_models)
             {
@@ -300,9 +336,9 @@ namespace grampcd
                     &cost,
                     t0_ + t[i],
                     &agent_states->x_[i * Nxi],
-                    &agent_states->u_[i * Nui],
+                    Nui > 0 ? &agent_states->u_[i * Nui]:nullptr,
                     &neighbor_states->x_[i * Nxj],
-                    &neighbor_states->u_[i * Nuj]
+                    Nuj > 0 ? &neighbor_states->u_[i * Nuj]: nullptr
                 );
             }
         }
