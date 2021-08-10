@@ -115,6 +115,9 @@ int main(int argc, char** argv)
         }
     }
 
+    //activate printing of progressbar
+    interface->set_print_progressbar(true);
+
     // run MPC
     interface->run_MPC(0, Tsim);
 

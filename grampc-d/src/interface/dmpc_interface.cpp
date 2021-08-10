@@ -30,6 +30,7 @@
 
 #include "chrono"
 #include <fstream>
+#include <algorithm>
 
 namespace grampcd
 {
@@ -37,11 +38,14 @@ namespace grampcd
 		log_(std::make_shared<Logging>())
 	{}
 
-	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents,
-		SimulatorPtr simulator,
+	void DmpcInterface::run_MPC
+	(
+		const std::vector<AgentPtr>& agents,
+		const SimulatorPtr& simulator,
 		const OptimizationInfo& oi,
 		double Tsim,
-		double t_0)
+		double t_0
+	)
 	{
 		SolverCentral solver(agents, oi);
 		const unsigned int maxSimIter = static_cast<unsigned int>(Tsim / oi.COMMON_dt_);
@@ -64,12 +68,18 @@ namespace grampcd
 
 			// update state and time
 			simulator->centralized_simulation(&solver, oi.COMMON_Integrator_, oi.COMMON_dt_);
+
+			// update progress bar
+			print_progressbar(iMPC, maxSimIter);
 		}
+
+		log_->print(DebugType::Progressbar) << std::endl;
+
 		log_->print(DebugType::Base) << "MPC finished. Average computation time: "
-			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " ms." << std::endl;
+			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " ms." << std::endl << std::endl;
 	}
 
-	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents, SimulatorPtr simulator, const OptimizationInfo& oi)
+	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents, const SimulatorPtr& simulator, const OptimizationInfo& oi)
 	{
 		SolverCentral solver(agents, oi);
 
@@ -105,8 +115,13 @@ namespace grampcd
 		}
 	}
 
-	void DmpcInterface::run_DMPC(SimulatorPtr simulator,
-		const OptimizationInfo& oi, typeRNum Tsim, typeRNum t_0)
+	void DmpcInterface::run_DMPC
+	(
+		const SimulatorPtr& simulator,
+		const OptimizationInfo& oi, 
+		const typeRNum Tsim,
+		const typeRNum t_0
+	)
 	{
 		const unsigned int maxSimIter = static_cast<unsigned int>(Tsim / oi.COMMON_dt_);
 		std::chrono::milliseconds CPUtime(0);
@@ -130,17 +145,22 @@ namespace grampcd
 
 			// update state and time
 			simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
+
+			// update progress bar
+			print_progressbar(iMPC, maxSimIter);
 		}
+
+		log_->print(DebugType::Progressbar) << std::endl;
 
 		log_->print(DebugType::Base) << "DMPC finished." << std::endl
 			<< "Maximum computation time : "
 			<< CPUtime_max << " ms in total or " << CPUtime_max / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl
 			<< "Average computation time : "
 			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " ms in total or "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl;
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl << std::endl;
 	}
 
-	void DmpcInterface::run_DMPC(SimulatorPtr simulator, const OptimizationInfo& oi)
+	void DmpcInterface::run_DMPC(const SimulatorPtr& simulator, const OptimizationInfo& oi)
 	{
 		// main loop for centralized solution
 		coordinator_->initialize_ADMM(oi);
@@ -174,7 +194,21 @@ namespace grampcd
 		}
 	}
 
-	void DmpcInterface::initialize_central_communicationInterface(int number_of_threads)
+	void DmpcInterface::print_progressbar(const int current_iter, const int max_iter)
+	{
+		if (max_iter == 0)
+			return;
+
+		const int progress = static_cast<int>(std::round(static_cast<double>(current_iter) / max_iter * 100));
+
+		log_->print(DebugType::Progressbar) << "\r" << progress << "% completed: " << std::string(progress / 2, '|');
+		log_->print(DebugType::Progressbar).flush();
+
+		if (current_iter == max_iter)
+			log_->print(DebugType::Progressbar) << std::endl;
+	}
+
+	void DmpcInterface::initialize_central_communicationInterface(const int number_of_threads)
 	{
 		// create communication interface
 		CommunicationInterfacePtr communication_interface(new CommunicationInterfaceCentral(log_, number_of_threads));
@@ -196,7 +230,7 @@ namespace grampcd
 		factory_ = ModelFactoryPtr(new GeneralModelFactory(log_));
 	}
 
-	void DmpcInterface::initialize_local_communicationInterface_as_agent(CommunicationInfo adress_coordinator)
+	void DmpcInterface::initialize_local_communicationInterface_as_agent(const CommunicationInfo& adress_coordinator)
 	{
 		// create communication interface
 		communication_interface_ = CommunicationInterfacePtr(new CommunicationInterfaceLocal(log_, adress_coordinator));
@@ -205,7 +239,7 @@ namespace grampcd
 		factory_ = ModelFactoryPtr(new GeneralModelFactory(log_));
 	}
 
-	void DmpcInterface::initialize_local_communicationInterface_as_coordinator(unsigned short port)
+	void DmpcInterface::initialize_local_communicationInterface_as_coordinator(const unsigned short port)
 	{
 		// create communication interface
 		communication_interface_ = CommunicationInterfacePtr(new CommunicationInterfaceLocal(log_, port));
@@ -226,7 +260,7 @@ namespace grampcd
 		factory_ = ModelFactoryPtr(new GeneralModelFactory(log_));
 	}
 
-	void DmpcInterface::register_agent(AgentInfo info, std::vector<typeRNum> x_init, std::vector<typeRNum> u_init)
+	void DmpcInterface::register_agent(const AgentInfo& info, const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init)
 	{
 		if (info.id_ < 0)
 		{
@@ -250,13 +284,13 @@ namespace grampcd
 		agents_.push_back(agent);
 	}
 
-	void DmpcInterface::deregister_agent(AgentInfo info)
+	void DmpcInterface::deregister_agent(const AgentInfo& info)
 	{
 		if (communication_interface_->deregister_agent(info))
 			DataConversion::erase_element_from_vector(agents_, info);
 	}
 
-	void DmpcInterface::set_desiredAgentState(int agent_id, std::vector<typeRNum> x_des, std::vector<typeRNum> u_des)
+	void DmpcInterface::set_desiredAgentState(const int agent_id, const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des)
 	{
 		for (auto agent : agents_)
 		{
@@ -265,12 +299,12 @@ namespace grampcd
 		}
 	}
 
-	void DmpcInterface::register_coupling(CouplingInfo info)
+	void DmpcInterface::register_coupling(const CouplingInfo& info)
 	{
 		communication_interface_->register_coupling(info);
 	}
 
-	void DmpcInterface::run_MPC(typeRNum t_0, typeRNum Tsim)
+	void DmpcInterface::run_MPC(ctypeRNum t_0, ctypeRNum Tsim)
 	{
 		run_MPC(agents_, simulator_, optimizationInfo_, Tsim, t_0);
 	}
@@ -280,7 +314,7 @@ namespace grampcd
 		run_MPC(agents_, simulator_, optimizationInfo_);
 	}
 
-	void DmpcInterface::run_DMPC(typeRNum t_0, typeRNum Tsim)
+	void DmpcInterface::run_DMPC(ctypeRNum t_0, ctypeRNum Tsim)
 	{
 		run_DMPC(simulator_, optimizationInfo_, Tsim, t_0);
 	}
@@ -290,22 +324,22 @@ namespace grampcd
 		run_DMPC(simulator_, optimizationInfo_);
 	}
 
-	SolutionPtr DmpcInterface::get_solution(unsigned int agent_id) const
+	SolutionPtr DmpcInterface::get_solution(const unsigned int agent_id) const
 	{
 		return communication_interface_->get_solution(agent_id);
 	}
 
-	std::vector< SolutionPtr > DmpcInterface::get_solution(std::string agents) const
+	std::vector< SolutionPtr > DmpcInterface::get_solution(const std::string& agents) const
 	{
 		return communication_interface_->get_solution(agents);
 	}
 
-	void DmpcInterface::reset_solution(unsigned int agent_id)
+	void DmpcInterface::reset_solution(const unsigned int agent_id)
 	{
 		communication_interface_->reset_solution(agent_id);
 	}
 
-	void DmpcInterface::reset_solution(std::string agents)
+	void DmpcInterface::reset_solution(const std::string& agents)
 	{
 		communication_interface_->reset_solution(agents);
 	}
@@ -315,7 +349,7 @@ namespace grampcd
 		return std::make_shared<OptimizationInfo>(optimizationInfo_);
 	}
 
-	void DmpcInterface::set_optimizationInfo(OptimizationInfo optimization_info)
+	void DmpcInterface::set_optimizationInfo(const OptimizationInfo& optimization_info)
 	{
 		optimizationInfo_ = optimization_info;
 	}
@@ -335,12 +369,12 @@ namespace grampcd
 		communication_interface_->send_flag_to_agents(agent_id);
 	}
 
-	void DmpcInterface::send_flag_to_agents(const std::vector<int> agent_ids) const
+	void DmpcInterface::send_flag_to_agents(const std::vector<int>& agent_ids) const
 	{
 		communication_interface_->send_flag_to_agents(agent_ids);
 	}
 
-	void DmpcInterface::send_flag_to_agents(const std::string agents) const
+	void DmpcInterface::send_flag_to_agents(const std::string& agents) const
 	{
 		communication_interface_->send_flag_to_agents(agents);
 	}
@@ -350,47 +384,52 @@ namespace grampcd
 		communication_interface_->waitFor_flag_from_coordinator();
 	}
 
-	void DmpcInterface::deregister_coupling(CouplingInfo info)
+	void DmpcInterface::deregister_coupling(const CouplingInfo& info)
 	{
 		communication_interface_->deregister_coupling(info);
 	}
 
-	void DmpcInterface::wait_blocking_s(unsigned int s)
+	void DmpcInterface::wait_blocking_s(const unsigned int s)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(s));
 	}
 
-	void DmpcInterface::simulate_realtime(bool realtime)
+	void DmpcInterface::simulate_realtime(const bool realtime)
 	{
 		realtime_ = realtime;
 	}
 
-	void DmpcInterface::cap_stored_data(unsigned int data_points)
+	void DmpcInterface::cap_stored_data(const unsigned int data_points)
 	{
 		communication_interface_->cap_stored_data(data_points);
 	}
 
-	void DmpcInterface::set_print_base(bool print)
+	void DmpcInterface::set_print_base(const bool print)
 	{
-		log_->set_print_base(print);
+		log_->print_base_ = print;
 	}
 
-	void DmpcInterface::set_print_error(bool print)
+	void DmpcInterface::set_print_error(const bool print)
 	{
-		log_->set_print_error(print);
+		log_->print_error_ = print;
 	}
 
-	void DmpcInterface::set_print_message(bool print)
+	void DmpcInterface::set_print_message(const bool print)
 	{
-		log_->set_print_message(print);
+		log_->print_message_ = print;
 	}
 
-	void DmpcInterface::set_print_warning(bool print)
+	void DmpcInterface::set_print_warning(const bool print)
 	{
-		log_->set_print_warning(print);
+		log_->print_warning_ = print;
 	}
 
-	void DmpcInterface::print_solution_to_file(const unsigned int agent_id, const std::string prefix) const
+	void DmpcInterface::set_print_progressbar(const bool print)
+	{
+		log_->print_progressbar_ = print;
+	}
+
+	void DmpcInterface::print_solution_to_file(const unsigned int agent_id, const std::string& prefix) const
 	{
 		std::string filename = prefix + std::to_string(agent_id);
 
@@ -408,7 +447,7 @@ namespace grampcd
 			<< "Failed to open file." << std::endl;
 	}
 
-	void DmpcInterface::print_solution_to_file(const std::string agents, const std::string prefix) const
+	void DmpcInterface::print_solution_to_file(const std::string& agents, const std::string& prefix) const
 	{
 		// get solutions
 		const auto solutions = communication_interface_->get_solution(agents);

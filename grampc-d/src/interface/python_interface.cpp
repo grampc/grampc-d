@@ -28,37 +28,37 @@ namespace grampcd
 		: dmpc_interface_(std::make_shared<DmpcInterface>())
 	{}
 
-	void PythonInterface::initialize_central_communicationInterface(int number_of_threads)
+	void PythonInterface::initialize_central_communicationInterface(const int number_of_threads)
 	{
 		dmpc_interface_->initialize_central_communicationInterface(number_of_threads);
 	}
 
-	void PythonInterface::initialize_local_communicationInterface_as_agent(CommunicationInfo adress_coordinator)
+	void PythonInterface::initialize_local_communicationInterface_as_agent(const CommunicationInfo& adress_coordinator)
 	{
 		dmpc_interface_->initialize_local_communicationInterface_as_agent(adress_coordinator);
 	}
 
-	void PythonInterface::initialize_local_communicationInterface_as_coordinator(unsigned short port)
+	void PythonInterface::initialize_local_communicationInterface_as_coordinator(const unsigned short port)
 	{
 		dmpc_interface_->initialize_local_communicationInterface_as_coordinator(port);
 	}
 
-	void PythonInterface::register_agent(AgentInfo info, std::vector<typeRNum> x_init, std::vector<typeRNum> u_init)
+	void PythonInterface::register_agent(const AgentInfo& info, const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init)
 	{
 		dmpc_interface_->register_agent(info, x_init, u_init);
 	}
 
-	void PythonInterface::set_desiredAgentState(int agent_id, std::vector<typeRNum> x_des, std::vector<typeRNum> u_des)
+	void PythonInterface::set_desiredAgentState(const int agent_id, const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des)
 	{
 		dmpc_interface_->set_desiredAgentState(agent_id, x_des, u_des);
 	}
 
-	void PythonInterface::register_coupling(CouplingInfo info)
+	void PythonInterface::register_coupling(const CouplingInfo& info)
 	{
 		dmpc_interface_->register_coupling(info);
 	}
 
-	void PythonInterface::run_MPC(typeRNum Tsim, typeRNum t0)
+	void PythonInterface::run_MPC(ctypeRNum Tsim, ctypeRNum t0)
 	{
 		dmpc_interface_->run_MPC(Tsim, t0);
 	}
@@ -68,7 +68,7 @@ namespace grampcd
 		dmpc_interface_->run_MPC();
 	}
 
-	void PythonInterface::run_DMPC(typeRNum Tsim, typeRNum t0)
+	void PythonInterface::run_DMPC(ctypeRNum Tsim, ctypeRNum t0)
 	{
 		dmpc_interface_->run_DMPC(Tsim, t0);
 	}
@@ -78,22 +78,22 @@ namespace grampcd
 		dmpc_interface_->run_DMPC();
 	}
 
-	SolutionPtr PythonInterface::get_solution(unsigned int agent_id) const
+	SolutionPtr PythonInterface::get_solution(const unsigned int agent_id) const
 	{
 		return dmpc_interface_->get_solution(agent_id);
 	}
 
-	std::vector< SolutionPtr > PythonInterface::get_solution(std::string agents) const
+	std::vector< SolutionPtr > PythonInterface::get_solution(const std::string& agents) const
 	{
 		return dmpc_interface_->get_solution(agents);
 	}
 
-	void PythonInterface::reset_solution(unsigned int agent_id)
+	void PythonInterface::reset_solution(const unsigned int agent_id)
 	{
 		dmpc_interface_->reset_solution(agent_id);
 	}
 
-	void PythonInterface::reset_solution(std::string agents)
+	void PythonInterface::reset_solution(const std::string& agents)
 	{
 		dmpc_interface_->reset_solution(agents);
 	}
@@ -103,12 +103,12 @@ namespace grampcd
 		return dmpc_interface_->get_optimizationInfo();
 	}
 
-	void PythonInterface::set_optimizationInfo(OptimizationInfo optimization_info)
+	void PythonInterface::set_optimizationInfo(const OptimizationInfo& optimization_info)
 	{
 		dmpc_interface_->set_optimizationInfo(optimization_info);
 	}
 
-	void PythonInterface::wait_for_connections(int agents, int couplings)
+	void PythonInterface::wait_for_connections(const int agents, const int couplings)
 	{
 		dmpc_interface_->wait_for_connections(agents, couplings);
 	}
@@ -123,12 +123,12 @@ namespace grampcd
 		dmpc_interface_->send_flag_to_agents(agent_id);
 	}
 
-	void PythonInterface::send_flag_to_agents(const std::vector<int> agent_ids) const
+	void PythonInterface::send_flag_to_agents(const std::vector<int>& agent_ids) const
 	{
 		dmpc_interface_->send_flag_to_agents(agent_ids);
 	}
 
-	void PythonInterface::send_flag_to_agents(const std::string agents) const
+	void PythonInterface::send_flag_to_agents(const std::string& agents) const
 	{
 		dmpc_interface_->send_flag_to_agents(agents);
 	}
@@ -138,57 +138,62 @@ namespace grampcd
 		dmpc_interface_->waitFor_flag_from_coordinator();
 	}
 
-	void PythonInterface::deregister_coupling(CouplingInfo info)
+	void PythonInterface::deregister_coupling(const CouplingInfo& info)
 	{
 		dmpc_interface_->deregister_coupling(info);
 	}
 
-	void PythonInterface::wait_blocking_s(unsigned int s)
+	void PythonInterface::wait_blocking_s(const unsigned int s)
 	{
 		dmpc_interface_->wait_blocking_s(s);
 	}
 
-	void PythonInterface::simulate_realtime(bool realtime)
+	void PythonInterface::simulate_realtime(const bool realtime)
 	{
 		dmpc_interface_->simulate_realtime(realtime);
 	}
 
-	void PythonInterface::deregister_agent(AgentInfo info)
+	void PythonInterface::deregister_agent(const AgentInfo& info)
 	{
 		dmpc_interface_->deregister_agent(info);
 	}
 
-	void PythonInterface::cap_stored_data(unsigned int data_points)
+	void PythonInterface::cap_stored_data(const unsigned int data_points)
 	{
 		dmpc_interface_->cap_stored_data(data_points);
 	}
 
-	void PythonInterface::set_print_base(bool print)
+	void PythonInterface::set_print_base(const bool print)
 	{
 		dmpc_interface_->set_print_base(print);
 	}
 
-	void PythonInterface::set_print_error(bool print)
+	void PythonInterface::set_print_error(const bool print)
 	{
 		dmpc_interface_->set_print_error(print);
 	}
 
-	void PythonInterface::set_print_message(bool print)
+	void PythonInterface::set_print_message(const bool print)
 	{
 		dmpc_interface_->set_print_message(print);
 	}
 
-	void PythonInterface::set_print_warning(bool print)
+	void PythonInterface::set_print_warning(const bool print)
 	{
 		dmpc_interface_->set_print_warning(print);
 	}
 
-	void PythonInterface::print_solution_to_file(const unsigned int agent_id, const std::string prefix) const
+	void PythonInterface::set_print_progressbar(const bool print)
+	{
+		dmpc_interface_->set_print_progressbar(print);
+	}
+
+	void PythonInterface::print_solution_to_file(const unsigned int agent_id, const std::string& prefix) const
 	{
 		dmpc_interface_->print_solution_to_file(agent_id, prefix);
 	}
 
-	void PythonInterface::print_solution_to_file(const std::string agents, const std::string prefix) const
+	void PythonInterface::print_solution_to_file(const std::string& agents, const std::string& prefix) const
 	{
 		dmpc_interface_->print_solution_to_file(agents, prefix);
 	}
@@ -229,30 +234,31 @@ namespace grampcd
 			.def("register_coupling", &PythonInterface::register_coupling)
 			.def("deregister_coupling", &PythonInterface::deregister_coupling)
 			.def("run_MPC", (void (PythonInterface::*)(void)) & PythonInterface::run_MPC)
-			.def("run_MPC", (void (PythonInterface::*)(typeRNum, typeRNum)) & PythonInterface::run_MPC)
+			.def("run_MPC", (void (PythonInterface::*)(ctypeRNum, ctypeRNum)) & PythonInterface::run_MPC)
 			.def("run_DMPC", (void (PythonInterface::*)(void)) & PythonInterface::run_DMPC)
-			.def("run_DMPC", (void (PythonInterface::*)(typeRNum, typeRNum)) & PythonInterface::run_DMPC)
+			.def("run_DMPC", (void (PythonInterface::*)(ctypeRNum, ctypeRNum)) & PythonInterface::run_DMPC)
 			.def("set_optimizationInfo", &PythonInterface::set_optimizationInfo)
 			.def("get_optimizationInfo", &PythonInterface::get_optimizationInfo)
 			.def("wait_for_connections", &PythonInterface::wait_for_connections)
-			.def("send_flag_to_agents", (void (PythonInterface::*)(int) const) & PythonInterface::send_flag_to_agents)
-			.def("send_flag_to_agents", (void (PythonInterface::*)(std::vector<int>) const) & PythonInterface::send_flag_to_agents)
-			.def("send_flag_to_agents", (void (PythonInterface::*)(std::string) const) & PythonInterface::send_flag_to_agents)
+			.def("send_flag_to_agents", (void (PythonInterface::*)(const int) const) & PythonInterface::send_flag_to_agents)
+			.def("send_flag_to_agents", (void (PythonInterface::*)(const std::vector<int>&) const) & PythonInterface::send_flag_to_agents)
+			.def("send_flag_to_agents", (void (PythonInterface::*)(const std::string&) const) & PythonInterface::send_flag_to_agents)
 			.def("wait_blocking_s", &PythonInterface::wait_blocking_s)
 			.def("waitFor_flag_from_coordinator", &PythonInterface::waitFor_flag_from_coordinator)
 			.def("set_passive", &PythonInterface::set_passive)
-			.def("get_solution", (SolutionPtr(PythonInterface::*)(unsigned int) const) & PythonInterface::get_solution)
-			.def("get_solution", (std::vector< SolutionPtr >(PythonInterface::*)(std::string) const) & PythonInterface::get_solution)
-			.def("reset_solution", (void(PythonInterface::*)(unsigned int)) & PythonInterface::reset_solution)
-			.def("reset_solution", (void(PythonInterface::*)(std::string)) & PythonInterface::reset_solution)
-			.def("print_solution_to_file", (void(PythonInterface::*)(const unsigned int, const std::string) const) & PythonInterface::print_solution_to_file, py::arg("agent_id"), py::arg("prefix") = "Solution_agent")
-			.def("print_solution_to_file", (void(PythonInterface::*)(const std::string, const std::string) const) & PythonInterface::print_solution_to_file, py::arg("agents"), py::arg("prefix") = "Solution_agent")
+			.def("get_solution", (SolutionPtr(PythonInterface::*)(const unsigned int) const) & PythonInterface::get_solution)
+			.def("get_solution", (std::vector< SolutionPtr >(PythonInterface::*)(const std::string&) const) & PythonInterface::get_solution)
+			.def("reset_solution", (void(PythonInterface::*)(const unsigned int)) & PythonInterface::reset_solution)
+			.def("reset_solution", (void(PythonInterface::*)(const std::string&)) & PythonInterface::reset_solution)
+			.def("print_solution_to_file", (void(PythonInterface::*)(const unsigned int, const std::string&) const) & PythonInterface::print_solution_to_file, py::arg("agent_id"), py::arg("prefix") = "Solution_agent")
+			.def("print_solution_to_file", (void(PythonInterface::*)(const std::string&, const std::string&) const) & PythonInterface::print_solution_to_file, py::arg("agents"), py::arg("prefix") = "Solution_agent")
 			.def("simulate_realtime", &PythonInterface::simulate_realtime)
 			.def("cap_stored_data", &PythonInterface::cap_stored_data)
 			.def("set_print_base", &PythonInterface::set_print_base)
 			.def("set_print_error", &PythonInterface::set_print_error)
 			.def("set_print_message", &PythonInterface::set_print_message)
-			.def("set_print_warning", &PythonInterface::set_print_warning);
+			.def("set_print_warning", &PythonInterface::set_print_warning)
+			.def("set_print_progressbar", &PythonInterface::set_print_progressbar);
 
 		py::class_<AgentInfo>(m, "AgentInfo")
 			.def(py::init<>())

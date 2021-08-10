@@ -135,6 +135,9 @@ coupling_info.agent_id_ = 4
 coupling_info.neighbor_id_ = 3
 interface.register_coupling(coupling_info)
 
+# activate progressbar
+interface.set_print_progressbar(True)
+
 # run distributed controller
 interface.run_DMPC(0, Tsim)
 

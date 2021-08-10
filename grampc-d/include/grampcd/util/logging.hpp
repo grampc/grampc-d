@@ -23,27 +23,19 @@ namespace grampcd
 		Error,
 		Warning,
 		Message,
-		Base
+		Base,
+		Progressbar
 	};
 
 	class Logging
 	{
 	public:
-		/*Activate printing messages of type base*/
-		void set_print_base(bool print) { set_print_base_ = print; }
-		/*Activate printing messages of type message*/
-		void set_print_message(bool print) { set_print_message_ = print; }
-		/*Activate printing messages of type warning*/
-		void set_print_warning(bool print) { set_print_warning_ = print; }
-		/*Activate printing messages of type error*/
-		void set_print_error(bool print) { set_print_error_ = print; }
-
 		std::ostream& print(const DebugType type) const;
 
-	private:
-		bool set_print_base_ = true;
-		bool set_print_message_ = false;
-		bool set_print_warning_ = false;
-		bool set_print_error_ = false;
+		bool print_base_ = true;
+		bool print_message_ = false;
+		bool print_warning_ = false;
+		bool print_error_ = false;
+		bool print_progressbar_ = false;
 	};
 }

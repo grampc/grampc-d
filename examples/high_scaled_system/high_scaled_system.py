@@ -124,6 +124,9 @@ for i in range(0, n_agents_y) :
 
         idx = idx + 1;
 
+#activate progressbar
+interface.set_print_progressbar(True)
+
 # run MPC
 interface.run_MPC(0, Tsim)
 

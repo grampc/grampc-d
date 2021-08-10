@@ -25,7 +25,7 @@
 namespace grampcd
 {
 
-    Coordinator::Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, LoggingPtr& log)
+    Coordinator::Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, const LoggingPtr& log)
         : communication_interface_(communication_interface),
           simulation_(simulation),
         log_(log)

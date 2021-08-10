@@ -21,19 +21,23 @@ namespace grampcd
 		switch (type)
 		{
 		case DebugType::Error:
-			if(set_print_error_)
+			if(print_error_)
 				return std::cerr;
 			break;
 		case DebugType::Warning:
-			if (set_print_warning_)
+			if (print_warning_)
 				return std::cerr;
 			break;
 		case DebugType::Message:
-			if(set_print_message_)
+			if(print_message_)
 				return std::cout;
 			break;
 		case DebugType::Base:
-			if(set_print_base_)
+			if(print_base_)
+				return std::cout;
+			break;
+		case DebugType::Progressbar:
+			if (print_progressbar_)
 				return std::cout;
 			break;
 		default:

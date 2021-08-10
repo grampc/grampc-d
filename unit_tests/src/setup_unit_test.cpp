@@ -98,7 +98,7 @@ void add_unit_test(const std::string& executable_name_to_add, const grampcd::Log
 int main(int argc, char* argv[]) 
 {
 	const auto log = std::make_shared<grampcd::Logging>();
-	log->set_print_error(true);
+	log->print_error_ = true;
 
 	add_unit_test("coupled_watertanks", log);
 	add_unit_test("evaluate_neighborApproximation", log);

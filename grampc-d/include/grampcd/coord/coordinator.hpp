@@ -26,7 +26,7 @@ namespace grampcd
     class Coordinator
     {
     public:
-        Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, LoggingPtr& log);
+        Coordinator(const CommunicationInterfacePtr& communication_interface, bool simulation, const LoggingPtr& log);
 
         /* Register agent in the network */
         const bool register_agent(const AgentInfo& agent_info);

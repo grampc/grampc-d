@@ -125,6 +125,9 @@ int main(int argc, char** argv)
 	coupling_info.neighbor_id_ = 3;
 	interface->register_coupling(coupling_info);
 
+	// activate progress bar
+	interface->set_print_progressbar(true);
+
 	// run distributed controller
 	interface->run_DMPC(0, Tsim);
 

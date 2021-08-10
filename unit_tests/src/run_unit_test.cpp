@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 {
 	//initialize Logging and specify which MessageTypes are printed
 	const auto log = std::make_shared<grampcd::Logging>();
-	log->set_print_error(true);
-	log->set_print_message(true);
+	log->print_error_ = true;
+	log->print_message_ = true;
 
 	//obtain the names of executable simulation files from checksumHandler
 	const auto results_of_all_unittests = unit_test::ChecksumHandler::get_results_of_all_unittests(log);
