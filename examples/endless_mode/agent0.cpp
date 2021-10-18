@@ -51,8 +51,7 @@ int main(int argc, char** argv)
 	agent.model_parameters_ = { A, 1, 0 };
 	agent.cost_parameters_ = { 0, 0, R };
 
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register coupling
 	auto coupling_info = interface->couplingInfo();

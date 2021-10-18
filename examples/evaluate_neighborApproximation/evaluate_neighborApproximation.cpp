@@ -69,8 +69,7 @@ int main(int argc, char** argv)
 	agent.model_parameters_ = { A, 1, 0 };
 	agent.cost_parameters_ = { 0, 0, R };
 
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	const int n_agents = 5;
 
@@ -79,16 +78,14 @@ int main(int argc, char** argv)
 		agent.id_ = i;
 		agent.model_parameters_ = { A, 0, 0 };
 		agent.cost_parameters_ = { 0, 0, 0 };
-		interface->register_agent(agent, xinit, uinit);
-		interface->set_desiredAgentState(i, xdes, udes);
+		interface->register_agent(agent, xinit, uinit, xdes, udes);
 	}
 
 	agent_id = n_agents-1;
 	agent.id_ = agent_id;
 	agent.model_parameters_ = { A, 0, d };
 	agent.cost_parameters_ = { P, Q, 0 };
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register couplings
 	auto coupling_info = interface->couplingInfo();
@@ -135,24 +132,21 @@ int main(int argc, char** argv)
 	agent.model_parameters_ = { A, 1, 0 };
 	agent.cost_parameters_ = { 0, 0, R };
 
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	for (unsigned int i = 1; i < n_agents - 1; ++i)
 	{
 		agent.id_ = i;
 		agent.model_parameters_ = { A, 0, 0 };
 		agent.cost_parameters_ = { 0, 0, 0 };
-		interface->register_agent(agent, xinit, uinit);
-		interface->set_desiredAgentState(i, xdes, udes);
+		interface->register_agent(agent, xinit, uinit, xdes, udes);
 	}
 
 	agent_id = n_agents - 1;
 	agent.id_ = agent_id;
 	agent.model_parameters_ = { A, 0, d };
 	agent.cost_parameters_ = { P, Q, 0 };
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register couplings
 	for (unsigned int i = 0; i < n_agents; ++i)

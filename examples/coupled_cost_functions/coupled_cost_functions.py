@@ -63,8 +63,7 @@ agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
 agent.cost_parameters_ = cost_parameters
-interface.register_agent(agent, xinit, uinit);
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 agent_id = 1;
 xinit = [0.25, 0];
@@ -73,8 +72,7 @@ agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
 agent.cost_parameters_ = cost_parameters
-interface.register_agent(agent, xinit, uinit);
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 agent_id = 2;
 xinit = [0.75, 0];
@@ -83,8 +81,7 @@ agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
 agent.cost_parameters_ = cost_parameters
-interface.register_agent(agent, xinit, uinit);
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 # register coupling
 coupling_info = grampcd_interface.CouplingInfo();

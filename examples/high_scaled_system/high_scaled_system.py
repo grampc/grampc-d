@@ -85,11 +85,9 @@ for i in range(0, n_agents_x) :
 for i in range(0, n_agents_x) :
     for j in range(0, n_agents_y) :
         agentInfo.id_ = i*n_agents_x + j;
-
-        interface.register_agent(agentInfo, x_init[agentInfo.id_], [0, 0]);
-
+        
         x_des = [i, 0, j, 0];
-        interface.set_desiredAgentState(agentInfo.id_, x_des, [0, 0]);
+        interface.register_agent(agentInfo, x_init[agentInfo.id_], [0, 0], x_des, [0, 0]);
 
 # register couplings
 coupling_info = grampcd_interface.CouplingInfo()
@@ -148,11 +146,9 @@ for i in range(0, n_agents_x) :
 for i in range(0, n_agents_x) :
     for j in range(0, n_agents_y) :
         agentInfo.id_ = i*n_agents_x + j;
-
-        interface.register_agent(agentInfo, x_init[agentInfo.id_], [0, 0]);
-
+        
         x_des = [i, 0, j, 0];
-        interface.set_desiredAgentState(agentInfo.id_, x_des, [0, 0]);
+        interface.register_agent(agentInfo, x_init[agentInfo.id_], [0, 0], x_des, [0, 0]);
 
 idx = 0
 for i in range(0, n_agents_y) :

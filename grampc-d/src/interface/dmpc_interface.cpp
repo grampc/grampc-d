@@ -260,12 +260,35 @@ namespace grampcd
 		factory_ = ModelFactoryPtr(new GeneralModelFactory(log_));
 	}
 
-	void DmpcInterface::register_agent(const AgentInfo& info, const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init)
+	void DmpcInterface::register_agent
+	(
+		const AgentInfo& info,
+		const std::vector<typeRNum>& x_init,
+		const std::vector<typeRNum>& u_init,
+		const std::vector<typeRNum>& x_des,
+		const std::vector<typeRNum>& u_des
+	)
 	{
 		if (info.id_ < 0)
 		{
 			log_->print(DebugType::Error) << "[DmpcInterface::register_agent] "
-				<< "Agent registration rejected as negative agent ids are not allowed." << std::endl;
+				<< "Registration of agent rejected since negative agent ids are not allowed." << std::endl;
+
+			return;
+		}
+
+		if (x_init.size() != x_des.size())
+		{
+			log_->print(DebugType::Error) << "[DmpcInterface::register_agent] "
+				<< "Registration of agent rejected since negative dimensions of x_init and x_des do not fit." << std::endl;
+
+			return;
+		}
+
+		if (u_init.size() != u_des.size())
+		{
+			log_->print(DebugType::Error) << "[DmpcInterface::register_agent] "
+				<< "Registration of agent rejected since negative dimensions of u_init and u_des do not fit." << std::endl;
 
 			return;
 		}
@@ -279,6 +302,7 @@ namespace grampcd
 		// initialize
 		agent->set_initialState(x_init, u_init);
 		agent->initialize(optimizationInfo_);
+		agent->set_desiredAgentState(x_des, u_des);
 
 		// safe in list
 		agents_.push_back(agent);
@@ -292,10 +316,13 @@ namespace grampcd
 
 	void DmpcInterface::set_desiredAgentState(const int agent_id, const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des)
 	{
-		for (auto agent : agents_)
+		for (const auto& agent : agents_)
 		{
 			if (agent->get_id() == agent_id)
+			{
 				agent->set_desiredAgentState(x_des, u_des);
+				break;
+			}
 		}
 	}
 

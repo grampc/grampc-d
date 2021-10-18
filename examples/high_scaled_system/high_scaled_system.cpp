@@ -61,13 +61,12 @@ int main(int argc, char** argv)
             agentInfo.id_ = i * n_agents_x + j;
 
             //define offset in x and y
-            typeRNum offset_x = i % 2 ? -0.2 : 0.2;
-            typeRNum offset_y = j % 2 ? -0.2 : 0.2;
+            ctypeRNum offset_x = i % 2 ? -0.2 : 0.2;
+            ctypeRNum offset_y = j % 2 ? -0.2 : 0.2;
 
-			std::vector<typeRNum> x_init = { static_cast<typeRNum>(i+offset_x), 0.0, static_cast<typeRNum>(j+offset_y), 0.0 };
-			interface->register_agent(agentInfo, x_init, { 0, 0 });
-            std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
-            interface->set_desiredAgentState(agentInfo.id_, x_des, { 0, 0 });
+			const std::vector<typeRNum> x_init = { static_cast<typeRNum>(i + offset_x), 0.0, static_cast<typeRNum>(j + offset_y), 0.0 };
+			const std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
+			interface->register_agent(agentInfo, x_init, { 0, 0 }, x_des, { 0, 0 });
         }
     }
 
@@ -142,12 +141,11 @@ int main(int argc, char** argv)
             agentInfo.id_ = i * n_agents_x + j;
 
             //define offset in x and y
-            typeRNum offset_x = i % 2 ? -0.4 : 0.4;
-            typeRNum offset_y = j % 2 ? -0.3 : 0.3;
-            std::vector<typeRNum> x_init = { static_cast<typeRNum>(i + offset_x), 0.0, static_cast<typeRNum>(j + offset_y), 0.0 };
-            interface->register_agent(agentInfo, x_init, { 0, 0 });
-            std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
-            interface->set_desiredAgentState(agentInfo.id_, x_des, { 0, 0 });
+            ctypeRNum offset_x = i % 2 ? -0.4 : 0.4;
+            ctypeRNum offset_y = j % 2 ? -0.3 : 0.3;
+			const std::vector<typeRNum> x_init = { static_cast<typeRNum>(i + offset_x), 0.0, static_cast<typeRNum>(j + offset_y), 0.0 };
+			const std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
+            interface->register_agent(agentInfo, x_init, { 0, 0 }, x_des, { 0, 0 });
         }
     }
 

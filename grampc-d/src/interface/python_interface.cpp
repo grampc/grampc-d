@@ -43,9 +43,16 @@ namespace grampcd
 		dmpc_interface_->initialize_local_communicationInterface_as_coordinator(port);
 	}
 
-	void PythonInterface::register_agent(const AgentInfo& info, const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init)
+	void PythonInterface::register_agent
+	(
+		const AgentInfo& info,
+		const std::vector<typeRNum>& x_init,
+		const std::vector<typeRNum>& u_init,
+		const std::vector<typeRNum>& x_des,
+		const std::vector<typeRNum>& u_des
+	)
 	{
-		dmpc_interface_->register_agent(info, x_init, u_init);
+		dmpc_interface_->register_agent(info, x_init, u_init, x_des, u_des);
 	}
 
 	void PythonInterface::set_desiredAgentState(const int agent_id, const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des)

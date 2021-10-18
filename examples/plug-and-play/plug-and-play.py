@@ -74,8 +74,7 @@ p = 1
 agent.id_ = agent_id
 agent.model_parameters_ = [I, Omega, kappa, P0, p]
 agent.cost_parameters_ = [0, P, 0, Q, R]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 agent_id = 1
 P0 = -0.01
@@ -83,8 +82,7 @@ p = 0
 agent.id_ = agent_id
 agent.model_parameters_ = [I, Omega, kappa, P0, p]
 agent.cost_parameters_ = [0, P, 0, Q, R]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 # register couplings
 coupling_info = grampcd_interface.CouplingInfo()
@@ -106,8 +104,7 @@ interface.run_DMPC(0, Tsim)
 # register agent
 agent_id = 2
 agent.id_ = agent_id
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 # register couplings
 coupling_info.agent_id_ = 1

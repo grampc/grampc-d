@@ -63,8 +63,7 @@ int main(int argc, char** argv)
 	agent.id_ = agent_id;
 	agent.model_parameters_ = { I, Omega, kappa, P0, p };
 	agent.cost_parameters_ = { 0, P, 0, Q, R };
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	agent_id = 1;
 	P0 = -0.01;
@@ -72,8 +71,7 @@ int main(int argc, char** argv)
 	agent.id_ = agent_id;
 	agent.model_parameters_ = { I, Omega, kappa, P0, p };
 	agent.cost_parameters_ = { 0, P, 0, Q, R };
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register couplings
 	auto coupling_info = interface->couplingInfo();
@@ -95,8 +93,7 @@ int main(int argc, char** argv)
 	// register agent
 	agent_id = 2;
 	agent.id_ = agent_id;
-	interface->register_agent(agent, xinit, uinit);
-	interface->set_desiredAgentState(agent_id, xdes, udes);
+	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register couplings
 	coupling_info.agent_id_ = 1;

@@ -30,7 +30,14 @@ namespace grampcd
 		virtual void initialize_local_communicationInterface_as_coordinator(const unsigned short port) = 0;
 
 		/*Register an agent.*/
-		virtual void register_agent(const AgentInfo& info, const std::vector<typeRNum>& x_init, const std::vector<typeRNum>& u_init) = 0;
+		virtual void register_agent
+		(
+			const AgentInfo& info, 
+			const std::vector<typeRNum>& x_init, 
+			const std::vector<typeRNum>& u_init,
+			const std::vector<typeRNum>& x_des, 
+			const std::vector<typeRNum>& u_des
+		) = 0;
 		/*Set the desired agent state of an agent.*/
 		virtual void set_desiredAgentState(const int agent_id, const std::vector<typeRNum>& x_des, const std::vector<typeRNum>& u_des) = 0;
 		/*De-register an agent.*/

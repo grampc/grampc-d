@@ -74,29 +74,25 @@ agent_id = 1
 agent.id_ = agent_id
 agent.model_parameters_ = [A, 1, 0]
 agent.cost_parameters_ = [0, 0, R]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 agent_id = 2
 agent.id_ = agent_id
 agent.model_parameters_ = [A, 0, 0]
 agent.cost_parameters_ = [0, 0, 0]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 agent_id = 3
 agent.id_ = agent_id
 agent.model_parameters_ = [A, 0, 0]
 agent.cost_parameters_ = [0, 0, 0]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 agent_id = 4
 agent.id_ = agent_id
 agent.model_parameters_ = [A, 0, d]
 agent.cost_parameters_ = [P, Q, 0]
-interface.register_agent(agent, xinit, uinit)
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 # register couplings
 coupling_info = grampcd_interface.CouplingInfo()

@@ -66,8 +66,7 @@ agent.model_name_ = "water_tank_agentModel";
 agent.model_parameters_ = [A, 0, d];
 agent.cost_parameters_ = [P, Q, 0];
 
-interface.register_agent(agent, xinit, uinit);
-interface.set_desiredAgentState(agent_id, xdes, udes)
+interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 # register coupling
 coupling_info = grampcd_interface.CouplingInfo();
