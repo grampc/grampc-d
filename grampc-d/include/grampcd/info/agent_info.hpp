@@ -30,7 +30,13 @@ namespace grampcd
         std::vector<typeRNum> model_parameters_ = std::vector<typeRNum>(0, 0);
         std::vector<typeRNum> cost_parameters_ = std::vector<typeRNum>(0, 0);
 
-        const bool operator== (const AgentInfo& info) const { return (id_ == info.id_) && (model_name_ == info.model_name_); }
+		const bool operator== (const AgentInfo& info) const { return (id_ == info.id_) && (model_name_ == info.model_name_); }
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(id_, model_name_, model_parameters_, cost_parameters_);
+		}
     };
 
 }

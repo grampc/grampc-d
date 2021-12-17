@@ -37,5 +37,11 @@ namespace grampcd
 		bool print_warning_ = false;
 		bool print_error_ = false;
 		bool print_progressbar_ = false;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(print_base_, print_message_, print_warning_, print_error_, print_progressbar_);
+		}
 	};
 }

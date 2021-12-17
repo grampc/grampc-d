@@ -14,6 +14,11 @@
 
 #include "grampcd/model/coupling_model.hpp"
 
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
+
 class SSMS2DCouplingModel : public grampcd::CouplingModel
 {
 public:
@@ -47,9 +52,32 @@ public:
 	void dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) override;
 	void dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) override;
 
-private:
+	// model parameters
 	typeRNum p1_;
 	typeRNum p2_;
 	typeRNum d0_;
 	typeRNum dmin;
+
+	/*
+	* The following functions enable serializing the object.
+	*/
+
+	// A default constructor is required.
+	SSMS2DCouplingModel() {};
+
+	// The serialize function is required.
+	template<class Archive>
+	void serialize(Archive& ar)
+	{
+		ar(
+			// serialize member variables of this specific coupling model
+			p1_, p2_, d0_, dmin,
+			//serialize member variables of the general coupling model
+			Nxi_, Nui_, Nxj_, Nuj_, Ngij_, Nhij_, model_parameters_, cost_parameters_, model_name_
+		);
+	}
 };
+
+// Register coupling model
+CEREAL_REGISTER_TYPE(SSMS2DCouplingModel);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::CouplingModel, SSMS2DCouplingModel)

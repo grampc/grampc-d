@@ -35,7 +35,13 @@ namespace grampcd
         const bool operator== (const CouplingInfo &info) const
         {
             return ( agent_id_ == info.agent_id_ ) && ( neighbor_id_ == info.neighbor_id_ ) && ( model_name_ == info.model_name_ );
-        }
+		}
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(agent_id_, neighbor_id_, model_name_, model_parameters_, cost_parameters_);
+		}
     };
 
 }

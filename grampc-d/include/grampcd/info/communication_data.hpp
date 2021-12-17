@@ -66,7 +66,7 @@ namespace grampcd
 	    std::vector< std::shared_ptr<std::vector<char>> > buffer_send_;
 
         /*Buffer to read data.*/
-        std::vector<char> buffer_read_ = std::vector<char>(512, 0);
+        std::vector<char> buffer_read_ = std::vector<char>(10000, 0);
         /*Read data.*/
         std::vector<char> data_;
         /*Timer for checking if connection is still alive.*/

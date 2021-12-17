@@ -19,52 +19,6 @@ namespace grampcd
 	class DataConversion
 	{
 	public:
-		/*Insert integer into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const int a);
-		/*Insert unsigned int into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const unsigned int a);
-		/*Insert typeRNum into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const typeRNum a);
-		/*Insert char into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const char a);
-		/*Insert vector of typeRNums into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const std::vector<typeRNum>& a);
-		/*Insert bool into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const bool a);
-		/*Insert string into char array*/
-		static void insert_into_charArray(const std::shared_ptr<std::vector<char>>& data, unsigned int& pos, const std::string& a);
-
-		/*Read int from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, int& a);
-		/*Read unsigned int from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, unsigned int& a);
-		/*Read typeRNum from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, typeRNum& a);
-		/*Read bool from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, bool& a);
-		/*Read vector of typeRNums from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, std::vector<typeRNum>& a);
-		/*Read string from char array*/
-		static void read_from_charArray(const std::vector<char>& data, unsigned int& pos, std::string& a);
-
-		/*Skip bool in char array*/
-		static void skip_in_charArray_bool(const std::vector<char>& data, unsigned int& pos);
-		/*Skip char in char array*/
-		static void skip_in_charArray_char(const std::vector<char>& data, unsigned int& pos);
-		/*Skip int in char array*/
-		static void skip_in_charArray_int(const std::vector<char>& data, unsigned int& pos);
-		/*Skip typeRNum in char array*/
-		static void skip_in_charArray_typeRNum(const std::vector<char>& data, unsigned int& pos);
-		/*Skip vector of typeRNums in char array*/
-		static void skip_in_charArray_vecTypeRNum(const std::vector<char>& data, unsigned int& pos);
-		/*Skip string in char array*/
-		static void skip_in_charArray_string(const std::vector<char>& data, unsigned int& pos);
-
-		/*Convert ADMM step to integer*/
-		static const int ADMMStep_to_int(ADMMStep step);
-		/*Convert integer to ADMM step*/
-		static const ADMMStep Int_to_ADMMStep(int a);
-
 		/*Erase element from list of integers*/
 		static void erase_element_from_vector(std::vector<int>& list, const int element);
 		/*Erase element from list of coupling infos*/

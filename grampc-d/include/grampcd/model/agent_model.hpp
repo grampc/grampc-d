@@ -81,9 +81,7 @@ namespace grampcd
         /*Returns cost parameters.*/
         const std::vector<typeRNum> get_costParameters() const;
         /*Returns the model name.*/
-        const std::string get_modelName() const;
-
-    private:
+		const std::string get_modelName() const;
         unsigned int Nxi_;
         unsigned int Nui_;
         unsigned int Ngi_;
@@ -96,7 +94,9 @@ namespace grampcd
         std::vector<typeRNum> cost_parameters_;
         std::string model_name_;
 
-        LoggingPtr log_;
-    };
+		LoggingPtr log_;
+
+        AgentModel() {};
+	};
 
 }

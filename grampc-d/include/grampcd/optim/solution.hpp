@@ -14,6 +14,9 @@
 
 #include "grampcd/state/agent_state.hpp"
 
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/vector.hpp"
+
 #include <iostream>
 
 namespace grampcd
@@ -46,6 +49,12 @@ namespace grampcd
 
 		/*Maximum number of data points*/
 		unsigned int maximum_number_of_data_points_ = 0;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(agentState_, predicted_agentState_, cost_, predicted_cost_, debug_cost_, maximum_number_of_data_points_);
+		}
 	};
 
 	std::ostream& operator<<(std::ostream& stream, const Solution& solution);

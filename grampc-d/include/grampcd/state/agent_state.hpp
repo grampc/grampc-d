@@ -13,6 +13,9 @@
 
 #include "grampcd/util/types.hpp"
 
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/vector.hpp"
+
 namespace grampcd
 {
 
@@ -33,7 +36,12 @@ namespace grampcd
         /*Vector that contains controls*/
         std::vector<typeRNum> u_;
         /*Vector that contains external influence*/
-        std::vector<typeRNum> v_;
-    };
+		std::vector<typeRNum> v_;
 
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(i_, t0_, t_, x_, u_, v_);
+		}
+    };
 }

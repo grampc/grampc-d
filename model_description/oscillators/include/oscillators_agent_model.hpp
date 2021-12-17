@@ -14,6 +14,13 @@
 
 #include "grampcd/model/agent_model.hpp"
 
+#include "grampcd/util/logging.hpp"
+
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
+
 class OscillatorsAgentModel : public grampcd::AgentModel
 {
 public:
@@ -55,14 +62,37 @@ public:
 
 	virtual void dhdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec) override;
 
-private:
 	// model parameters
 	typeRNum mi_;
 	typeRNum ci_;
 	typeRNum di_;
 	typeRNum pi_;
+
 	// cost parameters
 	std::vector<typeRNum> P_;
 	std::vector<typeRNum> Q_;
 	std::vector<typeRNum> R_;
+
+	/*
+	* The following functions enable serializing the object.
+	*/
+
+	// A default constructor is required.
+	OscillatorsAgentModel() {};
+
+	// The serialize function is required.
+	template<class Archive>
+	void serialize(Archive& ar)
+	{
+		ar(
+			// serialize member variables of this specific agent model
+			mi_, ci_, di_, pi_, P_, Q_, R_,
+			//serialize member variables of the general agent model
+			Nxi_, Nui_, Ngi_, Nhi_, umin_, umax_, model_parameters_, cost_parameters_, model_name_, log_
+		);
+	}
 };
+
+// Register agent model
+CEREAL_REGISTER_TYPE(OscillatorsAgentModel);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::AgentModel, OscillatorsAgentModel)

@@ -152,12 +152,13 @@ namespace grampcd
 
 		log_->print(DebugType::Progressbar) << std::endl;
 
+		const auto number_of_agents = communication_interface_->get_numberOfAgents();
 		log_->print(DebugType::Base) << "DMPC finished." << std::endl
 			<< "Maximum computation time : "
-			<< CPUtime_max << " ms in total or " << CPUtime_max / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl
+			<< CPUtime_max << " ms in total or " << CPUtime_max / number_of_agents << " ms per agent." << std::endl
 			<< "Average computation time : "
 			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " ms in total or "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / communication_interface_->get_numberOfAgents() << " ms per agent." << std::endl << std::endl;
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / number_of_agents << " ms per agent." << std::endl << std::endl;
 	}
 
 	void DmpcInterface::run_DMPC(const SimulatorPtr& simulator, const OptimizationInfo& oi)

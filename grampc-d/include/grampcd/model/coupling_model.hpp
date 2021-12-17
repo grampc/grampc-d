@@ -101,9 +101,8 @@ namespace grampcd
 	    /*Partial derivative of the inequality constraints with respect to the neighbors states multiplied with Lagrangian multipliers.*/
 	    virtual void dhdxj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) {}
 	    /*Partial derivative of the inequality constraints with respect to the neighbors controls multiplied with Lagrangian multipliers.*/
-        virtual void dhduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) {}
+		virtual void dhduj_vec(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj, ctypeRNum* vec) {}
 
-    private:
         unsigned int Nxi_;
         unsigned int Nui_;
         unsigned int Nxj_;
@@ -113,7 +112,9 @@ namespace grampcd
 
 		std::vector<typeRNum> model_parameters_;
 		std::vector<typeRNum> cost_parameters_;
-        std::string model_name_;
+		std::string model_name_;
+
+		CouplingModel() {};
     };
 
 }

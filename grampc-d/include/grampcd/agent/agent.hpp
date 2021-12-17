@@ -176,15 +176,15 @@ namespace grampcd
         //*********************************************
         // log
         //*********************************************
-        LoggingPtr log_;
+        const LoggingPtr log_;
 
         //*********************************************
         // agent parameters
         //*********************************************
         CommunicationInterfacePtr communication_interface_;
-        ModelFactoryPtr model_factory_;
-        AgentModelPtr model_;
-        AgentInfo info_;
+        const ModelFactoryPtr model_factory_;
+        const AgentModelPtr model_;
+        const AgentInfo info_;
         std::vector<typeRNum> x_init_;
 	    std::vector<typeRNum> u_init_;
 	    std::vector<typeRNum> x_des_;

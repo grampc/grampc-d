@@ -14,6 +14,9 @@
 
 #include "grampcd/util/types.hpp"
 
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/vector.hpp"
+
 namespace grampcd
 {
 
@@ -32,6 +35,12 @@ namespace grampcd
 		std::vector<typeRNum> rho_x_;
 		std::vector<typeRNum> rho_u_;
 		std::vector<typeRNum> rho_v_;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(i_, t0_, t_, rho_x_, rho_u_, rho_v_);
+		}
 	};
 
 }

@@ -36,13 +36,12 @@ namespace grampcd
         :   
         communication_interface_(communication_interface),
         model_factory_(model_factory),
-        model_(nullptr),
+        model_(model_factory->create_agentModel(agent_info)),
         info_(agent_info),
         local_solver_(nullptr),
         solution_(new Solution()),
         log_(log)
     {
-        model_ = model_factory->create_agentModel(agent_info);
         x_des_ = std::vector<typeRNum>(model_->get_Nxi(), 0.0);
         u_des_ = std::vector<typeRNum>(model_->get_Nui(), 0.0);
     }
@@ -733,6 +732,12 @@ namespace grampcd
 
         case ADMMStep::PRINT:
             solution_->update_debug_cost(get_predicted_cost());
+            break;
+
+        case ADMMStep::SEND_TRUE_STATE:
+            break;
+
+        default:
             break;
         }
     }

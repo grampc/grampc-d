@@ -21,12 +21,16 @@ namespace grampcd
     struct CommunicationInfo
     {
     public:
-        CommunicationInfo() {}
-
         std::string agent_type_ = "";
         int id_ = -1;
         std::string ip_ = "";
-        std::string port_ = "";
+		std::string port_ = "";
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(agent_type_, id_, ip_, port_);
+		}
     };
 
 }

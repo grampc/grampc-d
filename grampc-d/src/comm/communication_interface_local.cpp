@@ -11,6 +11,8 @@
  */
 
 #include "grampcd/comm/communication_interface_local.hpp"
+#include "grampcd/comm/message.hpp"
+#include "grampcd/comm/message_handler.hpp"
 
 #include "grampcd/info/communication_data.hpp"
 
@@ -24,27 +26,45 @@
 
 #include "grampcd/util/logging.hpp"
 #include "grampcd/util/data_conversion.hpp"
-#include "grampcd/util/protocol_communication.hpp"
+#include "grampcd/util/constants.hpp"
 
 #include "grampcd/optim/optim_util.hpp"
 
+#include "asio.hpp"
+
+#include <cereal/archives/binary.hpp>
 #include <iostream>
+#include <sstream>
 #include <chrono>
+#include <charconv>
 
 namespace grampcd
 {
+    struct EncapsulatedAsio
+    {
+        EncapsulatedAsio(const unsigned short port):
+			acceptor_(ioService_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
+			timer_waitForAck_(ioService_),
+			timer_waitTrue_(ioService_)
+        {}
+
+		asio::io_service ioService_;
+		asio::ip::tcp::acceptor acceptor_;
+		asio::basic_waitable_timer<std::chrono::system_clock>  timer_waitForAck_;
+		asio::basic_waitable_timer<std::chrono::system_clock>  timer_waitTrue_;
+		std::vector<std::thread> threads_for_communication_;
+    };
 
     // constructor for agents
     CommunicationInterfaceLocal::CommunicationInterfaceLocal(const LoggingPtr& log, const CommunicationInfo& comm_info_coordinator)
         :
-          acceptor_(ioService_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 0)),
-          timer_waitForAck_(ioService_),
-          timer_waitTrue_(ioService_),
-        log_(log)
+		asio_(std::make_shared<EncapsulatedAsio>(0)),
+		log_(log),
+		message_handler_(new MessageHandler(this, log_))
     {
         comm_info_local_.agent_type_ = "agent";
-        comm_info_local_.ip_ = acceptor_.local_endpoint().address().to_string();
-        comm_info_local_.port_ = std::to_string(acceptor_.local_endpoint().port());
+        comm_info_local_.ip_ = asio_->acceptor_.local_endpoint().address().to_string();
+        comm_info_local_.port_ = std::to_string(asio_->acceptor_.local_endpoint().port());
 
         // set coordinator
         std::unique_lock<std::shared_mutex> guard(mutex_coordinator_);
@@ -59,15 +79,14 @@ namespace grampcd
 
     // constructor for coordinator
     CommunicationInterfaceLocal::CommunicationInterfaceLocal(const LoggingPtr& log, const unsigned short port)
-        :
-          acceptor_(ioService_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)),
-          timer_waitForAck_(ioService_),
-          timer_waitTrue_(ioService_),
-        log_(log)
+		:
+		asio_(std::make_shared<EncapsulatedAsio>(port)),
+		log_(log),
+		message_handler_(new MessageHandler(this, log_))
     {
         comm_info_local_.agent_type_ = "coordinator";
-        comm_info_local_.ip_ = acceptor_.local_endpoint().address().to_string();
-        comm_info_local_.port_ = std::to_string(acceptor_.local_endpoint().port());
+        comm_info_local_.ip_ = asio_->acceptor_.local_endpoint().address().to_string();
+        comm_info_local_.port_ = std::to_string(asio_->acceptor_.local_endpoint().port());
 
         // start communication as server
         start_server();
@@ -79,10 +98,10 @@ namespace grampcd
     CommunicationInterfaceLocal::~CommunicationInterfaceLocal()
     {
         // stop the ioService
-        ioService_.stop();
+        asio_->ioService_.stop();
 
-        // joi all threads
-        for (auto& thread : threads_for_communication_)
+        // join all threads
+        for (auto& thread : asio_->threads_for_communication_)
             thread.join();
     }
 
@@ -144,11 +163,11 @@ namespace grampcd
 
                 agent_->fromCommunication_deregistered_coupling(info);
 
-                // check if coupling should be reregistered
+                // check if coupling should be re-registered
                 const bool reregister = (!DataConversion::is_element_in_vector(coupling_infos_blocked_, info))
                     && (info.agent_id_ == agent_->get_id());
 
-                // if it should not be reregistered, delete it form the list pending couplings
+                // if it should not be re-registered, delete it form the list pending couplings
                 if (!reregister)
                     DataConversion::erase_element_from_vector(coupling_infos_pending_, info);
                 else if(reregister && !DataConversion::is_element_in_vector(coupling_infos_pending_, info))
@@ -224,7 +243,7 @@ namespace grampcd
 
     void CommunicationInterfaceLocal::handle_disconnect_as_coordinator(const CommunicationDataPtr& comm_data)
     {
-        // de-register agent
+        // deregister agent
         std::unique_lock<std::shared_mutex> guard_coordinator(mutex_coordinator_);
 
         if(comm_data->agent_info_->id_ >= 0)
@@ -267,7 +286,7 @@ namespace grampcd
 
         // create new socket
         std::unique_lock<std::shared_mutex> guard(mutex_comm_data_vec_);
-        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(ioService_)));
+        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(asio_->ioService_)));
         guard.unlock();
 
         // accept connection on new socket
@@ -317,14 +336,15 @@ namespace grampcd
 
             // accept new connection
             std::lock_guard<std::shared_mutex> guard(mutex_comm_data_vec_);
-            comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(ioService_)));
+            comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(asio_->ioService_)));
             async_accept(comm_data_vec_.back());
         }
         // connected to agent
         else
         {
-            // send communication info
-            async_send(comm_data, ProtocolCommunication::buildProtocol_send_communicationInfo(comm_info_local_));
+			// send communication info
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_communication_info>(comm_info_local_));
+			async_send(comm_data, serialize(message));
 
             log_->print(DebugType::Message) << "[CommunicationInterfaceLocal::connectHandler] Connected to agent with id "
                 << std::to_string(comm_data->communication_info_->id_) << std::endl;
@@ -339,12 +359,12 @@ namespace grampcd
         std::lock_guard<std::shared_mutex> guard(mutex_comm_data_vec_);
 
         //accept new connection
-        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(ioService_)));
+        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(asio_->ioService_)));
         async_accept(comm_data_vec_.back());
 
         // start threads
         for( int i = 0; i < number_of_threads_; ++i  )
-            threads_for_communication_.push_back(std::thread([this]() {ioService_.run(); }));
+            asio_->threads_for_communication_.push_back(std::thread([this]() {asio_->ioService_.run(); }));
     }
 
     void CommunicationInterfaceLocal::start_client()
@@ -352,18 +372,18 @@ namespace grampcd
         std::lock_guard<std::shared_mutex> guard(mutex_comm_data_vec_);
 
         // create communication data
-        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(ioService_)));
+        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>(new CommunicationData(asio_->ioService_)));
 
         // connect to coordinator
         async_connect(comm_data_vec_.back(), comm_info_coordinator_.ip_, comm_info_coordinator_.port_);
         comm_info_coordinator_.agent_type_ = "coordinator";
 
-        // safe coordinator comminfo in commdata
+        // safe coordinator communication info in communication data
         comm_data_vec_.back()->communication_info_ = std::make_shared<CommunicationInfo>(comm_info_coordinator_);
 
         // start threads
         for( int i = 0; i < number_of_threads_; ++i  )
-            threads_for_communication_.push_back(std::thread([this]() {ioService_.run(); }));
+            asio_->threads_for_communication_.push_back(std::thread([this]() {asio_->ioService_.run(); }));
     }
 
     void CommunicationInterfaceLocal::poll_check_connection(const std::error_code &ec, CommunicationDataPtr comm_data)
@@ -403,8 +423,9 @@ namespace grampcd
         comm_data->timer_check_connection_.async_wait(std::bind(&CommunicationInterfaceLocal::poll_check_connection,
             this, std::placeholders::_1, comm_data) );
 
-        // send ping
-        async_send(comm_data, ProtocolCommunication::buildProtocol_get_ping());
+		// send ping
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_ping>());
+		async_send(comm_data, serialize(message));
 
         // restart timer for next ping
         start_ping(comm_data);
@@ -425,20 +446,32 @@ namespace grampcd
         std::shared_lock<std::shared_mutex> guard(mutex_infos_);
 
         // register pending Agent infos
-        for( const auto& info : agent_infos_registering_ )
-            async_send(comm_data, ProtocolCommunication::buildProtocol_register_agent(info));
+        for (const auto& info : agent_infos_registering_)
+        {
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_register_agent>(info));
+			async_send(comm_data, serialize(message));
+        }
 
-        // de-register agent infos
-	    for (const auto& info : agent_infos_deregistering_)
-            async_send(comm_data, ProtocolCommunication::buildProtocol_deregister_agent(info));
+        // deregister agent infos
+        for (const auto& info : agent_infos_deregistering_)
+        {
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_deregister_agent>(info));
+			async_send(comm_data, serialize(message));
+        }
 
         // register pending Coupling Infos
-        for( const auto& info : coupling_infos_pending_ )
-            async_send(comm_data, ProtocolCommunication::buildProtocol_register_coupling(info));
+        for (const auto& info : coupling_infos_pending_)
+        {
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_register_coupling>(info));
+			async_send(comm_data, serialize(message));
+        }
 
-        // de-register Coupling Infos
-        for( const auto& info : coupling_infos_deregistering_ )
-            async_send(comm_data, ProtocolCommunication::buildProtocol_deregister_coupling(info));
+        // deregister Coupling Infos
+        for (const auto& info : coupling_infos_deregistering_)
+        {
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_deregister_coupling>(info));
+			async_send(comm_data, serialize(message));
+        }
 
         // restart timer
         start_polling(comm_data);
@@ -505,7 +538,7 @@ namespace grampcd
     {
         std::lock_guard<std::shared_mutex> guard(mutex_infos_);
 
-        // send coordinator message to de-register coupling
+        // send coordinator message to deregister coupling
         coupling_infos_deregistering_.push_back(coupling);
 
         // block the coupling from re-registering
@@ -527,7 +560,8 @@ namespace grampcd
             return false;
         }
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_numberOfNeighbors(number, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_numberOfNeighbors>(number, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -545,7 +579,8 @@ namespace grampcd
             return false;
         }
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_agentState(state, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_agent_state>(state, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -563,7 +598,8 @@ namespace grampcd
             return false;
         }
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_desiredAgentState(desired_state, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_desired_agent_state>(desired_state, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -582,7 +618,8 @@ namespace grampcd
 	    // send request for true agent state
 	    std::unique_lock<std::mutex> guard(comm_data->mutex_agentState_for_simulation_);
 	    comm_data->flag_agentState_for_simulation_ = false;
-	    async_send(comm_data, ProtocolCommunication::buildProtocol_get_agentState_for_simulation());
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_agentState_for_simulation>());
+		async_send(comm_data, serialize(message));
 
 	    // wait for response
 	    comm_data->cond_var_agentState_for_simulation_.wait_for(guard, std::chrono::seconds(general_waiting_time_s_),
@@ -611,7 +648,8 @@ namespace grampcd
         std::unique_lock<std::mutex> guard(comm_data->mutex_desired_agentState_);
         comm_data->flag_desired_agentState_ = false;
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_get_desiredAgentState_from_agent());
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_desired_agent_state_from_agent>());
+		async_send(comm_data, serialize(message));
 
         // wait for response
         comm_data->cond_var_desired_agentState_.wait_for(guard, std::chrono::seconds(general_waiting_time_s_),
@@ -699,7 +737,8 @@ namespace grampcd
         comm_data->flag_agentModel_ = false;
 
 	    // send request for agent model
-	    async_send(comm_data, ProtocolCommunication::buildProtocol_get_agentModel_from_agent());
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_agent_model_from_agent>());
+		async_send(comm_data, serialize(message));
 
         // wait for response
         comm_data->cond_var_agentModel_.wait_for(guard, std::chrono::seconds(general_waiting_time_s_),
@@ -730,7 +769,8 @@ namespace grampcd
         comm_data->flag_couplingModels_ = false;
 
         // send request for coupling models
-	    async_send(comm_data, ProtocolCommunication::buildProtocol_get_couplingModel_from_agent() );
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_coupling_model_from_agent>());
+		async_send(comm_data, serialize(message));
 
         // wait for response
         comm_data->cond_var_couplingModels_.wait_for(guard, std::chrono::seconds(general_waiting_time_s_),
@@ -759,7 +799,8 @@ namespace grampcd
         }
 
         // send coupling states
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_couplingState(state, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_coupling_state>(state, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -779,7 +820,8 @@ namespace grampcd
         }
 
         // send coupling states
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_couplingState(state, state2, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_two_coupling_states>(state, state2, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -799,7 +841,8 @@ namespace grampcd
         }
 
         // send multiplier states
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_multiplierPenaltyState(multiplier, penalty, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_multiplier_state>(multiplier, penalty, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -819,7 +862,8 @@ namespace grampcd
         }
 
         // send convergence flag
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_convergenceFlag(converged, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_convergenceFlag>(converged, from));
+		async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -832,7 +876,8 @@ namespace grampcd
         numberOfNotifications_config_optimizationInfo_ = 0;
 
         // configure optimization for each agent
-        const auto data = ProtocolCommunication::buildProtocol_send_optimizationInfo(info);
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_optimizationInfo>(info));
+		const auto data = serialize(message);
         for(const auto& comm_data : comm_data_vec_)
         {
             if( comm_data->is_connected_ )
@@ -876,7 +921,8 @@ namespace grampcd
 
         // send request to configure
 	    std::unique_lock<std::mutex> guard_config_optim(mutex_config_optimizationInfo_); 
-	    async_send(comm_data, ProtocolCommunication::buildProtocol_send_optimizationInfo(coordinator_->get_optimizationInfo()));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_optimizationInfo>(coordinator_->get_optimizationInfo()));
+		async_send(comm_data, serialize(message));
 
         // wait for response
 	    conditionVariable_config_optimizationInfo_.wait_for(guard_config_optim, std::chrono::seconds(general_waiting_time_s_),
@@ -912,7 +958,8 @@ namespace grampcd
             numberOfNotifications_waitForConnection_ = 0;
 
             // ask all agents for number of connected agents
-            const auto data = ProtocolCommunication::buildProtocol_get_numberOfActiveCouplings();
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_number_of_active_couplings>());
+			const auto data = serialize(message);
             std::vector<CommunicationDataPtr> comm_data_to_wait_for;
             for (const auto& comm_data : comm_data_vec_)
             {
@@ -952,7 +999,8 @@ namespace grampcd
     const bool CommunicationInterfaceLocal::trigger_step(const ADMMStep& step)
     {
         // prepare protocol
-        const auto data = ProtocolCommunication::buildProtocol_triggerStep(step);
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_trigger_step>(step));
+		const auto data = serialize(message);
 
         // send trigger to each agent
         std::shared_lock<std::shared_mutex> guard_commDataVec(mutex_comm_data_vec_);
@@ -1003,7 +1051,8 @@ namespace grampcd
         numberOfNotifications_triggerStep_ = 0;
         ++numberOfNotifications_triggerStep_;
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_simulatedState(new_state, dt, t0, cost));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_simulated_state>(new_state, dt, t0, cost));
+		async_send(comm_data, serialize(message));
 
         // wait for response
         conditionVariable_triggerStep_.wait_for(guard_triggerStep, std::chrono::seconds(general_waiting_time_s_),
@@ -1057,28 +1106,24 @@ namespace grampcd
         // only evaluate the data, if at least 4 bytes are read
         while(comm_data->data_.size() >= 4)
         {
-            unsigned int size_of_data = 0;
-            unsigned int pos = 0;
+            unsigned int size_of_packet = 0;
+			unsigned int pos = 0;
 
-            // read size of data
-            DataConversion::read_from_charArray(comm_data->data_, pos, size_of_data);
-
-            if (size_of_data == 41)
-                bool TEST = true;
+            // read size of packet
+            std::from_chars(&comm_data->data_.at(0), &comm_data->data_.at(Constants::SIZE_OF_HEADERS_), size_of_packet);
 
             // if enough data is read, evaluate it
-            if (comm_data->data_.size() >= size_of_data)
-            {
+            if (comm_data->data_.size() >= size_of_packet)
+			{
                 // create local copy of data
-                std::shared_ptr<std::vector<char>> data(new std::vector<char>(size_of_data, 0));
-                for (unsigned int k = 0; k < size_of_data; ++k)
-                    (*data)[k] = comm_data->data_[k];
+				auto data = std::make_shared<std::stringstream>();
+				for (unsigned int k = Constants::SIZE_OF_HEADERS_; k < size_of_packet; ++k)
+					(*data) << comm_data->data_[k];
 
-                // erase copied data
-                comm_data->data_.erase(comm_data->data_.begin(), comm_data->data_.begin() + size_of_data);
+				comm_data->data_.erase(comm_data->data_.begin(), comm_data->data_.begin() + size_of_packet);
 
                 // evaluate data asynchronously
-                asio::post([comm_data, this, data]() { ProtocolCommunication::evaluateData(comm_data, this, *data); });
+                asio::post([comm_data, this, data]() { evaluate_data(comm_data, data); });
             }
             else
                 break;
@@ -1111,7 +1156,7 @@ namespace grampcd
 
         // create new connection
         std::unique_lock<std::shared_mutex> strong_guard_comm_data_vec(mutex_comm_data_vec_);
-        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>( new CommunicationData(ioService_)));
+        comm_data_vec_.push_back(std::shared_ptr<CommunicationData>( new CommunicationData(asio_->ioService_)));
         strong_guard_comm_data_vec.unlock();
 
         // add communicationInfo to list
@@ -1123,7 +1168,8 @@ namespace grampcd
 
     const bool CommunicationInterfaceLocal::fromCommunication_deregistered_coupling(const CouplingInfo& coupling)
     {
-        const auto data = ProtocolCommunication::buildProtocol_fromCommunication_deregistered_coupling(coupling);
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_fromCommunication_deregistered_coupling>(coupling));
+		const auto data = serialize(message);
 
         // send to agent
         const auto comm_data_agent = get_communicationData(coupling.agent_id_);
@@ -1232,7 +1278,8 @@ namespace grampcd
         numberOfNotifications_getSolutions_ = 0;
 
         // send request for solution
-        const auto data = ProtocolCommunication::buildProtocol_get_solution();
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_get_solution>());
+		const auto data = serialize(message);
         for (const auto& comm_data : comm_data_vec_)
         {
             if (comm_data->is_connected_)
@@ -1285,7 +1332,8 @@ namespace grampcd
         if (agents == "all")
         {
             std::shared_lock<std::shared_mutex> guard(mutex_comm_data_vec_);
-            const auto data = ProtocolCommunication::buildProtocol_send_flagToAgents();
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_to_agents>());
+			const auto data = serialize(message);
 
             for (const auto& comm_data : comm_data_vec_)
                 async_send(comm_data, data);
@@ -1309,13 +1357,15 @@ namespace grampcd
             return;
         }
 
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_flagToAgents());    
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_to_agents>());
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::send_flag_to_agents(const std::vector<int>& agent_ids) const
     {
         // prepare data
-        const auto data = ProtocolCommunication::buildProtocol_send_flagToAgents();
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_to_agents>());
+		const auto data = serialize(message);
 
         // send flag to each agent
         for (unsigned int k = 0; k < agent_ids.size(); ++k)
@@ -1392,7 +1442,7 @@ namespace grampcd
             return;
     
         // as everything is ok, accept the connection
-        acceptor_.async_accept(comm_data->socket_,
+        asio_->acceptor_.async_accept(comm_data->socket_,
             comm_data->strand_.wrap(std::bind(&CommunicationInterfaceLocal::acceptHandler,
                 this, std::placeholders::_1, comm_data ) ) );
     }
@@ -1427,8 +1477,9 @@ namespace grampcd
     }
 
     void CommunicationInterfaceLocal::fromCommunication_get_ping(const CommunicationDataPtr& comm_data) const
-    {
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_ping());
+	{
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_ping>());
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_ping(const CommunicationDataPtr& comm_data) const
@@ -1451,8 +1502,8 @@ namespace grampcd
                 if (comm_data_search->is_connected_)
                     ++number;
         }
-
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_numberOfActiveCouplings( number ));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_number_of_active_couplings>(number));
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_numberOfActiveCouplings(const CommunicationDataPtr& comm_data, int number) const
@@ -1463,37 +1514,39 @@ namespace grampcd
         conditionVariable_waitForConnection_.notify_one();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const grampcd::CouplingStatePtr& state, int from)
+    void CommunicationInterfaceLocal::fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const CouplingState& state, int from)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_received_couplingState(*state, from);
+        agent_->fromCommunication_received_couplingState(state, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, 
-        const grampcd::CouplingStatePtr& state1, const grampcd::CouplingStatePtr& state2, int from)
+        const CouplingState& state1, const CouplingState& state2, int from)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_received_couplingState(*state1, *state2, from);
+        agent_->fromCommunication_received_couplingState(state1, state2, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_get_desiredAgentStateFromAgent(const CommunicationDataPtr& comm_data) const
     {
-        // if mutex_basics_ is used here, there is a deadlock if neighbor approximation is used
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_desiredAgentState(agent_->get_desiredAgentState(), agent_->get_id()));
+		// if mutex_basics_ is used here, there is a deadlock if neighbor approximation is used
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_desired_agent_state>(agent_->get_desiredAgentState(), agent_->get_id()));
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_simulatedState
     (
         const CommunicationDataPtr& comm_data, 
-        const std::shared_ptr< std::vector<typeRNum> >& x_next, 
+        const std::vector<typeRNum>& x_next, 
         typeRNum dt, 
         typeRNum t0,
         typeRNum cost
     )
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->set_updatedState(*x_next, dt, t0, cost);
-        async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_acknowledge_executed_ADMMstep());
+        agent_->set_updatedState(x_next, dt, t0, cost);
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_acknowledge_executed_ADMM_step>());
+		async_send(get_communicationData("coordinator"), serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_couplingModel(const CommunicationDataPtr& comm_data, const std::shared_ptr< std::map<int, grampcd::CouplingModelPtr> >& model) const
@@ -1507,7 +1560,8 @@ namespace grampcd
     void CommunicationInterfaceLocal::fromCommunication_get_couplingModelFromAgent(const CommunicationDataPtr& comm_data) const
     {
         std::shared_lock<std::shared_mutex> guard(mutex_basics_);
-        async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_send_couplingModel(*agent_->get_couplingModels(), agent_->get_id()));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_coupling_models>(agent_->get_couplingModels(), agent_->get_id()));
+		async_send(get_communicationData("coordinator"), serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_agentModel(const CommunicationDataPtr& comm_data, const grampcd::AgentModelPtr& model) const
@@ -1521,13 +1575,15 @@ namespace grampcd
     void CommunicationInterfaceLocal::fromCommunication_get_agentModelFromAgent(const CommunicationDataPtr& comm_data) const
     {
         std::shared_lock<std::shared_mutex> guard(mutex_basics_);
-        async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_send_agentModel(agent_->get_agentModel(), agent_->get_id()));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_agent_model>(agent_->get_agentModel(), agent_->get_id()));
+		async_send(get_communicationData("coordinator"), serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_get_agentState_for_simulation(const CommunicationDataPtr& comm_data) const
     {
         // if mutex_basics_ is used here, there is a deadlock if neighbor approximation is used
-        async_send( comm_data, ProtocolCommunication::buildProtocol_send_agentState_for_simulation( agent_->get_agentState(), agent_->get_id() ) );
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_agent_state_for_simulation>(agent_->get_agentState(), agent_->get_id()));
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_agentState_for_simulation(const CommunicationDataPtr& comm_data, const AgentStatePtr& state) const
@@ -1549,10 +1605,10 @@ namespace grampcd
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_multiplierPenaltyState(const CommunicationDataPtr& comm_data, 
-        const grampcd::MultiplierStatePtr& multiplier, const grampcd::PenaltyStatePtr& penalty, const int from)
+        const MultiplierState& multiplier, const PenaltyState& penalty, const int from)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_received_multiplierState(*multiplier, *penalty, from);
+        agent_->fromCommunication_received_multiplierState(multiplier, penalty, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_desiredAgentState(const CommunicationDataPtr& comm_data, const grampcd::AgentStatePtr& state) const
@@ -1563,10 +1619,10 @@ namespace grampcd
         comm_data->cond_var_desired_agentState_.notify_all();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const grampcd::AgentStatePtr& state, int from)
+    void CommunicationInterfaceLocal::fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, int from)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_received_agentState(*state, from);
+        agent_->fromCommunication_received_agentState(state, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_numberOfNeighbors(const CommunicationDataPtr& comm_data, int number, int from)
@@ -1581,30 +1637,31 @@ namespace grampcd
         coordinator_->deregister_coupling(info);
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_deregister_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info)
+    void CommunicationInterfaceLocal::fromCommunication_deregister_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info)
     {
         std::unique_lock<std::shared_mutex> guard_coordinator(mutex_coordinator_);
-        if (!coordinator_->deregister_agent(*info))
+        if (!coordinator_->deregister_agent(info))
         {
             log_->print(DebugType::Error) << "[CommunicationInterfaceLocal::fromCommunication_deregister_agent] "
-                << "Deregister agent with id " << info->id_ << " failed." << std::endl;
+                << "Deregister agent with id " << info.id_ << " failed." << std::endl;
 
             return;
         }
-
-        async_send(comm_data, ProtocolCommunication::buildProtocol_successfully_deregistered_agent(*info));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_successfully_deregistered_agent>(info));
+		async_send(comm_data, serialize(message));
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_successfully_deregistered_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info)
+    void CommunicationInterfaceLocal::fromCommunication_successfully_deregistered_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_infos_);
-        DataConversion::erase_element_from_vector(agent_infos_active_, *info);
+        DataConversion::erase_element_from_vector(agent_infos_active_, info);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_get_solution(const CommunicationDataPtr& comm_data) const
     {
         std::shared_lock<std::shared_mutex> guard(mutex_basics_);
-        async_send(comm_data, ProtocolCommunication::buildProtocol_send_solution(agent_->get_solution()));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_solution>(agent_->get_solution()));
+		async_send(comm_data, serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_solution(const CommunicationDataPtr& comm_data, const SolutionPtr& solution) const
@@ -1635,46 +1692,51 @@ namespace grampcd
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
         agent_->fromCommunication_trigger_step(step);
 
-        if(step != ADMMStep::SEND_CONVERGENCE_FLAG)
-            async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_acknowledge_executed_ADMMstep());
+        if (step != ADMMStep::SEND_CONVERGENCE_FLAG)
+        {
+			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_acknowledge_executed_ADMM_step>());
+			async_send(get_communicationData("coordinator"), serialize(message));
+        }
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_optimizationInfo(const CommunicationDataPtr& comm_data, const OptimizationInfoPtr& optimization_info)
+    void CommunicationInterfaceLocal::fromCommunication_send_optimizationInfo(const CommunicationDataPtr& comm_data, const OptimizationInfo& optimization_info)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_configured_optimization(*optimization_info);
-        async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_acknowledge_received_optimizationInfo());
+        agent_->fromCommunication_configured_optimization(optimization_info);
+
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_acknowledge_received_optimization_info>());
+		async_send(get_communicationData("coordinator"), serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_successfully_registered_coupling(const CommunicationDataPtr& comm_data, 
-        const CouplingInfoPtr& coupling_info, const AgentInfoPtr& agent_info, const CommunicationInfoPtr& communication_info)
+        const CouplingInfo& coupling_info, const AgentInfo& agent_info, const CommunicationInfoPtr& communication_info)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_infos_);
 
         // add coupling to list of active couplings
-        coupling_infos_active_.push_back(*coupling_info);
+        coupling_infos_active_.push_back(coupling_info);
 
         // check if coupling is pending and delete it
-	    DataConversion::erase_element_from_vector(coupling_infos_pending_, *coupling_info);
+	    DataConversion::erase_element_from_vector(coupling_infos_pending_, coupling_info);
 	    guard.unlock();
 
         // register coupling in agent
         std::unique_lock<std::shared_mutex> guard_mutex_basics(mutex_basics_);
 
-        agent_->fromCommunication_registered_coupling(*coupling_info, *agent_info);
+        agent_->fromCommunication_registered_coupling(coupling_info, agent_info);
 
         guard_mutex_basics.unlock();
 
         connect_to_neighbor(communication_info);
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_successfully_registered_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info)
+    void CommunicationInterfaceLocal::fromCommunication_successfully_registered_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_infos_);
 
         for (unsigned int i = 0; i < agent_infos_registering_.size(); ++i)
         {
-            if (agent_infos_registering_[i].id_ == info->id_)
+            if (agent_infos_registering_[i].id_ == info.id_)
             {
                 agent_infos_active_.push_back(agent_infos_registering_[i]);
                 agent_infos_registering_.erase(agent_infos_registering_.begin() + i);
@@ -1685,26 +1747,29 @@ namespace grampcd
         std::shared_lock<std::shared_mutex> guard_socket(comm_data->mutex_socket_);
 
         comm_info_local_.ip_ = comm_data->socket_.local_endpoint().address().to_string();
-        async_send(get_communicationData("coordinator"), ProtocolCommunication::buildProtocol_send_communicationInfo(comm_info_local_));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_communication_info>(comm_info_local_));
+		async_send(get_communicationData("coordinator"), serialize(message));
     }
 
     void CommunicationInterfaceLocal::fromCommunication_register_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_coordinator_);
-        if (!coordinator_->register_agent(*info)) return;
+        if (!coordinator_->register_agent(*info)) 
+            return;
         guard.unlock();
 
         // send acknowledge
-        async_send(comm_data, ProtocolCommunication::buildProtocol_successfully_registered_agent(*info));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_successfully_registered_agent>(*info));
+		async_send(comm_data, serialize(message));
 
         // add agent to internal list
         comm_data->agent_info_ = info;
         comm_data->communication_info_->id_ = info->id_;
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_register_coupling(const CommunicationDataPtr& comm_data, const CouplingInfoPtr& coupling_info)
+    void CommunicationInterfaceLocal::fromCommunication_register_coupling(const CommunicationDataPtr& comm_data, const CouplingInfo& coupling_info)
     {
-        const auto comm_data_agent = get_communicationData(coupling_info->agent_id_);
+        const auto comm_data_agent = get_communicationData(coupling_info.agent_id_);
 
         if (comm_data_agent == nullptr)
             return;
@@ -1713,7 +1778,7 @@ namespace grampcd
         if (comm_data_agent->communication_info_->port_ == "")
             return;
 
-        const auto comm_data_neighbor = get_communicationData(coupling_info->neighbor_id_);
+        const auto comm_data_neighbor = get_communicationData(coupling_info.neighbor_id_);
         if (comm_data_neighbor == nullptr)
             return;
 
@@ -1722,50 +1787,49 @@ namespace grampcd
             return;
 
         std::unique_lock<std::shared_mutex> guard(mutex_coordinator_);
-        if (!coordinator_->register_coupling(*coupling_info))
+        if (!coordinator_->register_coupling(coupling_info))
             return;
     
 	    // send coupling to agent
-	    const auto data_agent = ProtocolCommunication::buildProtocol_successfully_registered_coupling(*coupling_info, *comm_data_neighbor->agent_info_, *comm_data_neighbor->communication_info_);
-	    async_send(comm_data_agent, data_agent);
+		const auto message_agent = std::static_pointer_cast<Message>(std::make_shared<Message_successfully_registered_coupling>(coupling_info, *comm_data_neighbor->agent_info_, *comm_data_neighbor->communication_info_));
+        async_send(comm_data_agent, serialize(message_agent));
 
-	    // send coupling to neighbor
-	    const auto data_neighbor = ProtocolCommunication::buildProtocol_successfully_registered_coupling(*coupling_info, *comm_data_agent->agent_info_, *comm_data_agent->communication_info_);
-	    async_send(comm_data_neighbor, data_neighbor);
+		const auto message_neighbor = std::static_pointer_cast<Message>(std::make_shared<Message_successfully_registered_coupling>(coupling_info, *comm_data_agent->agent_info_, *comm_data_agent->communication_info_));
+		async_send(comm_data_neighbor, serialize(message_neighbor));
     
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_deregistered_coupling(const CommunicationDataPtr& comm_data, const CouplingInfoPtr& info)
+    void CommunicationInterfaceLocal::fromCommunication_deregistered_coupling(const CommunicationDataPtr& comm_data, const CouplingInfo& info)
     {
         std::unique_lock<std::shared_mutex> guard_basics(mutex_basics_);
-        agent_->fromCommunication_deregistered_coupling(*info);
+        agent_->fromCommunication_deregistered_coupling(info);
 
         // check if coupling should be re-registered
-        const bool reregister = (!DataConversion::is_element_in_vector(coupling_infos_blocked_, *info))
-            && (info->agent_id_ == agent_->get_id());
+        const bool reregister = (!DataConversion::is_element_in_vector(coupling_infos_blocked_, info))
+            && (info.agent_id_ == agent_->get_id());
 
         std::unique_lock<std::shared_mutex> guard_infos(mutex_infos_);
 
         // if coupling should not be re-registered, delete it form the list pending
         if (!reregister)
-            DataConversion::erase_element_from_vector(coupling_infos_pending_, *info);
-        else if(reregister && !DataConversion::is_element_in_vector(coupling_infos_pending_, *info))
-            coupling_infos_pending_.push_back(*info);
+            DataConversion::erase_element_from_vector(coupling_infos_pending_, info);
+        else if(reregister && !DataConversion::is_element_in_vector(coupling_infos_pending_, info))
+            coupling_infos_pending_.push_back(info);
 
-        // delete it from the list de-registering
-        DataConversion::erase_element_from_vector(coupling_infos_deregistering_, *info);
+        // delete it from the list deregistering
+        DataConversion::erase_element_from_vector(coupling_infos_deregistering_, info);
 
         // delete it from the list active
-        DataConversion::erase_element_from_vector(coupling_infos_active_, *info);
+        DataConversion::erase_element_from_vector(coupling_infos_active_, info);
 
         guard_infos.unlock();
 
         // Define neighbor id
         int neighbor_id;
-        if (info->agent_id_ != agent_->get_id()) 
-            neighbor_id = info->agent_id_;
+        if (info.agent_id_ != agent_->get_id()) 
+            neighbor_id = info.agent_id_;
         else 
-            neighbor_id = info->neighbor_id_;
+            neighbor_id = info.neighbor_id_;
 
         // check if agent is still neighbor
         const bool isNeighbor = DataConversion::is_element_in_vector(agent_->get_neighbors(), neighbor_id);
@@ -1796,6 +1860,60 @@ namespace grampcd
     const LoggingPtr& CommunicationInterfaceLocal::get_log() const
     {
         return log_;
-    }
+	}
+
+	const std::shared_ptr< std::vector<char> > CommunicationInterfaceLocal::serialize(const MessagePtr message) const
+	{
+        try
+		{
+			std::stringstream sstream;
+			cereal::BinaryOutputArchive oarchive(sstream);
+
+			// serialize data
+			oarchive(message);
+
+			const auto data_string = sstream.str();
+
+			// generate output
+			const auto size_of_packet = static_cast<unsigned int>(data_string.size() + Constants::SIZE_OF_HEADERS_);
+			const auto data = std::make_shared<std::vector<char>>(size_of_packet, 0);
+
+			// insert header
+			std::to_chars(&data->at(0), &data->at(Constants::SIZE_OF_HEADERS_), size_of_packet);
+
+			// insert data
+			for (int i = 0; i < data_string.size(); ++i)
+				(*data)[Constants::SIZE_OF_HEADERS_ + i] = data_string[i];
+
+			return data;
+        }
+        catch (cereal::Exception ec)
+		{
+			log_->print(DebugType::Base) << "[CommunicationInterfaceLocal::serialize]: "
+                << "Serializing message with type " << static_cast<int>(message->get_message_type()) 
+                << " failed." << std::endl;
+            log_->print(DebugType::Base) << "Error message: " << ec.what() << std::endl;
+        }
+
+        return std::shared_ptr< std::vector<char> >();
+	}
+
+	void CommunicationInterfaceLocal::evaluate_data(CommunicationDataPtr comm_data, const std::shared_ptr<std::stringstream>& data)
+	{
+        try
+		{
+			cereal::BinaryInputArchive iarchive(*data);
+			MessagePtr message;
+			iarchive(message);
+
+			message_handler_->handle_message(comm_data, message);
+        }
+        catch (cereal::Exception ec)
+        {
+			log_->print(DebugType::Base) << "[CommunicationInterfaceLocal::evaluate_data]: "
+				<< "Deserialization failed" << std::endl;
+			log_->print(DebugType::Base) << "Error message: " << ec.what() << std::endl;
+        }
+	}
 
 }

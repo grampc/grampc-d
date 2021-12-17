@@ -13,3 +13,4 @@ backup_high_scaled/
 asio/
 *.a
 *.cmake
+*.json

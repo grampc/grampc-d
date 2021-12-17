@@ -14,6 +14,11 @@
 
 #include "grampcd/model/coupling_model.hpp"
 
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
+
 class SmartGridCouplingModel : public grampcd::CouplingModel
 {
 public:
@@ -47,8 +52,30 @@ public:
 	void dVdxi(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) override;
 	void dVdxj(typeRNum* out, ctypeRNum T, ctypeRNum* xi, ctypeRNum* xj) override;
 
-private:
+	// model parameters
 	typeRNum I_;
 	typeRNum Omega_;
 	typeRNum P_max_ij_;
+
+	/*
+	* The following functions enable serializing the object.
+	*/
+
+	// A default constructor is required.
+	SmartGridCouplingModel() {};
+
+	// The serialize function is required.
+	template<class Archive>
+	void serialize(Archive& ar)
+	{
+		ar(
+			// serialize member variables of this specific coupling model
+			I_, Omega_, P_max_ij_,
+			//serialize member variables of the general coupling model
+			Nxi_, Nui_, Nxj_, Nuj_, Ngij_, Nhij_, model_parameters_, cost_parameters_, model_name_);
+	}
 };
+
+// Register coupling model
+CEREAL_REGISTER_TYPE(SmartGridCouplingModel);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::CouplingModel, SmartGridCouplingModel)

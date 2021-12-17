@@ -14,6 +14,13 @@
 
 #include "grampcd/model/agent_model.hpp"
 
+#include "grampcd/util/logging.hpp"
+
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
+
 class SSMS3DAgentModel : public grampcd::AgentModel
 {
 public:
@@ -45,12 +52,37 @@ public:
 
 	virtual void dVdx(typeRNum* out, ctypeRNum T, ctypeRNum* x, ctypeRNum* xdes) override;
 
-private:
+	// model parameters
 	typeRNum p1_;
 	typeRNum p2_;
 	typeRNum p3_;
 	typeRNum g_;
+
+	// cost parameters
 	std::vector<typeRNum> P_;
 	std::vector<typeRNum> Q_;
 	std::vector<typeRNum> R_;
+
+	/*
+	* The following functions enable serializing the object.
+	*/
+
+	// A default constructor is required.
+	SSMS3DAgentModel() {};
+
+	// The serialize function is required.
+	template<class Archive>
+	void serialize(Archive& ar)
+	{
+		ar(
+			// serialize member variables of this specific agent model
+			p1_, p2_, p3_, g_, P_, Q_, R_,
+			//serialize member variables of the general agent model
+			Nxi_, Nui_, Ngi_, Nhi_, umin_, umax_, model_parameters_, cost_parameters_, model_name_, log_
+		);
+	}
 };
+
+// Register agent model
+CEREAL_REGISTER_TYPE(SSMS3DAgentModel);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::AgentModel, SSMS3DAgentModel)

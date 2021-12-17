@@ -57,4 +57,7 @@ namespace grampcd
 	DMPC_STRUCT_FORWARD(CouplingInfo);
 	DMPC_STRUCT_FORWARD(OptimizationInfo);
 	DMPC_STRUCT_FORWARD(CommunicationInfo);
+
+	DMPC_STRUCT_FORWARD(Message);
+	DMPC_STRUCT_FORWARD(MessageHandler);
 }

@@ -21,6 +21,9 @@ add_library(grampcd
     src/comm/communication_interface.cpp
     src/comm/communication_interface_central.cpp  
     src/comm/communication_interface_local.cpp    
+    src/comm/message_handler.cpp    
+    src/comm/message.cpp    
+    src/comm/message_definition.cpp
 
     src/model/agent_model.cpp
     src/model/coupling_model.cpp
@@ -28,7 +31,7 @@ add_library(grampcd
 
     src/optim/optim_util.cpp
     src/util/data_conversion.cpp
-    src/util/protocol_communication.cpp
+    
     src/util/logging.cpp
     src/optim/solution.cpp
 

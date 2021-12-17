@@ -18,13 +18,13 @@
 
 #include "grampcd/info/communication_info.hpp"
 
-#include "asio.hpp"
-
 #include <shared_mutex>
-#include <functional>
+#include <sstream>
 
 namespace grampcd
 {
+
+	struct EncapsulatedAsio;
 
 	/*!
 	 * @brief Interface for communication between agents
@@ -168,12 +168,12 @@ namespace grampcd
 		void fromCommunication_send_couplingModel(const CommunicationDataPtr& comm_data, const std::shared_ptr< std::map<int, grampcd::CouplingModelPtr> >& model) const;
 
 		/*This function is called if agent state is received.*/
-		void fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const grampcd::AgentStatePtr& state, const int from);
+		void fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, const int from);
 		/*This function is called if desired agent state is received.*/
 		void fromCommunication_send_desiredAgentState(const CommunicationDataPtr& comm_data, const grampcd::AgentStatePtr& state) const;
 		/*This function is called if multiplier state is received.*/
-		void fromCommunication_send_multiplierPenaltyState( const CommunicationDataPtr& comm_data, const grampcd::MultiplierStatePtr& multiplier,
-			const grampcd::PenaltyStatePtr& penalty, const int from);
+		void fromCommunication_send_multiplierPenaltyState( const CommunicationDataPtr& comm_data, const MultiplierState& multiplier,
+			const PenaltyState& penalty, const int from);
 		/*This function is called if requirement for agent state for simulation is received.*/
 		void fromCommunication_get_agentState_for_simulation(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if agent state for simulation is received.*/
@@ -182,7 +182,7 @@ namespace grampcd
 		void fromCommunication_send_simulatedState
 		(
 			const CommunicationDataPtr& comm_data, 
-			const std::shared_ptr< std::vector<typeRNum> >& x_next, 
+			const std::vector<typeRNum>& x_next, 
 			const typeRNum dt, 
 			const typeRNum t0,
 			const typeRNum cost
@@ -190,21 +190,21 @@ namespace grampcd
 		/*This function is called if requirement for agent state is received.*/
 		void fromCommunication_get_desiredAgentStateFromAgent(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if coupling state is received.*/
-		void fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const grampcd::CouplingStatePtr& state, const int from);
+		void fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const CouplingState& state, const int from);
 		/*This function is called if coupling state is received.*/
-		void fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const grampcd::CouplingStatePtr& state1, const grampcd::CouplingStatePtr& state2, const int from);
+		void fromCommunication_send_couplingState(const CommunicationDataPtr& comm_data, const CouplingState& state1, const CouplingState& state2, const int from);
 
 		/*This function is called agent should be registered.*/
 		void fromCommunication_register_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info);
 		/*This function is called if agent is successfully registered.*/
-		void fromCommunication_successfully_registered_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info);
+		void fromCommunication_successfully_registered_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info);
 		/*This function is called if agent should be de-registered.*/
-		void fromCommunication_deregister_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info);
+		void fromCommunication_deregister_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info);
 		/*This function is called if agent is successfully de-registered.*/
-		void fromCommunication_successfully_deregistered_agent(const CommunicationDataPtr& comm_data, const AgentInfoPtr& info);
+		void fromCommunication_successfully_deregistered_agent(const CommunicationDataPtr& comm_data, const AgentInfo& info);
 
 		/*This function is called if optimization info is received.*/
-		void fromCommunication_send_optimizationInfo(const CommunicationDataPtr& comm_data, const OptimizationInfoPtr& optimization_info);
+		void fromCommunication_send_optimizationInfo(const CommunicationDataPtr& comm_data, const OptimizationInfo& optimization_info);
 		/*This function is called if communication info is received.*/
 		void fromCommunication_send_communicationInfo(const CommunicationDataPtr& comm_data, const CommunicationInfoPtr& info);
 
@@ -216,14 +216,14 @@ namespace grampcd
 		void fromCommunication_triggerStep(ADMMStep step);
 
 		/*This function is called if coupling should be registered.*/
-		void fromCommunication_register_coupling(const CommunicationDataPtr& comm_data, const CouplingInfoPtr& info);
+		void fromCommunication_register_coupling(const CommunicationDataPtr& comm_data, const CouplingInfo& info);
 		/*This function is called if coupling is successfully registered.*/
 		void fromCommunication_successfully_registered_coupling(const CommunicationDataPtr& comm_data,
-			const CouplingInfoPtr& coupling_info, const AgentInfoPtr& agent_info, const CommunicationInfoPtr& communication_info);
+			const CouplingInfo& coupling_info, const AgentInfo& agent_info, const CommunicationInfoPtr& communication_info);
 		/*This function is called if coupling should be de-registered.*/
 		void fromCommunication_deregister_coupling(const CommunicationDataPtr& comm_data, const CouplingInfoPtr& info);
 		/*This function is called if coupling is successfully de-registered.*/
-		void fromCommunication_deregistered_coupling(const CommunicationDataPtr& comm_data, const CouplingInfoPtr& info);
+		void fromCommunication_deregistered_coupling(const CommunicationDataPtr& comm_data, const CouplingInfo& info);
 
 		/*This function is called if requirement for solution is received.*/
 		void fromCommunication_get_solution(const CommunicationDataPtr& comm_data) const;
@@ -281,11 +281,15 @@ namespace grampcd
 		/*Read data asynchronously.*/
 		void async_read_some(const CommunicationDataPtr& comm_data);
 
+		const std::shared_ptr< std::vector<char> > serialize(const MessagePtr message) const;
+		void evaluate_data(CommunicationDataPtr comm_data, const std::shared_ptr<std::stringstream>& data);
+
 		mutable std::mutex mutex_stream_;
 		LoggingPtr log_;
 		std::ostringstream stream_;
 
 		mutable std::shared_mutex mutex_basics_;
+		const MessageHandlerPtr message_handler_;
 		AgentPtr agent_;
 		SimulatorPtr simulator_;
 		std::vector<AgentInfo> agents_;
@@ -313,11 +317,7 @@ namespace grampcd
 		std::vector<CommunicationDataPtr> comm_data_vec_;
 		std::vector<CommunicationDataPtr> comm_data_vec_to_delete_;
 
-		asio::io_service ioService_;
-		asio::ip::tcp::acceptor acceptor_;
-		std::vector< std::thread > threads_for_communication_;
-		asio::basic_waitable_timer<std::chrono::system_clock>  timer_waitForAck_;
-		asio::basic_waitable_timer<std::chrono::system_clock>  timer_waitTrue_;
+		std::shared_ptr<EncapsulatedAsio> asio_;
 		const unsigned int general_waiting_time_s_ = 2;
 		const unsigned int polling_period_s_ = 3;
 		const unsigned int ping_period_s_ = 2;

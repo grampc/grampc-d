@@ -12,35 +12,18 @@
 
 #pragma once
 
-#include "grampcd/util/types.hpp"
-
-#include "cereal/archives/binary.hpp"
-#include "cereal/types/vector.hpp"
+#include "grampcd/util/class_forwarding.hpp"
 
 namespace grampcd
 {
-
-	/**
-	 * @brief Coupling variable $ z = [z_x, z_u] $.
-	 */
-	struct CouplingState
+	struct MessageHandler
 	{
 	public:
+		MessageHandler(CommunicationInterfaceLocal* communication_interface, const LoggingPtr& log);
 
-		int i_;
+		void handle_message(const CommunicationDataPtr& comm_data, const MessagePtr& message);
 
-		typeRNum t0_;
-		std::vector<typeRNum> t_;
-
-		std::vector<typeRNum> z_x_;
-		std::vector<typeRNum> z_u_;
-		std::vector<typeRNum> z_v_;
-
-		template<class Archive>
-		void serialize(Archive& ar)
-		{
-			ar(i_, t0_, t_, z_x_, z_u_, z_v_);
-		}
+		CommunicationInterfaceLocal* communication_interface_;
+		const LoggingPtr log_;
 	};
-
 }

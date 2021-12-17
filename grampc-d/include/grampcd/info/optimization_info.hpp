@@ -26,7 +26,7 @@ namespace grampcd
         OptimizationInfo() {}
 
         /*Optimization horizon*/
-        typeRNum COMMON_Thor_ = 1;
+		typeRNum COMMON_Thor_ = 1;
         /*Step size*/
         typeRNum COMMON_dt_ = 0.05;
         /*Number of discretization points*/
@@ -95,7 +95,22 @@ namespace grampcd
         /*Activate approximation of neighbors constraints*/
         bool APPROX_ApproximateConstraints_ = false;
         /*Activate approximation of neighbors dynamics*/
-        bool APPROX_ApproximateDynamics_ = false;
+		bool APPROX_ApproximateDynamics_ = false;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(COMMON_Thor_, COMMON_dt_, COMMON_Nhor_, COMMON_ShiftControl_, COMMON_Integrator_,
+                GRAMPC_MaxGradIter_, GRAMPC_MaxMultIter_, GRAMPC_PenaltyMin_, GRAMPC_PenaltyMax_, 
+                GRAMPC_AugLagUpdateGradientRelTol_, GRAMPC_Integrator_, GRAMPC_LineSearchType_, 
+                GRAMPC_PenaltyIncreaseFactor_, GRAMPC_PenaltyDecreaseFactor_, GRAMPC_LineSearchMax_, 
+                GRAMPC_LineSearchMin_, GRAMPC_ConvergenceCheck_, GRAMPC_ConvergenceGradientRelTol_, 
+                GRAMPC_ConstraintsAbsTol_, GRAMPC_PenaltyIncreaseThreshold_, GRAMPC_LineSearchInit_,
+                ADMM_maxIterations_, ADMM_innerIterations_, ADMM_ConvergenceTolerance_, 
+                ADMM_PenaltyIncreaseFactor_, ADMM_PenaltyDecreaseFactor_, ADMM_PenaltyMin_, 
+                ADMM_PenaltyMax_, ADMM_PenaltyInit_, ADMM_AdaptPenaltyParameter_, ADMM_DebugCost_,
+                APPROX_ApproximateCost_, APPROX_ApproximateConstraints_, APPROX_ApproximateDynamics_);
+		}
     };
 
 }
