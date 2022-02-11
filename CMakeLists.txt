@@ -13,6 +13,7 @@ project(grampcd VERSION 1.0.0)
 
 set(PYTHON_AVAILABLE FALSE)
 set(UNIT_TEST FALSE)
+set(AUTO_TUNE FALSE)
 
 # add support for C++17 standard
 set(CMAKE_CXX_STANDARD 17)

@@ -109,6 +109,16 @@ namespace grampcd
 		/*Print progressbar*/
 		void set_print_progressbar(const bool print) override;
 
+		/*Automatically tune the ADMM parameters*/
+		const OptimizationInfo auto_tune_parameters
+		(
+			const TuningInfo& tuning_info,
+			ctypeRNum convergence_tolerance = 1e-6,
+			const std::string& type = "MPC",
+			const int size_of_population = 200,
+			const int number_of_generations = 200
+		) override;
+
 	private:
 		const DmpcInterfacePtr dmpc_interface_;
 

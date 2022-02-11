@@ -57,7 +57,7 @@ namespace grampcd
         void initialize_ADMM(const OptimizationInfo& oi);
 
         /* Solve optimization problem using alternating direction method of multipliers (ADMM) */
-        void solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
+        const bool solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
 
         /* Received convergence flag from agent */
         void fromCommunication_received_convergenceFlag(bool converged, int from);

@@ -27,6 +27,9 @@
 
 #include "grampcd/util/logging.hpp"
 #include "grampcd/util/data_conversion.hpp"
+#include "grampcd/util/auto_tune.hpp"
+
+#include "grampcd/info/tuning_info.hpp"
 
 #include "chrono"
 #include <fstream>
@@ -36,7 +39,8 @@ namespace grampcd
 {
 	DmpcInterface::DmpcInterface() :
 		log_(std::make_shared<Logging>())
-	{}
+	{
+	}
 
 	void DmpcInterface::run_MPC
 	(
@@ -516,6 +520,11 @@ namespace grampcd
 		return CommunicationInfo();
 	}
 
+	TuningInfo DmpcInterface::tuningInfo() const
+	{
+		return TuningInfo();
+	}
+
 	void DmpcInterface::set_initialState(const unsigned int agent_id, const std::vector<typeRNum>& x_init)
 	{
 		// search for agent
@@ -531,5 +540,25 @@ namespace grampcd
 		// agent was not found
 		log_->print(DebugType::Error) << "[DmpcInterface::set_initialState]: "
 			<< "Agent " << agent_id << " is not registered. " << std::endl;
+	}
+
+	const OptimizationInfo DmpcInterface::auto_tune_parameters
+	(
+		const TuningInfo& tuning_info,
+		ctypeRNum convergence_tolerance,
+		const std::string& type,
+		const int size_of_population,
+		const int number_of_generations
+	)
+	{
+		Autotune auto_tune(log_, optimizationInfo_, agents_, coordinator_ );
+
+		return auto_tune.auto_tune_parameters
+		(
+			tuning_info, 
+			convergence_tolerance, 
+			type, size_of_population, 
+			number_of_generations
+		);
 	}
 }

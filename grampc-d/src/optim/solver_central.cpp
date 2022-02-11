@@ -107,4 +107,8 @@ namespace grampcd
         return agents_;
     }
 
+    const bool SolverCentral::is_converged() const
+    {
+        return optimizationInfo_.GRAMPC_MaxGradIter_ != solver_->getSolution()->iter[optimizationInfo_.GRAMPC_MaxMultIter_ - 1];
+    }
 }

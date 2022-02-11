@@ -18,6 +18,7 @@
 #include "grampcd/info/optimization_info.hpp"
 #include "grampcd/info/agent_info.hpp"
 #include "grampcd/info/coupling_info.hpp"
+#include "grampcd/info/tuning_info.hpp"
 
 #include "grampcd/util/class_forwarding.hpp"
 
@@ -37,6 +38,8 @@ namespace grampcd
 		OptimizationInfo optimizationInfo() const;
 		/*Create object of a communication info*/
 		CommunicationInfo communicationInfo() const;
+		/*Create object of a tuning info*/
+		TuningInfo tuningInfo() const;
 
 		/*Initialize the central communication interface.*/
 		void initialize_central_communicationInterface(const int number_of_threads = 0) override;
@@ -123,6 +126,16 @@ namespace grampcd
 		void set_print_error(const bool print) override;
 		/*Print progressbar*/
 		void set_print_progressbar(const bool print) override;
+
+		/*Automatically tune the ADMM parameters*/
+		const OptimizationInfo auto_tune_parameters
+		(
+			const TuningInfo& tuning_info,
+			ctypeRNum convergence_tolerance = 1e-6,
+			const std::string& type = "MPC",
+			const int size_of_population = 200,
+			const int number_of_generations = 200
+		) override;
 
 	private:
 		/*Run a centralized controller.*/

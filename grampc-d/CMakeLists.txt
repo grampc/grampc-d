@@ -42,12 +42,13 @@ add_library(grampcd
     src/optim/problem_description_local_default.cpp
     src/optim/problem_description_local_neighbor_approximation.cpp
     src/optim/approximate_neighbor.cpp
-)
+    src/util/auto_tune.cpp)
 
 target_include_directories(grampcd PUBLIC 
     include
     ${ASIO_INCLUDE_DIR}
     ${CEREAL_INCLUDE_DIR}
+    ${GALGO_INCLUDE_DIR}
 )
 
 add_dependencies(grampcd 
@@ -57,6 +58,9 @@ add_dependencies(grampcd
 
 # define flag to use asio as standalone library
 target_compile_definitions(grampcd PRIVATE -DASIO_STANDALONE )
+if(AUTO_TUNE)
+    target_compile_definitions(grampcd PRIVATE -DAUTO_TUNE)
+endif()
 
 target_link_libraries(grampcd 
     grampc 

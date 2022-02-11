@@ -76,3 +76,20 @@ ExternalProject_Add(sha
 
 ExternalProject_Get_Property(sha SOURCE_DIR)
 set(SHA_INCLUDE_DIR ${SOURCE_DIR} CACHE INTERNAL "SHA_INCLUDE_DIR")
+
+# include galgo as external project
+if(AUTO_TUNE)
+    ExternalProject_Add(galgo
+        GIT_REPOSITORY https://github.com/olmallet81/GALGO-2.0.git
+        GIT_TAG 6ee1cd951a2c5abbbcd7cdadf6598eac42e3530b
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+  	        BUILD_COMMAND ""
+  	        INSTALL_COMMAND ""
+	        LOG_DOWNLOAD ON
+            PREFIX  ${CMAKE_SOURCE_DIR}/libs/galgo
+    )
+
+    ExternalProject_Get_Property(galgo SOURCE_DIR)
+    set(GALGO_INCLUDE_DIR ${SOURCE_DIR}/src CACHE INTERNAL "GALGO_INCLUDE_DIR")
+endif()

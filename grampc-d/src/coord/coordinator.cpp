@@ -218,7 +218,7 @@ namespace grampcd
         communication_interface_->trigger_step(ADMMStep::SEND_MULTIPLIER_STATE);
     }
 
-    void Coordinator::solve_ADMM(int outer_iterations, int inner_iterations)
+    const bool Coordinator::solve_ADMM(int outer_iterations, int inner_iterations)
     {
         communication_interface_->trigger_step( ADMMStep::INITIALIZE );
 
@@ -252,8 +252,10 @@ namespace grampcd
             ADMM_converged_ = true;
             communication_interface_->trigger_step(ADMMStep::SEND_CONVERGENCE_FLAG);
             if(ADMM_converged_)
-                break;
+                return true;
         }
+
+        return false;
     }
 
     void Coordinator::fromCommunication_received_convergenceFlag(bool converged, int from)

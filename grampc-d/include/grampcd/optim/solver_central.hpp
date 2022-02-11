@@ -33,6 +33,8 @@ namespace grampcd
         /*Returns a vector with pointer to agents.*/
         const std::vector<AgentPtr>& get_agents() const;
 
+        const bool is_converged() const;
+
     private:
         OptimizationInfo optimizationInfo_;
 	    std::vector<AgentPtr> agents_;

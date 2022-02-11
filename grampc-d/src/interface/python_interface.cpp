@@ -110,6 +110,25 @@ namespace grampcd
 		return dmpc_interface_->get_optimizationInfo();
 	}
 
+	const OptimizationInfo PythonInterface::auto_tune_parameters
+	(
+		const TuningInfo& tuning_info,
+		ctypeRNum convergence_tolerance,
+		const std::string& type,
+		const int size_of_population,
+		const int number_of_generations
+	)
+	{
+		return dmpc_interface_->auto_tune_parameters
+		(
+			tuning_info, 
+			convergence_tolerance, 
+			type, 
+			size_of_population, 
+			number_of_generations
+		);
+	}
+
 	void PythonInterface::set_optimizationInfo(const OptimizationInfo& optimization_info)
 	{
 		dmpc_interface_->set_optimizationInfo(optimization_info);
@@ -265,7 +284,8 @@ namespace grampcd
 			.def("set_print_error", &PythonInterface::set_print_error)
 			.def("set_print_message", &PythonInterface::set_print_message)
 			.def("set_print_warning", &PythonInterface::set_print_warning)
-			.def("set_print_progressbar", &PythonInterface::set_print_progressbar);
+			.def("set_print_progressbar", &PythonInterface::set_print_progressbar)
+			.def("auto_tune_parameters", &PythonInterface::auto_tune_parameters);
 
 		py::class_<AgentInfo>(m, "AgentInfo")
 			.def(py::init<>())
@@ -332,5 +352,13 @@ namespace grampcd
 			.def_readwrite("APPROX_ApproximateCost_", &OptimizationInfo::APPROX_ApproximateCost_)
 			.def_readwrite("APPROX_ApproximateConstraints_", &OptimizationInfo::APPROX_ApproximateConstraints_)
 			.def_readwrite("APPROX_ApproximateDynamics_", &OptimizationInfo::APPROX_ApproximateDynamics_);
+
+		py::class_<TuningInfo>(m, "TuningInfo")
+			.def(py::init<>())
+			.def_readwrite("ADMM_innerIterations_", &TuningInfo::ADMM_innerIterations_)
+			.def_readwrite("ADMM_maxIterations_", &TuningInfo::ADMM_maxIterations_)
+			.def_readwrite("COMMON_Nhor_", &TuningInfo::COMMON_Nhor_)
+			.def_readwrite("GRAMPC_MaxGradIter_", &TuningInfo::GRAMPC_MaxGradIter_)
+			.def_readwrite("GRAMPC_MaxMultIter_", &TuningInfo::GRAMPC_MaxMultIter_);
 	}
 }

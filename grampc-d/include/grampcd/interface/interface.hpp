@@ -107,5 +107,15 @@ namespace grampcd
 		virtual void set_print_error(const bool print) = 0;
 		/*Print messages of type progress bar*/
 		virtual void set_print_progressbar(const bool print) = 0;
+
+		/*Automatically tune the ADMM parameters*/
+		virtual const OptimizationInfo auto_tune_parameters
+		(
+			const TuningInfo& tuning_info,
+			ctypeRNum convergence_tolerance = 1e-6,
+			const std::string& type = "MPC",
+			const int size_of_population = 200,
+			const int number_of_generations = 200
+		) = 0;
 	};
 }
