@@ -31,6 +31,9 @@ int main(int argc, char** argv)
 	optimization_info.ADMM_maxIterations_ = 10;
 	optimization_info.ADMM_ConvergenceTolerance_ = 0;
 
+	optimization_info.ASYNC_Active_ = false;
+	optimization_info.ASYNC_Delay_ = 0;
+
 	interface->set_optimizationInfo(optimization_info);
 
 	const typeRNum Tsim = 3;

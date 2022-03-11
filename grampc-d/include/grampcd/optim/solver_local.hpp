@@ -15,6 +15,7 @@
 #include "grampcd/info/optimization_info.hpp"
 #include "grampcd/optim/problem_description_local_default.hpp"
 #include "grampcd/optim/problem_description_local_neighbor_approximation.hpp"
+#include "grampcd/comm/communication_interface.hpp"
 
 namespace grampcd
 {
@@ -22,15 +23,22 @@ namespace grampcd
     class SolverLocal
     {
     public:
-        SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log);
+        SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log, const CommunicationInterfacePtr& communication_interface);
 
         void update_agentStates();
         void update_couplingStates();
         void update_multiplierStates();
 
-        const bool is_converged() const;
+        void send_agentStates();
+        void send_couplingStates();
+        void send_multiplierStates();
+        void send_numberofNeighbors();
+        void send_convergenceFlag();
+        void send_flagStoppedAdmm();
 
+        const bool is_converged() const;
         void initialize_ADMM();
+        void print_debugCost();
 
         const std::vector<int>& get_x_index_xji() const;
         const std::vector<int>& get_u_index_uji() const;
@@ -47,8 +55,6 @@ namespace grampcd
 
 	    SolverPtr solver_;
         LoggingPtr log_;
-
-	    int ADMM_iter_ = 0;
 	    double ADMM_PrimalResiduum = 0.0;
 	    double ADMM_DualResiduum = 0.0;
 
@@ -57,6 +63,7 @@ namespace grampcd
 
 	    Agent* agent_;
 	    OptimizationInfo info_;
+        CommunicationInterfacePtr communication_interface_;
     };
 
 }

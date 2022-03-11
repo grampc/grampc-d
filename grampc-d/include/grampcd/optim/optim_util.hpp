@@ -83,7 +83,8 @@ namespace grampcd
         SEND_CONVERGENCE_FLAG,
         INITIALIZE,
         SEND_TRUE_STATE,
-        PRINT
+        PRINT,
+        START_ASYNC_ADMM
     };
 
     /*Configure the solver regarding the optimization info.*/

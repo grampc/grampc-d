@@ -25,6 +25,11 @@
 #include "grampcd/optim/optim_util.hpp"
 #include "grampcd/optim/solver_local.hpp"
 #include "grampcd/optim/solution.hpp"
+#include "grampcd/agent/step_selector.hpp"
+#include "grampcd/agent/sync_step_selector.hpp"
+#include "grampcd/agent/async_step_selector.hpp"
+
+
 
 namespace grampcd
 {
@@ -32,7 +37,7 @@ namespace grampcd
     Agent::Agent(const CommunicationInterfacePtr& communication_interface,
                  const ModelFactoryPtr& model_factory,
                  const AgentInfo& agent_info,
-        const LoggingPtr& log)
+         const LoggingPtr& log)
         :   
         communication_interface_(communication_interface),
         model_factory_(model_factory),
@@ -40,7 +45,8 @@ namespace grampcd
         info_(agent_info),
         local_solver_(nullptr),
         solution_(new Solution()),
-        log_(log)
+        log_(log),
+        step_selector_(nullptr)
     {
         x_des_ = std::vector<typeRNum>(model_->get_Nxi(), 0.0);
         u_des_ = std::vector<typeRNum>(model_->get_Nui(), 0.0);
@@ -502,6 +508,12 @@ namespace grampcd
         }
         
         neighbor->set_neighbors_localCopies(state);
+
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            neighbor->reset_delays(ADMMStep::UPDATE_AGENT_STATE);
+            step_selector_->execute_admmStep(ADMMStep::UPDATE_COUPLING_STATE);    
+        }
     }
 
     void Agent::fromCommunication_received_desiredAgentState(const AgentState& state, int from)
@@ -557,6 +569,13 @@ namespace grampcd
         }
 			
         neighbor->set_neighbors_couplingState(coupling);
+
+        // asynchronous execution
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            neighbor->reset_delays(ADMMStep::UPDATE_COUPLING_STATE);
+            step_selector_->execute_admmStep(ADMMStep::UPDATE_MULTIPLIER_STATE);
+        }
     }
 
     void Agent::fromCommunication_received_couplingState(const CouplingState& coupling, const CouplingState& ext_influence_coupling, int from)
@@ -591,6 +610,13 @@ namespace grampcd
 			
         neighbor->set_neighbors_externalInfluence_couplingState(ext_influence_coupling);			
 		neighbor->set_neighbors_couplingState(coupling);
+
+        // asynchronous execution
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            neighbor->reset_delays(ADMMStep::UPDATE_COUPLING_STATE);
+            step_selector_->execute_admmStep(ADMMStep::UPDATE_MULTIPLIER_STATE);
+        }
     }
 
     void Agent::fromCommunication_received_multiplierState(const MultiplierState& multiplier, PenaltyState penalty, int from)
@@ -625,6 +651,13 @@ namespace grampcd
 
 		neighbor->set_neighbors_coupled_multiplierState(multiplier);
 		neighbor->set_neighbors_coupled_penaltyState(penalty);
+
+        // asynchronous execution
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            neighbor->reset_delays(ADMMStep::UPDATE_MULTIPLIER_STATE);
+            step_selector_->execute_admmStep(ADMMStep::UPDATE_AGENT_STATE);
+        }
     }
 
     void Agent::fromCommunication_configured_optimization(const OptimizationInfo& info)
@@ -632,7 +665,14 @@ namespace grampcd
         initialize(info);
 
         // create local solver
-        local_solver_.reset(new SolverLocal(this, info, log_));
+        local_solver_.reset(new SolverLocal(this, info, log_,communication_interface_));
+
+        // create step selector
+        if(optimizationInfo_.ASYNC_Active_)
+            step_selector_= AsyncStepSelectorPtr(new AsyncStepSelector(local_solver_,this));
+        else 
+            step_selector_ = SyncStepSelectorPtr(new SyncStepSelector(local_solver_));
+
     }
 
     const OptimizationInfo& Agent::get_optimizationInfo() const
@@ -657,90 +697,34 @@ namespace grampcd
 
     void Agent::fromCommunication_trigger_step(const ADMMStep& step)
     {
-        switch(step)
-        {
-
-        case ADMMStep::UPDATE_AGENT_STATE:
-            local_solver_->update_agentStates();
-            break;
-
-        case ADMMStep::SEND_AGENT_STATE:
-            // send local copies to neighbors
-            for( const auto& neighbor : neighbors_ )
-            {
-                if( neighbor->is_sendingNeighbor() || neighbor->is_approximating() )
-                {
-                    if (neighbor->is_approximatingDynamics())
-                    {
-                        AgentState local_copies = neighbor->get_localCopies();
-                        local_copies.x_.clear();
-
-                        communication_interface_->send_agentState(local_copies, get_id(), neighbor->get_id());
-                    }
-                    else
-                        communication_interface_->send_agentState(neighbor->get_localCopies(), get_id(), neighbor->get_id());
-                }
-            }
-            break;
-
-        case ADMMStep::UPDATE_COUPLING_STATE:
-            local_solver_->update_couplingStates();
-            break;
-
-        case ADMMStep::SEND_COUPLING_STATE:
-            // send coupling state to neighbors
-            {
-                for( const auto& neighbor : neighbors_ )
-                {
-                    // send coupling state
-                    if( ( neighbor->is_receivingNeighbor() || neighbor->is_approximating() ) && ! neighbor->is_approximatingDynamics() )
-                        communication_interface_->send_couplingState(get_couplingState(), get_id(), neighbor->get_id());
-
-                    // send coupling state and ext_influence_coupling_state
-                    if( neighbor->is_approximatingDynamics() )
-                        communication_interface_->send_couplingState(get_couplingState(), neighbor->get_externalInfluence_couplingState(), get_id(), neighbor->get_id());
-                }
-            }
-            break;
-
-        case ADMMStep::UPDATE_MULTIPLIER_STATE:
-            local_solver_->update_multiplierStates();
-            break;
-
-        case ADMMStep::SEND_MULTIPLIER_STATE:
-            // send multiplier state to all sending neighbors
-            for( const auto& neighbor : neighbors_ )
-            {
-                if( neighbor->is_sendingNeighbor() || neighbor->is_approximating() )
-                    communication_interface_->send_multiplierState(neighbor->get_coupled_multiplierState(),
-                        neighbor->get_coupled_penaltyState(), get_id(), neighbor->get_id());
-            }
-            break;
-
-        case ADMMStep::SEND_CONVERGENCE_FLAG:
-            communication_interface_->send_convergenceFlag(local_solver_->is_converged(), get_id());
-            break;
-
-        case ADMMStep::INITIALIZE:
-            // send number of neighbors to each neighbor
-            for( const auto& neighbor : get_neighbors() )
-                communication_interface_->send_numberOfNeighbors(static_cast<int>(neighbors_.size()), get_id(), neighbor->get_id());
-
-            local_solver_->initialize_ADMM();
-            set_neighbors_initial_states();
-            break;
-
-        case ADMMStep::PRINT:
-            solution_->update_debug_cost(get_predicted_cost());
-            break;
-
-        case ADMMStep::SEND_TRUE_STATE:
-            break;
-
-        default:
-            break;
-        }
+       step_selector_->execute_admmStep(step);
     }
+
+    void Agent::fromCommunication_recieved_flagToStopAdmm(const bool flag)
+    {
+        // remember flag stop ADMM
+        std::static_pointer_cast<AsyncStepSelector>(step_selector_)->set_flagStopAdmm(flag);
+
+        // send acknowledge flag
+        communication_interface_->send_flagStoppedAdmm(flag,this->get_id());
+    }
+
+    void Agent::fromCommunication_recieved_flagStoppedAdmm(const bool flag, int from)
+    {
+
+        const auto neighbor = DataConversion::get_element_from_vector(neighbors_, from);
+
+        if (neighbor == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[Agent::fromCommunication_recieved_admmIter] Agent " << get_id() << ": "
+                << "Received number of neighbors from unknown neighbor " << from << "." << std::endl;
+
+            return;
+        }
+        neighbor->flag_StoppedAdmm_ = true;
+
+    }
+    
 
     void Agent::set_neighbors_initial_states()
     {
@@ -932,4 +916,63 @@ namespace grampcd
 	    return cost;
     }
 
+    void Agent::increase_all_delays(const ADMMStep& step) const
+    {
+        for (auto& neighbor : sending_neighbors_)
+            neighbor->increase_delays(step);
+    }
+
+    void Agent::initialize_allNeighborDelays() const
+    {
+        for (const auto& neighbor : neighbors_)
+            neighbor->initialize_delays();
+    }
+
+    const int Agent::get_delay_sending_neighbors(const ADMMStep& step) const 
+    {
+        int max_delay = 0;
+
+        // Todo: std::max wäre deutlich übersichtlicher
+        for (auto& neighbor : sending_neighbors_)
+        {
+            int previous_max_delay = max_delay;
+
+            max_delay = std::max(max_delay, neighbor->get_delays(step));
+
+            // ignore delay of finished neighbors
+            if(neighbor->get_delays(step) > (previous_max_delay +1) && neighbor->flag_StoppedAdmm_)
+                max_delay = previous_max_delay;
+        }
+        return max_delay;
+    }
+
+    const int Agent::get_delay_recieving_neighbors(const ADMMStep& step) const
+    {
+        int max_delay = 0;
+
+        for (auto& neighbor : receiving_neighbors_)
+        {
+            int previous_max_delay = max_delay;
+            
+            max_delay = std::max(max_delay, neighbor->get_delays(step));
+
+            // ignore delay of finished neighbors
+            if (neighbor->get_delays(step) > (previous_max_delay +1) && neighbor->flag_StoppedAdmm_)
+                max_delay = previous_max_delay;
+        }
+        return max_delay;
+    }
+
+    const StepSelectorPtr& Agent::get_stepSelector() const
+    {
+        return step_selector_;
+    }
+
+    void Agent::reset_stopAdmmflag_of_neighbors()
+    {
+        for (auto& neighbor : neighbors_)
+            neighbor->flag_StoppedAdmm_ = false;
+    }
+
 }
+

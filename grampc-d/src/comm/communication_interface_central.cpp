@@ -288,6 +288,25 @@ const bool CommunicationInterfaceCentral::send_convergenceFlag(const bool conver
     return true;
 }
 
+const bool  CommunicationInterfaceCentral::send_flagStoppedAdmm(const bool flag, const int from, const int to)
+{
+    if (to >= agents_.size())
+    {
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::send_admmIter] "
+            << "Could not find agent with id " << to << "." << std::endl;
+        return false;
+    }
+  
+    agents_[to]->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    return true;
+}
+
+const bool  CommunicationInterfaceCentral::send_flagStoppedAdmm(const bool flag, const int from)
+{
+    coordinator_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    return true;
+}
+
 const bool CommunicationInterfaceCentral::configure_optimization(const OptimizationInfo& info)
 {
     // configure optimization for each agent

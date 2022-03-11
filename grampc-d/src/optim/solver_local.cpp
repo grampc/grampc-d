@@ -21,19 +21,24 @@
 
 #include "grampcd/util/logging.hpp"
 
+#include "grampcd/agent/step_selector.hpp"
+#include "grampcd/agent/async_step_selector.hpp"
+
+#include "grampcd/optim/solution.hpp"
 #include <cmath>
 #include <algorithm>
 
 namespace grampcd
 {
 
-    SolverLocal::SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log)
+    SolverLocal::SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log, const CommunicationInterfacePtr& communication_interface)
         : agent_(agent),
           default_problem_description_(agent),
           neighbor_approximation_problem_description_(agent, info),
           solver_(new grampc::Grampc(&default_problem_description_)),
           info_(info),
-          log_(log)
+          log_(log),
+          communication_interface_(communication_interface)
     {
 	    if (info.APPROX_ApproximateDynamics_)
 		    solver_.reset(new grampc::Grampc(&neighbor_approximation_problem_description_));
@@ -41,6 +46,14 @@ namespace grampcd
 		    solver_.reset(new grampc::Grampc(&default_problem_description_));
 
         configureSolver(solver_, info);
+    }
+
+    void SolverLocal::initialize_ADMM()
+    {
+        send_numberofNeighbors();
+        agent_->set_neighbors_initial_states();
+        agent_->initialize_allNeighborDelays();
+        agent_->reset_stopAdmmflag_of_neighbors();
     }
 
     void SolverLocal::update_agentStates()
@@ -388,9 +401,83 @@ namespace grampcd
                 neighbor->set_externalInfluence_multiplierState(multiplier);
             }
         }
+    }
 
-        //increase counter for ADMM iterations
-        ADMM_iter_ += 1;
+    void SolverLocal::send_agentStates()
+    {
+        for (const auto& neighbor : agent_->get_neighbors())
+        {
+            if (neighbor->is_sendingNeighbor() || neighbor->is_approximating())
+            {
+                if (neighbor->is_approximatingDynamics())
+                {
+                    AgentState local_copies = neighbor->get_localCopies();
+                    local_copies.x_.clear();
+
+                    communication_interface_->send_agentState(local_copies, agent_->get_id(), neighbor->get_id());
+                }
+                else
+                    communication_interface_->send_agentState(neighbor->get_localCopies(), agent_->get_id(), neighbor->get_id());
+            }
+        }
+    }
+
+    void SolverLocal::send_couplingStates()
+    {
+
+        for (const auto& neighbor : agent_->get_neighbors())
+        {
+            // send coupling state
+            if ((neighbor->is_receivingNeighbor() || neighbor->is_approximating()) && !neighbor->is_approximatingDynamics())
+                communication_interface_->send_couplingState(agent_->get_couplingState(), agent_->get_id(), neighbor->get_id());
+
+            // send coupling state and ext_influence_coupling_state
+            if (neighbor->is_approximatingDynamics())
+                communication_interface_->send_couplingState(agent_->get_couplingState(), neighbor->get_externalInfluence_couplingState(), agent_->get_id(), neighbor->get_id());
+        }
+
+
+    }
+
+    void SolverLocal::send_multiplierStates()
+    {
+        for (const auto& neighbor : agent_->get_neighbors())
+        {
+            if (neighbor->is_sendingNeighbor() || neighbor->is_approximating())
+                communication_interface_->send_multiplierState(neighbor->get_coupled_multiplierState(),
+                    neighbor->get_coupled_penaltyState(), agent_->get_id(), neighbor->get_id());
+        }
+    }
+
+    void SolverLocal::send_convergenceFlag()
+    {
+        communication_interface_->send_convergenceFlag(is_converged(), agent_->get_id());
+    }
+
+    void SolverLocal::send_numberofNeighbors()
+    {
+        for (const auto& neighbor : agent_->get_neighbors())
+            communication_interface_->send_numberOfNeighbors(static_cast<int>(agent_->get_neighbors().size()), agent_->get_id(), neighbor->get_id());
+    }
+
+    void SolverLocal::send_flagStoppedAdmm()
+    {
+        // get and cast step selector 
+        AsyncStepSelectorPtr stepselector =  std::static_pointer_cast<AsyncStepSelector>(agent_->get_stepSelector());
+
+        // send flag to neighbors
+        for (const auto& neighbor : agent_->get_neighbors())
+        {
+            communication_interface_->send_flagStoppedAdmm(stepselector->get_flagStopAdmm(), agent_->get_id(), neighbor->get_id());
+        }
+
+        // send flag to Coordinator 
+        communication_interface_->send_flagStoppedAdmm(stepselector->get_flagStopAdmm(), agent_->get_id());
+    }
+
+    void SolverLocal::print_debugCost()
+    {
+        agent_->get_solution()->update_debug_cost(agent_->get_predicted_cost());
     }
 
     void SolverLocal::penaltyParameterAdaption()
@@ -573,11 +660,6 @@ namespace grampcd
 	    return primal_residuum < std::pow(info_.ADMM_ConvergenceTolerance_, 2);
     }
 
-    void SolverLocal::initialize_ADMM()
-    {
-        ADMM_iter_ = 0;
-    }
-
     const std::vector<int>& SolverLocal::get_u_index_uji() const
     {
         if(agent_->is_approximatingDynamics())
@@ -637,5 +719,5 @@ namespace grampcd
 		    return 0;
 	    }
     }
-
+   
 }

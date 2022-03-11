@@ -36,7 +36,8 @@ namespace grampcd
             copied_couplingModel_(nullptr),
             approximate_neighbor_(nullptr),
             log_(log),
-            agent_id_(-1)
+            agent_id_(-1),
+            flag_StoppedAdmm_(false)
     {
         sending_neighbor_ = false;
         receiving_neighbor_ = false;
@@ -641,6 +642,77 @@ namespace grampcd
             return couplingModel_->get_Nxj();
         else
             return copied_couplingModel_->get_Nxi();
+    }
+
+    void Neighbor::increase_delays(const ADMMStep& step)
+    {
+        switch (step)
+        {
+        case(ADMMStep::UPDATE_AGENT_STATE):
+            ++delay_agentState_;
+            break;
+
+        case(ADMMStep::UPDATE_COUPLING_STATE):
+            ++delay_couplingState_;
+            break;
+
+        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+            ++delay_multiplierState_;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    void Neighbor::reset_delays(const ADMMStep& step)
+    {
+        switch (step)
+        {
+        case(ADMMStep::UPDATE_AGENT_STATE):
+            delay_agentState_ = 0;
+            break;
+
+        case(ADMMStep::UPDATE_COUPLING_STATE):
+           delay_couplingState_ = 0;
+            break;
+
+        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+            delay_multiplierState_ = 0;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    int Neighbor::get_delays(const ADMMStep& step)
+    {
+        switch (step)
+        {
+        case(ADMMStep::UPDATE_AGENT_STATE):
+            return delay_agentState_;
+            break;
+
+        case(ADMMStep::UPDATE_COUPLING_STATE):
+            return delay_couplingState_;
+            break;
+
+        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+            return delay_multiplierState_;
+            break;
+
+        default:
+            return 0;
+            break;
+        }
+    }
+
+    void Neighbor::initialize_delays()
+    {
+        delay_agentState_ = 65535;
+        delay_couplingState_ = 65535;
+        delay_multiplierState_ = 0;
     }
 
 }

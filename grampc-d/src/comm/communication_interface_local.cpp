@@ -868,6 +868,72 @@ namespace grampcd
         return true;
     }
 
+    const bool  CommunicationInterfaceLocal::send_flagStoppedAdmm(const bool flag, const int from, const int to)
+    {
+         // get communication data 
+        const auto comm_data = get_communicationData(to);
+
+        // check if agent is known
+        if (comm_data == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[CommunicationInterfaceLocal::sendflagStoppedAdmm] Agent with id " << to
+                << " not found." << std::endl;
+
+            return false;
+        }
+
+        // send admm stop flag to agent
+        const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_stopped_admm>(flag,from));
+        async_send(comm_data, serialize(message));
+
+        return true;
+    }
+ 
+    const bool CommunicationInterfaceLocal::send_flagStoppedAdmm(const bool flag, const int from)
+    {
+        // get CommunicationData
+        const auto comm_data = get_communicationData("coordinator");
+
+        // check if agent is known
+        if (comm_data == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[CommunicationInterfaceLocal::sendConvergenceFlag] "
+                << "Coordinator not found." << std::endl;
+
+            return false;
+        }
+
+        // send admm stop flag to coordinator 
+        const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_stopped_admm_coordinator>(flag, from));
+        async_send(comm_data, serialize(message));
+
+        return true;
+
+    }
+
+    const bool CommunicationInterfaceLocal::send_flagToStopAdmm( const bool flag, const int to)
+    {
+
+        // get CommunicationData
+        const auto comm_data = get_communicationData(to);
+
+        // check if agent is known
+        if (comm_data == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[CommunicationInterfaceLocal::send_flagToStopAdmm]  Agent with id " << to
+                << " not found." << std::endl;
+
+            return false;
+        }
+
+        // send flag to stop admm
+        const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_flag_to_stop_admm>(flag));
+        async_send(comm_data, serialize(message));
+
+        return true;
+
+    }
+
     const bool CommunicationInterfaceLocal::configure_optimization(const OptimizationInfo& info)
     {
 	    std::shared_lock<std::shared_mutex> guard(mutex_comm_data_vec_);
@@ -1604,6 +1670,26 @@ namespace grampcd
         conditionVariable_triggerStep_.notify_one();
     }
 
+    void CommunicationInterfaceLocal::fromCommunication_send_flagStoppedAdmm(const CommunicationDataPtr& comm_data, const bool flag, const int from)
+    {
+        // received flag that agent stopped admm
+        std::unique_lock<std::shared_mutex> guard(mutex_basics_);
+        agent_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    }
+
+    void CommunicationInterfaceLocal::fromCommunication_send_flagStoppedAdmmCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from)
+    {
+        // coordinator recieved flag that agent stopped admm
+        std::unique_lock<std::shared_mutex> guard(mutex_coordinator_);
+        coordinator_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    }
+
+    void CommunicationInterfaceLocal::fromCommunication_send_flagToStopAdmm(const CommunicationDataPtr& comm_data, const bool flag)
+    {
+        std::unique_lock<std::shared_mutex> guard(mutex_basics_);
+        agent_->fromCommunication_recieved_flagToStopAdmm(flag);
+    }
+
     void CommunicationInterfaceLocal::fromCommunication_send_multiplierPenaltyState(const CommunicationDataPtr& comm_data, 
         const MultiplierState& multiplier, const PenaltyState& penalty, const int from)
     {
@@ -1915,5 +2001,7 @@ namespace grampcd
 			log_->print(DebugType::Base) << "Error message: " << ec.what() << std::endl;
         }
 	}
+
+   
 
 }

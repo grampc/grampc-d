@@ -50,6 +50,9 @@ optimization_info.APPROX_ApproximateCost_ = approx
 optimization_info.APPROX_ApproximateConstraints_ = approx
 optimization_info.APPROX_ApproximateDynamics_ = approx
 
+optimization_info.ADMM_DebugCost_ = 0
+optimization_info.ASYNC_Delay_ = 0
+
 interface.set_optimizationInfo(optimization_info)
 
 Tsim = 0.01

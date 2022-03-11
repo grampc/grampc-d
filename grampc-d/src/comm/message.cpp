@@ -137,4 +137,14 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_num
 CEREAL_REGISTER_TYPE(grampcd::Message_acknowledge_received_optimization_info);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_acknowledge_received_optimization_info)
 
+CEREAL_REGISTER_TYPE(grampcd::Message_send_flag_stopped_admm);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_flag_stopped_admm)
+
+CEREAL_REGISTER_TYPE(grampcd::Message_send_flag_stopped_admm_coordinator);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_flag_stopped_admm_coordinator)
+
+CEREAL_REGISTER_TYPE(grampcd::Message_send_flag_to_stop_admm);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_flag_to_stop_admm)
+
+
 CEREAL_REGISTER_DYNAMIC_INIT(message)

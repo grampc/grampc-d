@@ -54,7 +54,10 @@ namespace grampcd
 		SUCCESSFULLY_REGISTERED_AGENT,
 		SUCCESSFULLY_REGISTERED_COUPLING,
 		SEND_COMMUNICATION_INFO,
-		SUCCESSFULLY_DEREGISTERED_AGENT
+		SUCCESSFULLY_DEREGISTERED_AGENT,
+		SEND_FLAG_STOPPED_ADMM,
+		SEND_FLAG_STOPPED_ADMM_COORDINATOR,
+		SEND_FLAG_TO_STOP_ADMM
 	};
 
 	struct Message
@@ -536,6 +539,56 @@ namespace grampcd
 			ar(coupling_info_, agent_info_, communication_info_);
 		}
 	};
+
+	
+	struct Message_send_flag_stopped_admm : public Message
+	{
+		Message_send_flag_stopped_admm();
+		Message_send_flag_stopped_admm(const bool flag_stoppedAdmm, const int from);
+		const Messagetype get_message_type() const;
+		
+		 bool flag_stoppedAdmm_ = false;
+		 int from_ = 0;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(flag_stoppedAdmm_,from_);
+		}
+	};
+
+	struct Message_send_flag_stopped_admm_coordinator : public Message
+	{
+		Message_send_flag_stopped_admm_coordinator();
+		Message_send_flag_stopped_admm_coordinator(const bool flag_stoppedAdmm, const int from);
+		const Messagetype get_message_type() const;
+
+		bool flag_stoppedAdmm_ = false;
+		int from_ = 0;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(flag_stoppedAdmm_, from_);
+		}
+	};
+
+	struct Message_send_flag_to_stop_admm : public Message
+	{
+		Message_send_flag_to_stop_admm();
+		Message_send_flag_to_stop_admm(const bool flag_toStopAdmm);
+		const Messagetype get_message_type() const;
+
+		bool flag_toStopAdmm_ = false;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(flag_toStopAdmm_);
+		}
+	};
+
+
 }
 
 CEREAL_FORCE_DYNAMIC_INIT(message)

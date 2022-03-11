@@ -186,6 +186,21 @@ public:
     /*Shift the neighbors states.*/
     void shift_states(const typeRNum dt, const typeRNum t0);
 
+    //*********************************************
+    // asynchronous functions and variables
+    //*********************************************
+    /*increases the delays by one */
+    void increase_delays(const ADMMStep& step);
+    /*initializes the delays*/
+    void initialize_delays();
+    /*resets the delays to zero*/
+    void reset_delays(const ADMMStep& step);
+    /*returns the delays*/
+    int  get_delays(const ADMMStep& step);
+
+    /*flag if neighbor finished ADMM*/
+    bool flag_StoppedAdmm_;
+
 private:
     LoggingPtr log_;
 
@@ -202,6 +217,12 @@ private:
     AgentModelPtr agentModel_;
     CouplingModelPtr couplingModel_;
     CouplingModelPtr copied_couplingModel_;
+
+    unsigned int delay_agentState_;
+    unsigned int delay_couplingState_;
+    unsigned int delay_multiplierState_;
+     
+
 
     /************************
      States for neighbor
@@ -249,6 +270,8 @@ private:
     bool is_approximatingCost_ = false;
     bool is_approximatingConstraints_ = false;
     bool is_approximatingDynamics_ = false;
+
+
 
 };
 

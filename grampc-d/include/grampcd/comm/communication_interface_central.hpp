@@ -64,6 +64,10 @@ namespace grampcd
 		const bool send_multiplierState(const MultiplierState& state, PenaltyState penalty, const int from, const int to) override;
 		/*Send convergence flag to the coordinator.*/
 		const bool send_convergenceFlag(const bool converged, const int from) override;
+		/*send the stopped admm flag to an agent*/
+		const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) override;
+		/*send the stopped admm flag to the coordinator*/
+		const bool send_flagStoppedAdmm(const bool flag, const int from) override;
 
 		/*Configure optimization.*/
 		const bool configure_optimization(const OptimizationInfo& info) override;

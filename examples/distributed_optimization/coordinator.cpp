@@ -36,6 +36,9 @@ int main(int argc, char** argv)
 	optimization_info.ADMM_maxIterations_ = 5;
 	optimization_info.ADMM_ConvergenceTolerance_ = 0;
 
+	optimization_info.ASYNC_Active_ = false; 
+	optimization_info.ASYNC_Delay_ = 0;
+
 	interface->set_optimizationInfo(optimization_info);
 
 	const typeRNum Tsim = 5;
@@ -47,7 +50,7 @@ int main(int argc, char** argv)
 	interface->run_DMPC(0, Tsim);
 
 	// print solutions
-	interface->print_solution_to_file("all");
+	interface->print_solution_to_file("all","async_Solution_agent");
 
 	interface->send_flag_to_agents("all");
 

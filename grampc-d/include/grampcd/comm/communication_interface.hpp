@@ -55,6 +55,10 @@ namespace grampcd
         virtual const bool send_multiplierState(const MultiplierState& state, PenaltyState penalty, const int from, const int to) = 0;
         /*Send convergence flag to the coordinator.*/
         virtual const bool send_convergenceFlag(const bool converged, const int from) = 0;
+        /*send the stopped admm flag to an agent*/
+        virtual const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) = 0;
+        /*ssend the stoppped admm flag to the coordinator*/
+        virtual const bool send_flagStoppedAdmm(const bool flag, const int from) = 0;
 
         /*Configure optimization.*/
         virtual const bool configure_optimization(const OptimizationInfo& info) = 0;

@@ -61,6 +61,8 @@ namespace grampcd
         const AgentModelPtr& get_agentModel() const;
         /*Returns the optimization info.*/
         const OptimizationInfo& get_optimizationInfo() const;
+        /*returns the step selector*/
+        const StepSelectorPtr& get_stepSelector() const;
 
         /*************************************************************************
          neighbor functions
@@ -161,16 +163,36 @@ namespace grampcd
         void fromCommunication_configured_optimization(const OptimizationInfo& info);
         /*This function is called if a message is received to trigger an ADMM step.*/
         void fromCommunication_trigger_step(const ADMMStep& step);
+        /*this function is called if a message is recieved to stop the ADMM algorithm*/
+        void fromCommunication_recieved_flagToStopAdmm(const bool flag);
+        /*this function is called if a message is recieved containing the ADMM iterations of the neighbors*/
+        void fromCommunication_recieved_flagStoppedAdmm(const bool flag, int from);
+
+        /*************************************************************************
+        end of communication functions
+        *************************************************************************/
 
         /*Set initial states for neighbors.*/
         void set_neighbors_initial_states();
-
         /*Return the current solution.*/
         const SolutionPtr& get_solution() const;
         /*Sets a new solution.*/
         void set_solution(const SolutionPtr& solution);
         /*Reset the current solution.*/
         void reset_solution();
+        /*writes predicted debug cost to solution*/
+        void print_debugCost();
+        /*increase all the corresponding delays of the neighbors*/
+        void increase_all_delays(const ADMMStep& step) const;
+        /*initialize the delays of the neighbors*/
+        void initialize_allNeighborDelays() const ;
+        /*returns the delay of the corresponding neighbor*/
+        const int get_delay_sending_neighbors(const ADMMStep& step) const;
+        /*returns the delay of the corresponding neighbor*/
+        const int get_delay_recieving_neighbors(const ADMMStep& step) const;
+        /*resets the flag stopAdmmflag*/
+        void reset_stopAdmmflag_of_neighbors();
+       
 
     private:
         //*********************************************
@@ -197,6 +219,8 @@ namespace grampcd
         std::vector<NeighborPtr> neighbors_;
         std::vector<NeighborPtr> receiving_neighbors_;
         std::vector<NeighborPtr> sending_neighbors_;
+        std::vector<NeighborPtr> stopped_neighbors_;
+
 
         //*********************************************
         // agent states
@@ -218,9 +242,10 @@ namespace grampcd
         // optimization parameters
         //*********************************************
 
-        OptimizationInfo optimizationInfo_;
         SolverLocalPtr local_solver_;
+        OptimizationInfo optimizationInfo_;
         SolutionPtr solution_;
+        StepSelectorPtr step_selector_;
 
         //*********************************************
         // neighbor approximation

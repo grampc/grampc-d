@@ -82,6 +82,12 @@ namespace grampcd
 		const bool send_multiplierState(const MultiplierState& state, PenaltyState penalty, const int from, const int to) override;
 		/*Send convergence flag to the coordinator.*/
 		const bool send_convergenceFlag(const bool converged, const int from) override;
+		/*send the stopped admm flag to an agent*/
+	    const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) override;
+		/*send the stopped admm flag to the coordinator*/
+		const bool send_flagStoppedAdmm(const bool flag, const int from) override;
+		/*send flag to stop the admm iterations of an agent*/
+		const bool send_flagToStopAdmm(const bool flag, const int to);
 
 		/*Configure optimization.*/
 		const bool configure_optimization(const OptimizationInfo& info) override;
@@ -138,6 +144,7 @@ namespace grampcd
 		/*Set to passive mode.*/
 		void set_passive() override;
 
+
 		/*Cap the stored data to a number of data points.*/
 		void cap_stored_data(const unsigned int data_points) override;
 		/*Returns the number of agents.*/
@@ -157,6 +164,12 @@ namespace grampcd
 		void fromCommunication_send_numberOfActiveCouplings(const CommunicationDataPtr& comm_data, const int number) const;
 		/*This function is called if flag is received.*/
 		void fromCommunication_send_flagToAgents(const CommunicationDataPtr& comm_data) const;
+		/*this function is called if an agent recieves a flag that its neighbor stopped the admm */
+		void fromCommunication_send_flagStoppedAdmm(const CommunicationDataPtr& comm_data, const bool flag, const int from); 
+		/*this function is called if the coordinator recieves a flag that an agent stopped its admm iterations*/
+		void fromCommunication_send_flagStoppedAdmmCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from);
+		/*This function is recieved when the agent should stop his admm iterations*/
+		void fromCommunication_send_flagToStopAdmm(const CommunicationDataPtr& comm_data, const bool flag);
 
 		/*This function is called if requirement for agent model is received.*/
 		void fromCommunication_get_agentModelFromAgent(const CommunicationDataPtr& comm_data) const;

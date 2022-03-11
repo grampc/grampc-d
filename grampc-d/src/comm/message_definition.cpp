@@ -179,4 +179,22 @@ namespace grampcd
 		agent_info_(std::make_shared<AgentInfo>(agent_info)),
 		communication_info_(std::make_shared<CommunicationInfo>(communication_info)) {}
 	const Messagetype Message_successfully_registered_coupling::get_message_type() const { return Messagetype::SUCCESSFULLY_REGISTERED_COUPLING; }
+
+	Message_send_flag_stopped_admm::Message_send_flag_stopped_admm() {}
+	Message_send_flag_stopped_admm::Message_send_flag_stopped_admm(const bool flag_stoppedAdmm, const int from)
+		:flag_stoppedAdmm_(flag_stoppedAdmm),
+		 from_(from) {}
+	const Messagetype Message_send_flag_stopped_admm::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM; }
+
+	Message_send_flag_stopped_admm_coordinator::Message_send_flag_stopped_admm_coordinator() {}
+	Message_send_flag_stopped_admm_coordinator::Message_send_flag_stopped_admm_coordinator(const bool flag_stoppedAdmm, const int from)
+		: flag_stoppedAdmm_(flag_stoppedAdmm),
+		  from_(from) {}
+	const Messagetype Message_send_flag_stopped_admm_coordinator::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM_COORDINATOR; }
+
+	Message_send_flag_to_stop_admm::Message_send_flag_to_stop_admm() {}
+	Message_send_flag_to_stop_admm::Message_send_flag_to_stop_admm(const bool flag_toStopAdmm)
+		: flag_toStopAdmm_(flag_toStopAdmm){}
+	const Messagetype Message_send_flag_to_stop_admm::get_message_type() const { return Messagetype::SEND_FLAG_TO_STOP_ADMM; }
+
 }

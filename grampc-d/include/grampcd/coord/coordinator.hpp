@@ -16,6 +16,9 @@
 
 #include "grampcd/info/optimization_info.hpp"
 
+#include <mutex>
+#include <condition_variable>
+
 namespace grampcd
 {
 
@@ -57,10 +60,13 @@ namespace grampcd
         void initialize_ADMM(const OptimizationInfo& oi);
 
         /* Solve optimization problem using alternating direction method of multipliers (ADMM) */
-        const bool solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
+        const bool solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);;
 
         /* Received convergence flag from agent */
         void fromCommunication_received_convergenceFlag(bool converged, int from);
+
+        /*Recieved flag of agent which executed all ADMM steps*/
+        void fromCommunication_recieved_flagStoppedAdmm(bool flag, int from);
 
         /* Advance all agents to next sampling step */
         void trigger_simulation(const std::string& Integrator, typeRNum dt) const;
@@ -73,6 +79,10 @@ namespace grampcd
         CommunicationInterfacePtr communication_interface_;
         std::map< unsigned int, std::vector< CouplingInfoPtr > > sending_neighbors_;
         std::map< unsigned int, std::vector< CouplingInfoPtr > > receiving_neighbors_;
+        std::vector< int> agents_thatStoppedAdmm_;
+        std::vector< int> agents_thatConverged_;
+        std::mutex mutex_stop_ADMM_;
+        std::condition_variable cond_var_stop_ADMM_;
 
         LoggingPtr log_;
 

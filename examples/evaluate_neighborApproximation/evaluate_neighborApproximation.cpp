@@ -35,6 +35,9 @@ int main(int argc, char** argv)
 	optimization_info.ADMM_ConvergenceTolerance_ = 0.009;
 	optimization_info.ADMM_DebugCost_ = true;
 
+	optimization_info.ASYNC_Active_ = false;
+	optimization_info.ASYNC_Delay_ = 0;
+
 	bool approx = true;
 	optimization_info.APPROX_ApproximateCost_ = approx;
 	optimization_info.APPROX_ApproximateConstraints_ = approx;

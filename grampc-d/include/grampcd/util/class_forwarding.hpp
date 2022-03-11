@@ -27,6 +27,9 @@ namespace grampcd
 	DMPC_CLASS_FORWARD(Agent);
 	DMPC_CLASS_FORWARD(Neighbor);
 	DMPC_CLASS_FORWARD(Coordinator);
+	DMPC_CLASS_FORWARD(StepSelector);
+	DMPC_CLASS_FORWARD(SyncStepSelector);
+	DMPC_CLASS_FORWARD(AsyncStepSelector);
 
 	DMPC_CLASS_FORWARD(DmpcInterface);
 

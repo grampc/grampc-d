@@ -10,6 +10,10 @@
  *
  */
 
+#if defined(_MSC_VER)
+#include <corecrt.h>
+#endif
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -351,7 +355,11 @@ namespace grampcd
 			// parameters for neighbor approximation
 			.def_readwrite("APPROX_ApproximateCost_", &OptimizationInfo::APPROX_ApproximateCost_)
 			.def_readwrite("APPROX_ApproximateConstraints_", &OptimizationInfo::APPROX_ApproximateConstraints_)
-			.def_readwrite("APPROX_ApproximateDynamics_", &OptimizationInfo::APPROX_ApproximateDynamics_);
+			.def_readwrite("APPROX_ApproximateDynamics_", &OptimizationInfo::APPROX_ApproximateDynamics_)
+
+			// parameters for asynchronous execution
+			.def_readwrite("ASYNC_Active_", &OptimizationInfo::ASYNC_Active_)
+			.def_readwrite("ASYNC_Delay_", &OptimizationInfo::ASYNC_Delay_);
 
 		py::class_<TuningInfo>(m, "TuningInfo")
 			.def(py::init<>())

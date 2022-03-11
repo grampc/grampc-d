@@ -42,7 +42,11 @@ add_library(grampcd
     src/optim/problem_description_local_default.cpp
     src/optim/problem_description_local_neighbor_approximation.cpp
     src/optim/approximate_neighbor.cpp
-    src/util/auto_tune.cpp)
+    src/util/auto_tune.cpp
+    src/agent/step_selector.cpp
+    src/agent/sync_step_selector.cpp
+    src/agent/async_step_selector.cpp
+)
 
 target_include_directories(grampcd PUBLIC 
     include

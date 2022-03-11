@@ -97,6 +97,11 @@ namespace grampcd
         /*Activate approximation of neighbors dynamics*/
 		bool APPROX_ApproximateDynamics_ = false;
 
+        /*Activate asynchronous communication*/
+		bool ASYNC_Active_ = false;
+		// Specify constant delay 
+        int ASYNC_Delay_ = 0;
+
 		template<class Archive>
 		void serialize(Archive& ar)
 		{
@@ -109,7 +114,8 @@ namespace grampcd
                 ADMM_maxIterations_, ADMM_innerIterations_, ADMM_ConvergenceTolerance_, 
                 ADMM_PenaltyIncreaseFactor_, ADMM_PenaltyDecreaseFactor_, ADMM_PenaltyMin_, 
                 ADMM_PenaltyMax_, ADMM_PenaltyInit_, ADMM_AdaptPenaltyParameter_, ADMM_DebugCost_,
-                APPROX_ApproximateCost_, APPROX_ApproximateConstraints_, APPROX_ApproximateDynamics_);
+                APPROX_ApproximateCost_, APPROX_ApproximateConstraints_, APPROX_ApproximateDynamics_,
+                ASYNC_Active_, ASYNC_Delay_);
 		}
     };
 
