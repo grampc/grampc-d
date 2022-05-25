@@ -34,7 +34,7 @@ interface = grampcd_interface.interface()
 interface.initialize_central_communicationInterface()
 
 # set optimization info
-optimization_info = grampcd_interface.OptimizationInfo()
+optimization_info = grampcd_interface.optimization_info()
 optimization_info.COMMON_Nhor_ = 21
 optimization_info.COMMON_Thor_ = 2
 optimization_info.COMMON_dt_ = 0.02
@@ -64,7 +64,7 @@ n_agents_y = 5;
 n_agents = n_agents_x * n_agents_y;
 
 # register agents
-agentInfo = grampcd_interface.AgentInfo()
+agentInfo = grampcd_interface.agent_info()
 agentInfo.model_name_ = "ssms2d_agentModel"
 agentInfo.model_parameters_ = [m_agent, 1]
 agentInfo.cost_parameters_ = [P_x, P_vx, P_y, P_vy, Q_x, Q_vx, Q_y, Q_vy, R_ux, R_uy]
@@ -93,7 +93,7 @@ for i in range(0, n_agents_x) :
         interface.register_agent(agentInfo, x_init[agentInfo.id_], [0, 0], x_des, [0, 0]);
 
 # register couplings
-coupling_info = grampcd_interface.CouplingInfo()
+coupling_info = grampcd_interface.coupling_info()
 coupling_info.model_name_ = 'ssms2d_couplingModel'
 coupling_info.model_parameters_ = [m_agent, c]
 

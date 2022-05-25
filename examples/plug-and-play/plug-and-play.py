@@ -33,7 +33,7 @@ interface = grampcd_interface.interface()
 interface.initialize_central_communicationInterface()
 
 # set optimization info
-optimization_info = grampcd_interface.OptimizationInfo()
+optimization_info = grampcd_interface.optimization_info()
 optimization_info.COMMON_Nhor_ = 30
 optimization_info.COMMON_Thor_ = 12
 optimization_info.COMMON_dt_ = 0.1
@@ -69,7 +69,7 @@ udes = [0];
 
 # register agents
 n_agents = 3
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.model_name_ = "smartGrid_agentModel"
 
 agent_id = 0
@@ -89,7 +89,7 @@ agent.cost_parameters_ = [0, P, 0, Q, R]
 interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 # register couplings
-coupling_info = grampcd_interface.CouplingInfo()
+coupling_info = grampcd_interface.coupling_info()
 
 coupling_info.model_name_ = 'smartGrid_couplingModel'
 coupling_info.model_parameters_ = [I, Omega, P_max]

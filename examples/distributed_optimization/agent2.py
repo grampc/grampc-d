@@ -39,7 +39,7 @@ interface.set_print_error(1)
 agent_id = 2
 
 # set communication info
-comm_info_coordinator = grampcd_interface.CommunicationInfo()
+comm_info_coordinator = grampcd_interface.communication_info()
 comm_info_coordinator.ip_ = '127.0.0.1'
 comm_info_coordinator.port_ = '7777'
 
@@ -56,7 +56,7 @@ xdes = [0, 0];
 udes = [0];
 
 # register agent
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = [1, 1, 1]
@@ -65,7 +65,7 @@ agent.cost_parameters_ = [P, P, Q, Q, R]
 interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 # register coupling
-coupling_info = grampcd_interface.CouplingInfo();
+coupling_info = grampcd_interface.coupling_info();
 coupling_info.agent_id_ = agent_id;
 coupling_info.model_name_ = 'vdp_linear_couplingModel';
 coupling_info.model_parameters_ = [1];

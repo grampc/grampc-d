@@ -31,15 +31,15 @@ namespace grampcd
 		DmpcInterface();
 
 		/*Create object of an agent info*/
-		AgentInfo agentInfo() const;
+		AgentInfo agent_info() const;
 		/*Create object of a coupling info*/
-		CouplingInfo couplingInfo() const;
+		CouplingInfo coupling_info() const;
 		/*Create object of an optimization info*/
-		OptimizationInfo optimizationInfo() const;
+		OptimizationInfo optimization_info() const;
 		/*Create object of a communication info*/
-		CommunicationInfo communicationInfo() const;
+		CommunicationInfo communication_info() const;
 		/*Create object of a tuning info*/
-		TuningInfo tuningInfo() const;
+		TuningInfo tuning_info() const;
 
 		/*Initialize the central communication interface.*/
 		void initialize_central_communicationInterface(const int number_of_threads = 0) override;

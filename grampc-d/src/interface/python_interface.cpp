@@ -291,14 +291,14 @@ namespace grampcd
 			.def("set_print_progressbar", &PythonInterface::set_print_progressbar)
 			.def("auto_tune_parameters", &PythonInterface::auto_tune_parameters);
 
-		py::class_<AgentInfo>(m, "AgentInfo")
+		py::class_<AgentInfo>(m, "agent_info")
 			.def(py::init<>())
 			.def_readwrite("id_", &AgentInfo::id_)
 			.def_readwrite("model_name_", &AgentInfo::model_name_)
 			.def_readwrite("model_parameters_", &AgentInfo::model_parameters_)
 			.def_readwrite("cost_parameters_", &AgentInfo::cost_parameters_);
 
-		py::class_<CouplingInfo>(m, "CouplingInfo")
+		py::class_<CouplingInfo>(m, "coupling_info")
 			.def(py::init<>())
 			.def_readwrite("agent_id_", &CouplingInfo::agent_id_)
 			.def_readwrite("neighbor_id_", &CouplingInfo::neighbor_id_)
@@ -306,14 +306,14 @@ namespace grampcd
 			.def_readwrite("model_parameters_", &CouplingInfo::model_parameters_)
 			.def_readwrite("cost_parameters_", &CouplingInfo::cost_parameters_);
 
-		py::class_<CommunicationInfo>(m, "CommunicationInfo")
+		py::class_<CommunicationInfo>(m, "communication_info")
 			.def(py::init<>())
 			.def_readwrite("agent_type_", &CommunicationInfo::agent_type_)
 			.def_readwrite("id_", &CommunicationInfo::id_)
 			.def_readwrite("ip_", &CommunicationInfo::ip_)
 			.def_readwrite("port_", &CommunicationInfo::port_);
 
-		py::class_<OptimizationInfo>(m, "OptimizationInfo")
+		py::class_<OptimizationInfo>(m, "optimization_info")
 			.def(py::init<>())
 			// Common parameters
 			.def_readwrite("COMMON_Thor_", &OptimizationInfo::COMMON_Thor_)

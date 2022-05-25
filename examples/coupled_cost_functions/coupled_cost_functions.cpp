@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	interface->initialize_central_communicationInterface();
 
 	// set optimization info
-	auto optimization_info = interface->optimizationInfo();
+	auto optimization_info = interface->optimization_info();
 	optimization_info.COMMON_Nhor_ = 21;
 	optimization_info.COMMON_Thor_ = 1;
 	optimization_info.COMMON_dt_ = 0.1;
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 	// register agent
 	unsigned int agent_id = 0;
 	std::vector<typeRNum> xinit = { 0.5, 0.0 };
-	auto agent = interface->agentInfo();
+	auto agent = interface->agent_info();
 	agent.id_ = agent_id;
 	agent.model_name_ = "vdp_agentModel";
 	agent.model_parameters_ = model_parameters;
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
 	agent_id = 1;
 	xinit = { 0.25, 0.0 };
-	agent = interface->agentInfo();
+	agent = interface->agent_info();
 	agent.id_ = agent_id;
 	agent.model_name_ = "vdp_agentModel";
 	agent.model_parameters_ = model_parameters;
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
 	agent_id = 2;
 	xinit = { 0.75, 0.0 };
-	agent = interface->agentInfo();
+	agent = interface->agent_info();
 	agent.id_ = agent_id;
 	agent.model_name_ = "vdp_agentModel";
 	agent.model_parameters_ = model_parameters;
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register coupling
-	auto coupling_info = interface->couplingInfo();
+	auto coupling_info = interface->coupling_info();
 	coupling_info.model_name_ = "vdp_synchronize_couplingModel";
 	coupling_info.model_parameters_ = { 1 };
 	coupling_info.cost_parameters_ = { 1 };

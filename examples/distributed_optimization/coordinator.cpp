@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	interface->initialize_local_communicationInterface_as_coordinator(7777);
 	
 	// set optimization info
-	auto optimization_info = interface->optimizationInfo();
+	auto optimization_info = interface->optimization_info();
 	optimization_info.COMMON_Nhor_ = 21;
 	optimization_info.COMMON_Thor_ = 1;
 	optimization_info.COMMON_dt_ = 0.1;

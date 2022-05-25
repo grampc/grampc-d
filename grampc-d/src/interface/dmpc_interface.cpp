@@ -500,27 +500,27 @@ namespace grampcd
 		}
 	}
 
-	AgentInfo DmpcInterface::agentInfo() const
+	AgentInfo DmpcInterface::agent_info() const
 	{
 		return AgentInfo();
 	}
 
-	CouplingInfo DmpcInterface::couplingInfo() const
+	CouplingInfo DmpcInterface::coupling_info() const
 	{
 		return CouplingInfo();
 	}
 
-	OptimizationInfo DmpcInterface::optimizationInfo() const
+	OptimizationInfo DmpcInterface::optimization_info() const
 	{
 		return OptimizationInfo();
 	}
 
-	CommunicationInfo DmpcInterface::communicationInfo() const
+	CommunicationInfo DmpcInterface::communication_info() const
 	{
 		return CommunicationInfo();
 	}
 
-	TuningInfo DmpcInterface::tuningInfo() const
+	TuningInfo DmpcInterface::tuning_info() const
 	{
 		return TuningInfo();
 	}

@@ -33,7 +33,7 @@ interface = grampcd_interface.interface()
 interface.initialize_central_communicationInterface()
 
 # set optimization info
-optimization_info = grampcd_interface.OptimizationInfo()
+optimization_info = grampcd_interface.optimization_info()
 
 optimization_info.COMMON_Nhor_ = 16
 optimization_info.COMMON_Thor_ = 4
@@ -49,9 +49,6 @@ approx = 1
 optimization_info.APPROX_ApproximateCost_ = approx
 optimization_info.APPROX_ApproximateConstraints_ = approx
 optimization_info.APPROX_ApproximateDynamics_ = approx
-
-optimization_info.ADMM_DebugCost_ = 0
-optimization_info.ASYNC_Delay_ = 0
 
 interface.set_optimizationInfo(optimization_info)
 
@@ -74,7 +71,7 @@ xdes = [2]
 udes = [0];
 
 # register agent
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.model_name_ = "water_tank_agentModel"
 
 agent_id = 0
@@ -99,7 +96,7 @@ agent.cost_parameters_ = [P, Q, 0]
 interface.register_agent(agent, xinit, uinit, xdes, udes)
 
 # register couplings
-coupling_info = grampcd_interface.CouplingInfo()
+coupling_info = grampcd_interface.coupling_info()
 coupling_info.model_name_ = 'water_tank_couplingModel'
 coupling_info.model_parameters_ = [A, a]
 

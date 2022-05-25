@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	interface->initialize_central_communicationInterface();
 
 	// set optimization info
-	auto optimization_info = interface->optimizationInfo();
+	auto optimization_info = interface->optimization_info();
 
 
 	optimization_info.COMMON_Nhor_ = 16;
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 	std::vector<typeRNum> udes(1, 0.0);
 
 	// register agent
-	auto agent = interface->agentInfo();
+	auto agent = interface->agent_info();
 	agent.model_name_ = "water_tank_agentModel";
 
 	int agent_id = 0;
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register couplings
-	auto coupling_info = interface->couplingInfo();
+	auto coupling_info = interface->coupling_info();
 	coupling_info.model_name_ = "water_tank_couplingModel";
 	coupling_info.model_parameters_ = { A, a };
 

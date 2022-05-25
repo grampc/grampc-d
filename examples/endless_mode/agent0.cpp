@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	const int agent_id = 0;
 
 	// set communication info
-	auto comm_info_coordinator = interface->communicationInfo();
+	auto comm_info_coordinator = interface->communication_info();
     comm_info_coordinator.ip_ = "127.0.0.1";
 	comm_info_coordinator.port_ = "7777";
 
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 	std::vector<typeRNum> udes(1, 0.0);
 
 	// register agent
-	auto agent = interface->agentInfo();
+	auto agent = interface->agent_info();
 	agent.id_ = agent_id;
 	agent.model_name_ = "water_tank_agentModel";
 	agent.model_parameters_ = { A, 1, 0 };
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 	interface->register_agent(agent, xinit, uinit, xdes, udes);
 
 	// register coupling
-	auto coupling_info = interface->couplingInfo();
+	auto coupling_info = interface->coupling_info();
 	coupling_info.agent_id_ = agent_id;
 	coupling_info.model_name_ = "water_tank_couplingModel";
 	coupling_info.model_parameters_ = { A, a };

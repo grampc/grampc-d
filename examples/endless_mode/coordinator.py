@@ -37,7 +37,7 @@ interface.set_print_error(1)
 interface.initialize_local_communicationInterface_as_coordinator(7777)
 
 # set optimization info
-optimization_info = grampcd_interface.OptimizationInfo()
+optimization_info = grampcd_interface.optimization_info()
 optimization_info.COMMON_Nhor_ = 21
 optimization_info.COMMON_Thor_ = 5
 optimization_info.COMMON_dt_ = 0.1

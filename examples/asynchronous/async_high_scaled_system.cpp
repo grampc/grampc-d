@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     interface->initialize_central_communicationInterface();
 
     // set optimization info
-    auto optimization_info = interface->optimizationInfo();
+    auto optimization_info = interface->optimization_info();
     optimization_info.COMMON_Nhor_ = 21;
     optimization_info.COMMON_Thor_ = 2;
     optimization_info.COMMON_dt_ = 0.02;
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
 
     // register agents
-    auto agentInfo = interface->agentInfo();
+    auto agentInfo = interface->agent_info();
     agentInfo.model_name_ = "ssms2d_agentModel";
     agentInfo.model_parameters_ = { m_agent, 1 };
     agentInfo.cost_parameters_ = { P_x, P_vx, P_y, P_vy, Q_x, Q_vx, Q_y, Q_vy, R_ux, R_uy };
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     }
 
     // register couplings
-    auto coupling_info = interface->couplingInfo();
+    auto coupling_info = interface->coupling_info();
     coupling_info.model_name_ = "ssms2d_couplingModel";
     coupling_info.model_parameters_ = { m_agent, c };
 

@@ -32,7 +32,7 @@ interface = grampcd_interface.interface()
 interface.initialize_central_communicationInterface()
 
 # set optimization info
-optimization_info = grampcd_interface.OptimizationInfo()
+optimization_info = grampcd_interface.optimization_info()
 optimization_info.COMMON_Nhor_ = 21
 optimization_info.COMMON_Thor_ = 1
 optimization_info.COMMON_dt_ = 0.1
@@ -62,7 +62,7 @@ cost_parameters = [0, P, 0, Q, R];
 # register agent
 agent_id = 0;
 xinit = [0.5, 0];
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
@@ -71,7 +71,7 @@ interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 agent_id = 1;
 xinit = [0.25, 0];
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
@@ -80,7 +80,7 @@ interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 agent_id = 2;
 xinit = [0.75, 0];
-agent = grampcd_interface.AgentInfo()
+agent = grampcd_interface.agent_info()
 agent.id_ = agent_id;
 agent.model_name_ = "vdp_agentModel";
 agent.model_parameters_ = model_parameters
@@ -88,7 +88,7 @@ agent.cost_parameters_ = cost_parameters
 interface.register_agent(agent, xinit, uinit, xdes, udes);
 
 # register coupling
-coupling_info = grampcd_interface.CouplingInfo();
+coupling_info = grampcd_interface.coupling_info();
 coupling_info.model_name_ = 'vdp_synchronize_couplingModel';
 coupling_info.model_parameters_ = [1];
 coupling_info.cost_parameters_ = [1];
