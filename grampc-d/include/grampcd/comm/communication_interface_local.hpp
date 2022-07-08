@@ -19,6 +19,7 @@
 #include "grampcd/info/communication_info.hpp"
 
 #include <shared_mutex>
+#include <condition_variable>
 #include <sstream>
 
 namespace grampcd
