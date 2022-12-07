@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -27,6 +27,9 @@
 
 #include "grampcd/state/agent_state.hpp"
 #include "grampcd/state/coupling_state.hpp"
+#include "grampcd/state/constraint_state.hpp"
+
+
 
 namespace grampcd
 {
@@ -67,10 +70,10 @@ namespace grampcd
 		: number_(number), from_(from) {}
 	const Messagetype Message_send_numberOfNeighbors::get_message_type() const { return Messagetype::SEND_NUMBER_OF_NEIGHBORS; }
 
-	Message_send_agent_state::Message_send_agent_state() {}
-	Message_send_agent_state::Message_send_agent_state(const AgentState& agent_state, const int from)
+	Message_send_local_copies::Message_send_local_copies() {}
+	Message_send_local_copies::Message_send_local_copies(const AgentState& agent_state, const int from)
 		: agent_state_(std::make_shared<AgentState>(agent_state)), from_(from) {}
-	const Messagetype Message_send_agent_state::get_message_type() const { return Messagetype::SEND_AGENT_STATE; }
+	const Messagetype Message_send_local_copies::get_message_type() const { return Messagetype::SEND_LOCAL_COPIES; }
 
 	Message_send_desired_agent_state::Message_send_desired_agent_state() {}
 	Message_send_desired_agent_state::Message_send_desired_agent_state(const AgentState& desired_agent_state, const int from)
@@ -97,6 +100,13 @@ namespace grampcd
 		from_(from) {}
 	const Messagetype Message_send_multiplier_state::get_message_type() const { return Messagetype::SEND_MULTIPLIER_STATE; }
 
+	Message_send_agent_state::Message_send_agent_state() {}
+	Message_send_agent_state::Message_send_agent_state(const AgentState& agent_state, const ConstraintState& constr_state, const int from)
+		: agent_state_(std::make_shared<AgentState>(agent_state)),
+		constr_state_(std::make_shared<ConstraintState>(constr_state)),
+		from_(from) {}
+	const Messagetype Message_send_agent_state::get_message_type() const { return Messagetype::SEND_AGENT_STATE; }
+
 	Message_get_agentState_for_simulation::Message_get_agentState_for_simulation() {}
 	const Messagetype Message_get_agentState_for_simulation::get_message_type() const { return Messagetype::GET_AGENT_STATE_FOR_SIMULATION; }
 
@@ -119,8 +129,8 @@ namespace grampcd
 	const Messagetype Message_get_number_of_active_couplings::get_message_type() const { return Messagetype::GET_NUMBER_OF_ACTIVE_COUPLINGS; }
 
 	Message_trigger_step::Message_trigger_step() {}
-	Message_trigger_step::Message_trigger_step(const ADMMStep& step)
-		: step_(std::make_shared<ADMMStep>(step)) {}
+	Message_trigger_step::Message_trigger_step(const AlgStep& step)
+		: step_(std::make_shared<AlgStep>(step)) {}
 	const Messagetype Message_trigger_step::get_message_type() const { return Messagetype::TRIGGER_STEP; }
 
 	Message_send_simulated_state::Message_send_simulated_state() {}

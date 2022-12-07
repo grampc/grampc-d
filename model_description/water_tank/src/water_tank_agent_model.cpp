@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -107,7 +107,7 @@ void WaterTankAgentModel::hfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRN
 
 void WaterTankAgentModel::dhdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec)
 {
-	out[0] += vec[0];
+	 out[0] += vec[0];
 }
 
 void WaterTankAgentModel::dhdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* vec)

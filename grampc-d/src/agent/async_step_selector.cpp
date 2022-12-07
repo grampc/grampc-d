@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -12,7 +12,9 @@
 
 #include"grampcd/agent/async_step_selector.hpp"
 
-#include "grampcd/optim/solver_local.hpp"
+#include "grampcd/optim/solver_local_admm.hpp"
+#include "grampcd/optim/solver_local_sensi.hpp"
+
 #include "grampcd/agent/agent.hpp"
 
 namespace grampcd
@@ -21,54 +23,54 @@ namespace grampcd
 		:
 		local_solver_(local_solver),
         agent_(agent),
-        previous_step_(ADMMStep::UPDATE_MULTIPLIER_STATE),
-        current_step_(ADMMStep::UPDATE_AGENT_STATE),
-        next_step_(ADMMStep::UPDATE_COUPLING_STATE),
-        flagStopAdmm_(true)
+        flagStopAlg_(true)
 	{
 
 	}
 
-	void AsyncStepSelector::execute_admmStep(const ADMMStep& step)
+	void AsyncStepSelector::execute_algStep(const AlgStep& step)
 	{
         switch (step)
         {
-        case ADMMStep::INITIALIZE:
+         /*****************************
+         ADMM STEPS
+         ******************************/
+        case AlgStep::ADMM_INITIALIZE:
         {
             admmIter_ = 0;
             local_solver_->initialize_ADMM();
-            set_flagStopAdmm(false);
+            set_flagStopAlg(false);
 
             // set steps
-            previous_step_ = ADMMStep::UPDATE_MULTIPLIER_STATE;
-            current_step_ = ADMMStep::INITIALIZE;
-            next_step_ = ADMMStep::UPDATE_AGENT_STATE;
+            previous_step_ = AlgStep::ADMM_UPDATE_MULTIPLIER_STATE;
+            current_step_ = AlgStep::ADMM_INITIALIZE;
+            next_step_ = AlgStep::ADMM_UPDATE_AGENT_STATE;
             break;
         }
 
-        case ADMMStep::START_ASYNC_ADMM:
+        case AlgStep::ADMM_START_ASYNC_ADMM:
         {
-            current_step_ = ADMMStep::START_ASYNC_ADMM;
+            current_step_ = AlgStep::ADMM_START_ASYNC_ADMM;
 
             break;
         }
 
-        case ADMMStep::UPDATE_AGENT_STATE:
+        case AlgStep::ADMM_UPDATE_AGENT_STATE:
         {   
             // set current and previous Step
             current_step_ = step;
-            previous_step_ = ADMMStep::UPDATE_MULTIPLIER_STATE;
+            previous_step_ = AlgStep::ADMM_UPDATE_MULTIPLIER_STATE;
 
             // stopping criteria
-            if (get_flagStopAdmm())
+            if (get_flagStopAlg())
                 break;
-            if (next_step_ != ADMMStep::UPDATE_AGENT_STATE)
+            if (next_step_ != AlgStep::ADMM_UPDATE_AGENT_STATE)
                 break;
             if (!check_delays(current_step_))
                 break;
 
             // set next step
-            next_step_ = ADMMStep::UPDATE_COUPLING_STATE;
+            next_step_ = AlgStep::ADMM_UPDATE_COUPLING_STATE;
 
             // minimize local OCP w.r.t. local variables
             local_solver_->update_agentStates();
@@ -77,7 +79,7 @@ namespace grampcd
             agent_->increase_all_delays(previous_step_);
 
             // update debug cost 
-            if (agent_->get_optimizationInfo().ADMM_DebugCost_)
+            if (agent_->get_optimizationInfo().COMMON_DebugCost_)
                 local_solver_->print_debugCost();
 
             // send agent state
@@ -85,22 +87,22 @@ namespace grampcd
             break;
         }
 
-        case ADMMStep::UPDATE_COUPLING_STATE:
+        case AlgStep::ADMM_UPDATE_COUPLING_STATE:
         {
             // set previous and current step
             current_step_ = step;
-            previous_step_ = ADMMStep::UPDATE_AGENT_STATE;
+            previous_step_ = AlgStep::ADMM_UPDATE_AGENT_STATE;
             
             // stopping criteria
-            if (get_flagStopAdmm())
+            if (get_flagStopAlg())
                 break;
-            if (next_step_ != ADMMStep::UPDATE_COUPLING_STATE)
+            if (next_step_ != AlgStep::ADMM_UPDATE_COUPLING_STATE)
                 break;
             if (!check_delays(current_step_))
                 break;
 
             // set next step 
-            next_step_ = ADMMStep::UPDATE_MULTIPLIER_STATE;
+            next_step_ = AlgStep::ADMM_UPDATE_MULTIPLIER_STATE;
 
             local_solver_->update_couplingStates();
 
@@ -113,24 +115,24 @@ namespace grampcd
             break;
         }
 
-        case ADMMStep::UPDATE_MULTIPLIER_STATE:
+        case AlgStep::ADMM_UPDATE_MULTIPLIER_STATE:
         {   
             // set previous and current step
             current_step_ = step;
-            previous_step_ = ADMMStep::UPDATE_COUPLING_STATE;
+            previous_step_ = AlgStep::ADMM_UPDATE_COUPLING_STATE;
            
 
             // stopping criteria
-            if (get_flagStopAdmm())
+            if (get_flagStopAlg())
                 break;
-            if (next_step_ != ADMMStep::UPDATE_MULTIPLIER_STATE)
+            if (next_step_ != AlgStep::ADMM_UPDATE_MULTIPLIER_STATE)
                 break;
             if (!check_delays(current_step_))
                 break;
                 
 
             // set next step
-            next_step_ = ADMMStep::UPDATE_AGENT_STATE;
+            next_step_ = AlgStep::ADMM_UPDATE_AGENT_STATE;
 
             local_solver_->update_multiplierStates();
 
@@ -141,7 +143,7 @@ namespace grampcd
             ++admmIter_;
 
             // check if maximum iterations have been reached and set flag if so 
-            check_admmIterations();
+            check_algIterations();
 
             // check if convergence has been achieved
             check_convergence();
@@ -152,31 +154,110 @@ namespace grampcd
             break;
         }
 
-        case ADMMStep::SEND_AGENT_STATE:
+        case AlgStep::ADMM_SEND_AGENT_STATE:
         {
             local_solver_->send_agentStates();
             break;
         }
 
-        case ADMMStep::SEND_COUPLING_STATE:
+        case AlgStep::ADMM_SEND_COUPLING_STATE:
         {
             local_solver_->send_couplingStates();
             break;
         }
 
-        case ADMMStep::SEND_MULTIPLIER_STATE:
+        case AlgStep::ADMM_SEND_MULTIPLIER_STATE:
         {
             local_solver_->send_multiplierStates();
             break;
         }
 
-        case ADMMStep::SEND_CONVERGENCE_FLAG:
+        /*****************************
+         Sensi STEPS
+         ******************************/
+
+        case AlgStep::SENSI_INITIALIZE:
+        {
+            sensiIter_ = 0;
+            local_solver_->initialize_Sensi();
+            set_flagStopAlg(false);
+
+            // set steps
+            previous_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+            current_step_ = AlgStep::SENSI_INITIALIZE;
+            next_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+            break;
+        }
+
+        case AlgStep::SENSI_START_ASYNC_SENSI:
+        {
+            current_step_ = AlgStep::SENSI_START_ASYNC_SENSI;
+            break;
+        }
+
+        case AlgStep::SENSI_UPDATE_AGENT_STATE:
+        {
+
+            // set previous and current step
+            current_step_ = step;
+            previous_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+
+            // stopping criteria
+            if (get_flagStopAlg())
+                break;
+            if (next_step_ != AlgStep::SENSI_UPDATE_AGENT_STATE)
+                break;
+            if (!check_delays(current_step_))
+                break;
+
+            // set next step
+            next_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+
+           // sensitivities do not have delays
+           // calculate sensitivities for neighbors 
+            local_solver_->update_sensiStates();
+
+            // minimize local OCP w.r.t. local variables
+            local_solver_->update_agentStates();
+
+            // increase the relative delay of the neighbors 
+            agent_->increase_all_delays(previous_step_);
+
+            // update debug cost 
+            if (agent_->get_optimizationInfo().COMMON_DebugCost_)
+                local_solver_->print_debugCost();
+
+            // increase admm iterations 
+            ++sensiIter_;
+
+            // check if maximum iterations have been reached and set flag if so 
+            check_algIterations();
+
+            // check if convergence has been achieved
+            check_convergence();
+
+            // directly send agent state
+            local_solver_->send_agentStates();
+            break;
+        }
+
+
+        case AlgStep::SENSI_SEND_AGENT_STATE:
+        {
+            local_solver_->send_agentStates();
+            break;
+        }
+
+        /*****************************
+        GENERIC STEPS
+        ******************************/
+        case AlgStep::GEN_SEND_CONVERGENCE_FLAG:
         {
             local_solver_->send_convergenceFlag();
             break;
         }
 
-        case ADMMStep::PRINT:
+        case AlgStep::GEN_PRINT:
         {
             local_solver_->print_debugCost();
             break;
@@ -190,53 +271,67 @@ namespace grampcd
         check_continuation();
     }
 
-   void AsyncStepSelector::set_flagStopAdmm(const bool flag)
+   void AsyncStepSelector::set_flagStopAlg(const bool flag)
     {
-        flagStopAdmm_ = flag;
+        flagStopAlg_ = flag;
     }
 
-    const bool AsyncStepSelector::get_flagStopAdmm()
+    const bool AsyncStepSelector::get_flagStopAlg()
     {
-        return flagStopAdmm_;
+        return flagStopAlg_;
     }
 
-    const unsigned int AsyncStepSelector::get_admmIter()
+    const unsigned int AsyncStepSelector::get_algIter()
     {
-        return admmIter_;
-
+        if (agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM")
+            return admmIter_;
+        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi")
+            return sensiIter_;
+        else
+            return 0;
+      
     }
 
-    const bool AsyncStepSelector::check_delays(const ADMMStep& step)
+    const bool AsyncStepSelector::check_delays(const AlgStep& step)
     {
         switch (step)
         {
 
-        case grampcd::ADMMStep::UPDATE_AGENT_STATE:
-            if (agent_->get_delay_sending_neighbors(ADMMStep::UPDATE_MULTIPLIER_STATE) > check_criterionRegardingDelay())
+        case AlgStep::ADMM_UPDATE_AGENT_STATE:
+            if (agent_->get_delay_sending_neighbors(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE) > check_criterionRegardingDelay())
                 return false;
             break;
 
-        case grampcd::ADMMStep::SEND_AGENT_STATE:
+        case AlgStep::ADMM_SEND_AGENT_STATE:
             return false;
             break;
 
-        case grampcd::ADMMStep::UPDATE_COUPLING_STATE:
-            if (agent_->get_delay_recieving_neighbors(ADMMStep::UPDATE_AGENT_STATE) > check_criterionRegardingDelay())
+        case AlgStep::ADMM_UPDATE_COUPLING_STATE:
+            if (agent_->get_delay_receiving_neighbors(AlgStep::ADMM_UPDATE_AGENT_STATE) > check_criterionRegardingDelay())
                 return false;
             break;
 
-        case grampcd::ADMMStep::SEND_COUPLING_STATE:
+        case AlgStep::ADMM_SEND_COUPLING_STATE:
             return false;
             break;
 
-        case grampcd::ADMMStep::UPDATE_MULTIPLIER_STATE:
-            if (agent_->get_delay_sending_neighbors(ADMMStep::UPDATE_COUPLING_STATE) > check_criterionRegardingDelay())
+        case AlgStep::ADMM_UPDATE_MULTIPLIER_STATE:
+            if (agent_->get_delay_sending_neighbors(AlgStep::ADMM_UPDATE_COUPLING_STATE) > check_criterionRegardingDelay())
                 return false;
             break;
 
-        case grampcd::ADMMStep::SEND_MULTIPLIER_STATE:
+        case AlgStep::ADMM_SEND_MULTIPLIER_STATE:
             return false;
             break;
+
+        case AlgStep::SENSI_UPDATE_AGENT_STATE:
+                if (agent_->get_delay_sending_neighbors(AlgStep::SENSI_UPDATE_AGENT_STATE) > check_criterionRegardingDelay())
+                    return false;
+                break;
+
+        case AlgStep::SENSI_SEND_AGENT_STATE:
+            return false; 
+            break; 
 
         default:
             return false;
@@ -255,28 +350,31 @@ namespace grampcd
 
     void  AsyncStepSelector::check_continuation()
     {
-        if (!get_flagStopAdmm() && current_step_!=ADMMStep::INITIALIZE )
+        // only continue if there is no flag to stop or initialize step
+        if (!get_flagStopAlg() && current_step_!=AlgStep::ADMM_INITIALIZE && current_step_ != AlgStep::SENSI_INITIALIZE)
         {
           if (check_delays(next_step_))
-                execute_admmStep(next_step_);
+                execute_algStep(next_step_);
         }
 
         // set step after initializing
-        if (current_step_ == ADMMStep::INITIALIZE)
-            current_step_ = ADMMStep::START_ASYNC_ADMM;
+        if (current_step_ == AlgStep::ADMM_INITIALIZE)
+            current_step_ = AlgStep::ADMM_START_ASYNC_ADMM;
+        if (current_step_ == AlgStep::SENSI_INITIALIZE)
+            current_step_ = AlgStep::SENSI_START_ASYNC_SENSI;
 
     }
 
-    void AsyncStepSelector::check_admmIterations()
+    void AsyncStepSelector::check_algIterations()
     {
-        // check if maximum iterations have been reached
-        if (get_admmIter() == agent_->get_optimizationInfo().ADMM_maxIterations_)
+        // check if maximum iterations have been reached for ADMM and Sensi case 
+        if ((agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM" && get_algIter() == agent_->get_optimizationInfo().ADMM_maxIterations_ ) 
+            || (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi" && get_algIter() == agent_->get_optimizationInfo().SENSI_maxIterations_))
         {
-            set_flagStopAdmm(true);
+            set_flagStopAlg(true);
 
             // send flag to neighbors and coordinator that the maximum ADMM iterations have been reached
-            local_solver_->send_flagStoppedAdmm();
-
+            local_solver_->send_stoppedAlgFlag();
         }
     }
 

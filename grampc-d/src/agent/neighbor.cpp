@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/DanielBurk/GRAMPC-D.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -37,7 +37,7 @@ namespace grampcd
             approximate_neighbor_(nullptr),
             log_(log),
             agent_id_(-1),
-            flag_StoppedAdmm_(false)
+            flag_StoppedAlg_(false)
     {
         sending_neighbor_ = false;
         receiving_neighbor_ = false;
@@ -46,6 +46,12 @@ namespace grampcd
         is_approximatingCost_ = false;
         is_approximatingDynamics_ = false;
         is_approximatingConstraints_ = false;
+
+        delay_agentState_ = 0;
+        delay_couplingState_ = 0;
+        delay_multiplierState_ = 0;
+        delay_sensiState_ = 0;
+        delay_sensiAgentState_ = 0;
     }
 
     const int Neighbor::get_id() const
@@ -153,9 +159,24 @@ namespace grampcd
         return coupled_penaltyState_;
     }
 
+    const SensiState& Neighbor::get_sensiState() const
+    {
+        return sensiState_;
+    }
+
+    const ConstraintState& Neighbor::get_coupled_constraintState() const
+    {
+        return coupled_constraintState_;
+    }
+
     const AgentState& Neighbor::get_neighbors_localCopies() const
     {
         return neighbors_localCopies_;
+    }
+
+    const AgentState& Neighbor::get_neighbors_agentState() const
+    {
+        return neighbors_agentState_;
     }
 
     const AgentState& Neighbor::get_neighbors_desiredAgentState() const
@@ -176,6 +197,11 @@ namespace grampcd
     const PenaltyState& Neighbor::get_neighbors_coupled_penaltyState() const
     {
         return neighbors_coupled_penaltyState_;
+    }
+
+    const ConstraintState& Neighbor::get_neighbors_coupled_constraintState() const
+    {
+        return neighbors_coupled_constraintState_;
     }
 
     const CouplingState& Neighbor::get_previous_neighbors_externalInfluence_couplingState() const
@@ -298,7 +324,6 @@ namespace grampcd
             << "Failed to set external influence multiplier state, as dimensions don't fit." << std::endl;
     }
 
-
     void Neighbor::set_localCopies(const AgentState &state)
     {
         if( compare_stateDimensions( local_copies_, state ) )
@@ -329,6 +354,24 @@ namespace grampcd
             << "Failed to set coupled penalty state, as dimensions don't fit." << std::endl;
     }
 
+    void Neighbor::set_sensiState(const SensiState& state)
+    {
+        if (compare_stateDimensions(sensiState_, state))
+            sensiState_ = state;
+        else
+            log_->print(DebugType::Error) << "[Neighbor::set_sensiState] "
+            << "Failed to set sensi state, as dimensions don't fit." << std::endl;
+    }
+
+    void Neighbor::set_coupled_constraintState(const ConstraintState& state)
+    {
+        if (compare_stateDimensions(coupled_constraintState_, state))
+            coupled_constraintState_ = state;
+        else
+            log_->print(DebugType::Error) << "[Neighbor::set_coupled_constraintState] "
+            << "Failed to set coupled constraint state, as dimensions don't fit." << std::endl;
+    }
+
     void Neighbor::set_neighbors_localCopies( const AgentState& state )
     {
         if( compare_stateDimensions( neighbors_localCopies_, state ) )
@@ -336,6 +379,15 @@ namespace grampcd
         else
             log_->print(DebugType::Error) << "[Neighbor::set_neighbors_localCopies] "
             << "Failed to set neighbors local copies, as dimensions don't fit." << std::endl;
+    }
+
+    void Neighbor::set_neighbors_agentState(const AgentState& state)
+    {
+        if (compare_stateDimensions(neighbors_agentState_, state))
+            neighbors_agentState_ = state;
+        else
+            log_->print(DebugType::Error) << "[Neighbor::set_neighbors_agentState] "
+            << "Failed to set neighbors agent states, as dimensions don't fit." << std::endl;
     }
 
     void Neighbor::set_neighbors_couplingState( const CouplingState& coupling )
@@ -366,6 +418,15 @@ namespace grampcd
         else
             log_->print(DebugType::Error) << "[Neighbor::set_neighbors_coupled_penaltyState] "
             << "Failed to set neighbors coupled penalty state, as dimensions don't fit." << std::endl;
+    }
+
+    void Neighbor::set_neighbors_coupled_constraintState(const ConstraintState& state)
+    {
+        if (compare_stateDimensions(neighbors_coupled_constraintState_, state))
+            neighbors_coupled_constraintState_ = state;
+        else
+            log_->print(DebugType::Error) << "[Neighbor::set_neighbors_coupled_constraintState] "
+            << "Failed to set neighbors coupled constraint state, as dimensions don't fit." << std::endl;
     }
 
     void Neighbor::set_neighbors_desiredAgentState( const AgentState& state )
@@ -400,6 +461,7 @@ namespace grampcd
             local_copies_.i_ = this->id_;
             local_copies_.x_.resize(Nxj*Nhor, 0.0);
             local_copies_.u_.resize(Nuj*Nhor, 0.0);
+            local_copies_.lambda_.resize(Nxj * Nhor, 0.0);
 
             coupled_multiplierState_.t_ = t;
             coupled_multiplierState_.i_ = this->id_;
@@ -410,12 +472,12 @@ namespace grampcd
             coupled_penaltyState_.i_ = this->id_;
             coupled_penaltyState_.rho_x_.resize(Nxj*Nhor, optimization_info.ADMM_PenaltyInit_);
             coupled_penaltyState_.rho_u_.resize(Nuj*Nhor, optimization_info.ADMM_PenaltyInit_);
-
+                        
             neighbors_couplingState_.t_ = t;
             neighbors_couplingState_.i_ = this->id_;
             neighbors_couplingState_.z_x_.resize(Nxj*Nhor, 0.0);
             neighbors_couplingState_.z_u_.resize(Nuj*Nhor, 0.0);
-
+                     
             previous_neighbors_couplingState_.t_ = t;
             previous_neighbors_couplingState_.i_ = this->id_;
             previous_neighbors_couplingState_.z_x_.resize(Nxj*Nhor, 0.0);
@@ -428,6 +490,7 @@ namespace grampcd
             neighbors_localCopies_.i_ = agent->get_id();
             neighbors_localCopies_.x_.resize(Nxi*Nhor, 0.0);
             neighbors_localCopies_.u_.resize(Nui*Nhor, 0.0);
+            neighbors_localCopies_.lambda_.resize(Nxi * Nhor, 0.0);
 
             neighbors_coupled_multiplierState_.t_ = t;
             neighbors_coupled_multiplierState_.i_ = agent->get_id();
@@ -438,6 +501,7 @@ namespace grampcd
             neighbors_coupled_penaltyState_.i_ = agent->get_id();
             neighbors_coupled_penaltyState_.rho_x_.resize(Nxi*Nhor, optimization_info.ADMM_PenaltyInit_);
             neighbors_coupled_penaltyState_.rho_u_.resize(Nui*Nhor, optimization_info.ADMM_PenaltyInit_);
+
         }
 
         if( is_approximatingDynamics() )
@@ -447,6 +511,7 @@ namespace grampcd
             local_copies_.x_.resize(Nxj*Nhor, 0.0);
             local_copies_.u_.resize(Nuj*Nhor, 0.0);
             local_copies_.v_.resize(Nxj*Nhor, 0.0);
+            local_copies_.lambda_.resize(Nxj * Nhor, 0.0);
 
             coupled_multiplierState_.t_ = t;
             coupled_multiplierState_.i_ = this->id_;
@@ -461,6 +526,7 @@ namespace grampcd
             externalInfluence_agentState_.t_ = t;
             externalInfluence_agentState_.i_ = agent->get_id();
             externalInfluence_agentState_.v_.resize(Nxi*Nhor, 0.0);
+            externalInfluence_agentState_.lambda_.resize(Nxi * Nhor, 0.0);
 
             externalInfluence_couplingState_.t_ = t;
             externalInfluence_agentState_.i_ = agent->get_id();
@@ -478,6 +544,7 @@ namespace grampcd
             neighbors_localCopies_.i_ = agent->get_id();
             neighbors_localCopies_.u_.resize(Nui*Nhor, 0.0);
             neighbors_localCopies_.v_.resize(Nxi*Nhor, 0.0);
+            neighbors_localCopies_.lambda_.resize(Nxi * Nhor, 0.0);
 
             neighbors_coupled_multiplierState_.t_ = t;
             neighbors_coupled_multiplierState_.i_ = agent->get_id();
@@ -524,10 +591,59 @@ namespace grampcd
             neighbors_desiredAgentState_.i_ = this->get_id();
             neighbors_desiredAgentState_.x_.resize(Nxj*Nhor, 0.0);
             neighbors_desiredAgentState_.u_.resize(Nuj*Nhor, 0.0);
+            neighbors_desiredAgentState_.lambda_.resize(Nxj* Nhor, 0.0);
         }
-
+       
         if( is_approximating() )
             approximate_neighbor_.reset(new grampcd::ApproximateNeighbor(agent, this));
+
+        // for sensitivity-based algorithm
+        neighbors_agentState_.t_ = t;
+        neighbors_agentState_.i_ = agent->get_id();
+        neighbors_agentState_.x_.resize(Nxj* Nhor, 0.0);
+        neighbors_agentState_.u_.resize(Nuj* Nhor, 0.0);
+        neighbors_agentState_.lambda_.resize(Nxj* Nhor, 0.0);
+
+        if (is_sendingNeighbor())
+        {
+            const auto Ngij = get_couplingModel()->get_Ngij();
+            const auto Nhij = get_couplingModel()->get_Nhij();
+
+            coupled_constraintState_.t_ = t;
+            coupled_constraintState_.i_ = agent->get_id();
+            coupled_constraintState_.mu_g_.resize(Ngij* Nhor, 0.0);
+            coupled_constraintState_.mu_h_.resize(Nhij* Nhor, 0.0);
+            coupled_constraintState_.c_g_.resize(Ngij* Nhor, 0.0);
+            coupled_constraintState_.c_h_.resize(Nhij* Nhor, 0.0);
+
+        }
+        if (is_receivingNeighbor())
+        {
+            const auto Ngji = get_copied_couplingModel()->get_Ngij();
+            const auto Nhji = get_copied_couplingModel()->get_Nhij();
+
+            sensiState_.t_ = t;
+            sensiState_.i_ = agent->get_id();
+            sensiState_.psi_x_.resize(Nxi * Nhor, 0.0);
+            sensiState_.psi_u_.resize(Nui * Nhor, 0.0);
+            sensiState_.psi_V_.resize(Nxi, 0.0);
+
+            if (optimization_info.SENSI_higherOrder_)
+            {
+                sensiState_.psi_xx_.resize(Nxi * Nxi * Nhor, 0.0);
+                sensiState_.psi_uu_.resize(Nui * Nui * Nhor, 0.0);
+                sensiState_.psi_xu_.resize(Nxi * Nui * Nhor, 0.0);
+                sensiState_.psi_VV_.resize(Nxi * Nxi, 0.0);
+            }
+
+            neighbors_coupled_constraintState_.t_ = t;
+            neighbors_coupled_constraintState_.i_ = agent->get_id();
+            neighbors_coupled_constraintState_.mu_g_.resize(Ngji* Nhor, 0.0);
+            neighbors_coupled_constraintState_.mu_h_.resize(Nhji* Nhor, 0.0);
+            neighbors_coupled_constraintState_.c_g_.resize(Ngji* Nhor, 0.0);
+            neighbors_coupled_constraintState_.c_h_.resize(Nhji* Nhor, 0.0);
+
+        }
     }
 
     void Neighbor::reset_neighborStates()
@@ -554,6 +670,11 @@ namespace grampcd
         resetState(neighbors_externalInfluence_penaltyState_, j, t);
         resetState(neighbors_externalInfluence_couplingState_, j, t);
         resetState(neighbors_externalInfluence_multiplierState_, j, t);
+
+        resetState(neighbors_agentState_, j, t);
+        resetState(sensiState_, j, t);
+        resetState(coupled_constraintState_, j, t);
+        resetState(neighbors_coupled_constraintState_, j, t);
 
         resetState(previous_externalInfluence_couplingState_, j, t);
         resetState(previous_externalInfluence_multiplierState_, j, t);
@@ -603,6 +724,11 @@ namespace grampcd
         shiftState(neighbors_externalInfluence_multiplierState_, dt, t0);
         shiftState(neighbors_externalInfluence_penaltyState_, dt, t0);
 
+        shiftState(neighbors_agentState_, dt, t0);
+        shiftState(sensiState_, dt, t0);
+        shiftState(coupled_constraintState_, dt, t0);
+        shiftState(neighbors_coupled_constraintState_, dt, t0);
+
         shiftState(previous_couplingState_, dt, t0);
         shiftState(previous_multiplierState_, dt, t0);
 
@@ -644,41 +770,49 @@ namespace grampcd
             return copied_couplingModel_->get_Nxi();
     }
 
-    void Neighbor::increase_delays(const ADMMStep& step)
+    void Neighbor::increase_delays(const AlgStep& step)
     {
         switch (step)
         {
-        case(ADMMStep::UPDATE_AGENT_STATE):
+        case(AlgStep::ADMM_UPDATE_AGENT_STATE):
             ++delay_agentState_;
             break;
 
-        case(ADMMStep::UPDATE_COUPLING_STATE):
+        case(AlgStep::ADMM_UPDATE_COUPLING_STATE):
             ++delay_couplingState_;
             break;
 
-        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+        case(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE):
             ++delay_multiplierState_;
             break;
 
+        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
+            ++delay_sensiAgentState_;
+            break;
+
         default:
             break;
         }
     }
 
-    void Neighbor::reset_delays(const ADMMStep& step)
+    void Neighbor::reset_delays(const AlgStep& step)
     {
         switch (step)
         {
-        case(ADMMStep::UPDATE_AGENT_STATE):
+        case(AlgStep::ADMM_UPDATE_AGENT_STATE):
             delay_agentState_ = 0;
             break;
 
-        case(ADMMStep::UPDATE_COUPLING_STATE):
-           delay_couplingState_ = 0;
+        case(AlgStep::ADMM_UPDATE_COUPLING_STATE):
+            delay_couplingState_ = 0;
             break;
 
-        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+        case(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE):
             delay_multiplierState_ = 0;
+            break;
+
+        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
+            delay_sensiAgentState_ = 0;
             break;
 
         default:
@@ -686,20 +820,24 @@ namespace grampcd
         }
     }
 
-    int Neighbor::get_delays(const ADMMStep& step)
+    int Neighbor::get_delays(const AlgStep& step)
     {
         switch (step)
         {
-        case(ADMMStep::UPDATE_AGENT_STATE):
+        case(AlgStep::ADMM_UPDATE_AGENT_STATE):
             return delay_agentState_;
             break;
 
-        case(ADMMStep::UPDATE_COUPLING_STATE):
+        case(AlgStep::ADMM_UPDATE_COUPLING_STATE):
             return delay_couplingState_;
             break;
 
-        case(ADMMStep::UPDATE_MULTIPLIER_STATE):
+        case(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE):
             return delay_multiplierState_;
+            break;
+
+        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
+            return delay_sensiAgentState_;
             break;
 
         default:
@@ -713,6 +851,7 @@ namespace grampcd
         delay_agentState_ = 65535;
         delay_couplingState_ = 65535;
         delay_multiplierState_ = 0;
+        delay_sensiAgentState_ = 0;   
     }
 
 }

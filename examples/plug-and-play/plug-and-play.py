@@ -1,9 +1,9 @@
 # This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
 #
 # GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
-# based on the alternating direction method of multipliers (ADMM).
+# 
 #
-# Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+# Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
 # All rights reserved.
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -43,7 +43,7 @@ optimization_info.ADMM_innerIterations_ = 2
 optimization_info.ADMM_maxIterations_ = 20
 optimization_info.ADMM_ConvergenceTolerance_ = 0.0005
 
-optimization_info.ADMM_DebugCost_ = 0
+optimization_info.COMMON_Debug_cost_ = 0
 optimization_info.ASYNC_Delay_ = 0
 
 interface.set_optimizationInfo(optimization_info)

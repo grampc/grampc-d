@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 
 	// set communication info
 	auto comm_info_coordinator = interface->communication_info();
-    comm_info_coordinator.ip_ = "127.0.0.1";
+	comm_info_coordinator.ip_ = "127.0.0.1";
 	comm_info_coordinator.port_ = "7777";
 
 	// initialize communication interface
@@ -36,10 +36,10 @@ int main(int argc, char** argv)
 	typeRNum P = 1; typeRNum Q = 1; typeRNum R = 0.1;
 
 	// initial and desired states and controls
-	std::vector<typeRNum> xinit = {0.5, 0.0};
-	std::vector<typeRNum> uinit = {0.0};
-	std::vector<typeRNum> xdes = {0.0, 0.0};
-	std::vector<typeRNum> udes = {0.0};
+	std::vector<typeRNum> xinit = { 0.5, 0.0 };
+	std::vector<typeRNum> uinit = { 0.0 };
+	std::vector<typeRNum> xdes = { 0.0, 0.0 };
+	std::vector<typeRNum> udes = { 0.0 };
 
 	// register agent
 	auto agent = interface->agent_info();
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 	coupling_info.model_parameters_ = { 1 };
 
 	coupling_info.neighbor_id_ = 1;
-    interface->register_coupling(coupling_info);
+	interface->register_coupling(coupling_info);
 
 	// wait for flag
 	interface->waitFor_flag_from_coordinator();

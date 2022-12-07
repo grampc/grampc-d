@@ -1,9 +1,9 @@
 # This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
 #
 # GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
-# based on the alternating direction method of multipliers (ADMM).
+# 
 #
-# Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+# Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
 # All rights reserved.
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -37,16 +37,19 @@ add_library(grampcd
 
     src/optim/solver_central.cpp
     src/optim/solver_local.cpp
+    src/optim/solver_local_admm.cpp
+    src/optim/solver_local_sensi.cpp
 
     src/optim/problem_description_central.cpp
     src/optim/problem_description_local_default.cpp
     src/optim/problem_description_local_neighbor_approximation.cpp
+    src/optim/problem_description_local_sensi.cpp
     src/optim/approximate_neighbor.cpp
     src/util/auto_tune.cpp
     src/agent/step_selector.cpp
     src/agent/sync_step_selector.cpp
     src/agent/async_step_selector.cpp
-)
+ )
 
 target_include_directories(grampcd PUBLIC 
     include

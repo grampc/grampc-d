@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -20,10 +20,11 @@ namespace grampcd
 {
 	enum class Messagetype
 	{
-		SEND_AGENT_STATE,
+		SEND_LOCAL_COPIES,
 		SEND_COUPLING_STATE,
 		SEND_TWO_COUPLING_STATES,
 		SEND_MULTIPLIER_STATE,
+		SEND_AGENT_STATE,
 		SEND_DESIRED_AGENT_STATE,
 		FROM_COMMUNICATION_DEREGISTERED_COUPLING,
 		GET_PING,
@@ -179,10 +180,10 @@ namespace grampcd
 		}
 	};
 
-	struct Message_send_agent_state : public Message
+	struct Message_send_local_copies : public Message
 	{
-		Message_send_agent_state();
-		Message_send_agent_state(const AgentState& agent_state, const int from);
+		Message_send_local_copies();
+		Message_send_local_copies(const AgentState& agent_state, const int from);
 		const Messagetype get_message_type() const;
 
 		AgentStatePtr agent_state_;
@@ -258,6 +259,23 @@ namespace grampcd
 		void serialize(Archive& ar)
 		{
 			ar(multiplier_state_, penalty_state_, from_);
+		}
+	};
+
+	struct Message_send_agent_state : public Message
+	{
+		Message_send_agent_state();
+		Message_send_agent_state(const AgentState& agent_state, const ConstraintState& constr_state, const int from);
+		const Messagetype get_message_type() const;
+
+		AgentStatePtr agent_state_;
+		ConstraintStatePtr constr_state_;
+		int from_ = 0;
+
+		template<class Archive>
+		void serialize(Archive& ar)
+		{
+			ar(agent_state_, constr_state_, from_);
 		}
 	};
 
@@ -341,10 +359,10 @@ namespace grampcd
 	struct Message_trigger_step : public Message
 	{
 		Message_trigger_step();
-		Message_trigger_step(const ADMMStep& step);
+		Message_trigger_step(const AlgStep& step);
 		const Messagetype get_message_type() const;
 
-		std::shared_ptr<ADMMStep> step_;
+		std::shared_ptr<AlgStep> step_;
 
 		template<class Archive>
 		void serialize(Archive& ar)

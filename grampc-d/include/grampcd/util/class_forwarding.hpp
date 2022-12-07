@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -16,12 +16,11 @@
 
 namespace grampcd
 {
-	enum class ADMMStep;
+	enum class AlgStep;
 
 	DMPC_CLASS_FORWARD(CommunicationInterfaceLocal);
 	DMPC_CLASS_FORWARD(CommunicationInterface);
 
-	DMPC_CLASS_FORWARD(SolverLocal);
 	DMPC_CLASS_FORWARD(Solution);
 
 	DMPC_CLASS_FORWARD(Agent);
@@ -46,6 +45,8 @@ namespace grampcd
 	DMPC_CLASS_FORWARD(ApproximateNeighbor);
 	DMPC_CLASS_FORWARD(SolverCentral);
 	DMPC_CLASS_FORWARD(SolverLocal);
+	DMPC_CLASS_FORWARD(SolverLocalADMM);
+	DMPC_CLASS_FORWARD(SolverLocalSensi);
 	DMPC_CLASS_FORWARD(Simulator);
 
 	DMPC_STRUCT_FORWARD(AgentInfo);
@@ -55,6 +56,9 @@ namespace grampcd
 	DMPC_STRUCT_FORWARD(CouplingState);
 	DMPC_STRUCT_FORWARD(MultiplierState);
 	DMPC_STRUCT_FORWARD(PenaltyState);
+	DMPC_STRUCT_FORWARD(SensiState);
+	DMPC_STRUCT_FORWARD(ConstraintState);
+
 
 	DMPC_STRUCT_FORWARD(AgentInfo);
 	DMPC_STRUCT_FORWARD(CouplingInfo);

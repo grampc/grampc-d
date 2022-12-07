@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -18,6 +18,8 @@
 #include "grampcd/state/coupling_state.hpp"
 #include "grampcd/state/multiplier_state.hpp"
 #include "grampcd/state/penalty_state.hpp"
+#include "grampcd/state/sensi_state.hpp"
+#include "grampcd/state/constraint_state.hpp"
 
 namespace grampcd
 {
@@ -117,6 +119,15 @@ public:
     /*Returns description for neighbor approximation.*/
     const ApproximateNeighborPtr get_neighborApproximation() const;
 
+    /*returns the received state of the neighbor*/
+    const AgentState& get_neighbors_agentState() const;
+    /*returns the sensitivities sent by the neighbor dJ_j/du_i*/
+    const SensiState& get_sensiState() const;
+    /*sets the calculated constraint mutlipliers of the neighbor*/
+    const ConstraintState& get_coupled_constraintState()const;
+    /*sets the received constraint multipliers of the neighbors*/
+    const ConstraintState& get_neighbors_coupled_constraintState()const;
+
     //*********************************************
     // set states
     //*********************************************
@@ -155,6 +166,15 @@ public:
     /*Set neighbors external influence penalty state.*/
     void set_neighbors_externalInfluence_penaltyState( const PenaltyState& penalty );
 
+    /*sets the received state of the neighbor*/
+    void set_neighbors_agentState(const AgentState& state);
+    /*sets the sensitivities sent by the neighbor dJ_j/du_i*/
+    void set_sensiState(const SensiState& state);
+    /*sets the calculated constraint mutlipliers of the neighbor*/
+    void set_coupled_constraintState(const ConstraintState& state); 
+    /*sets the received constraint multipliers of the neighbors*/
+    void set_neighbors_coupled_constraintState(const ConstraintState& state);
+
     //*********************************************
     // basic functions
     //*********************************************
@@ -190,16 +210,18 @@ public:
     // asynchronous functions and variables
     //*********************************************
     /*increases the delays by one */
-    void increase_delays(const ADMMStep& step);
+    void increase_delays(const AlgStep& step);
     /*initializes the delays*/
     void initialize_delays();
     /*resets the delays to zero*/
-    void reset_delays(const ADMMStep& step);
+    void reset_delays(const AlgStep& step);
     /*returns the delays*/
-    int  get_delays(const ADMMStep& step);
+    int  get_delays(const AlgStep& step);
 
-    /*flag if neighbor finished ADMM*/
-    bool flag_StoppedAdmm_;
+    /*flag if neighbor finished algorithm*/
+    bool flag_StoppedAlg_;
+
+
 
 private:
     LoggingPtr log_;
@@ -218,11 +240,11 @@ private:
     CouplingModelPtr couplingModel_;
     CouplingModelPtr copied_couplingModel_;
 
-    unsigned int delay_agentState_;
+    unsigned int delay_agentState_ ;
     unsigned int delay_couplingState_;
     unsigned int delay_multiplierState_;
-     
-
+    unsigned int delay_sensiState_;
+    unsigned int delay_sensiAgentState_;
 
     /************************
      States for neighbor
@@ -254,6 +276,11 @@ private:
     CouplingState previous_neighbors_externalInfluence_couplingState_;
     CouplingState previous_neighbors_couplingState_;
 
+    AgentState neighbors_agentState_;
+    SensiState sensiState_;
+    ConstraintState coupled_constraintState_;
+    ConstraintState neighbors_coupled_constraintState_;
+
     /************************
      States for cost approximation
     ************************/
@@ -270,9 +297,7 @@ private:
     bool is_approximatingCost_ = false;
     bool is_approximatingConstraints_ = false;
     bool is_approximatingDynamics_ = false;
-
-
-
+ 
 };
 
 }

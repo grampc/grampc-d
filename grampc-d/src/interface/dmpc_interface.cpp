@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -131,30 +131,55 @@ namespace grampcd
 		const unsigned int maxSimIter = static_cast<unsigned int>(Tsim / oi.COMMON_dt_);
 		std::chrono::milliseconds CPUtime(0);
 
-		// main loop for centralized solution
-		coordinator_->initialize_ADMM(oi);
+		// main loop for distributed solution
+		if(oi.COMMON_Solver_=="ADMM")
+			coordinator_->initialize_ADMM(oi);
+		else if(oi.COMMON_Solver_ == "Sensi")
+			coordinator_->initialize_sensi(oi);
+		else 
+			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
+
 		log_->print(DebugType::Base) << "DMPC running ..." << std::endl;
 
 		simulator_->set_t0(t_0);
 
 		std::chrono::milliseconds::rep CPUtime_max = 0;
-
-		for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
+		if (oi.COMMON_Solver_ == "ADMM")
 		{
-			// optimize
-			const auto tstart = std::chrono::steady_clock::now();
-			coordinator_->solve_ADMM(oi.ADMM_maxIterations_, oi.ADMM_innerIterations_);
-			const auto tend = std::chrono::steady_clock::now();
-			CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
-			CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
+			for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
+			{
+				// optimize
+				const auto tstart = std::chrono::steady_clock::now();
+				coordinator_->solve_ADMM(oi.ADMM_maxIterations_, oi.ADMM_innerIterations_);
+				const auto tend = std::chrono::steady_clock::now();
+				CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
+				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
 
-			// update state and time
-			simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
+				// update state and time
+				simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
 
-			// update progress bar
-			print_progressbar(iMPC, maxSimIter);
+				// update progress bar
+				print_progressbar(iMPC, maxSimIter);
+			}
 		}
+		else if (oi.COMMON_Solver_ == "Sensi")
+		{
+			for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
+			{
+				// optimize
+				const auto tstart = std::chrono::steady_clock::now();
+				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				const auto tend = std::chrono::steady_clock::now();
+				CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
+				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
 
+				// update state and time
+				simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
+
+				// update progress bar
+				print_progressbar(iMPC, maxSimIter);
+			}
+		}
 		log_->print(DebugType::Progressbar) << std::endl;
 
 		const auto number_of_agents = communication_interface_->get_numberOfAgents();
@@ -168,35 +193,68 @@ namespace grampcd
 
 	void DmpcInterface::run_DMPC(const SimulatorPtr& simulator, const OptimizationInfo& oi)
 	{
-		// main loop for centralized solution
-		coordinator_->initialize_ADMM(oi);
+		// main loop for distributed solution
+		if (oi.COMMON_Solver_ == "ADMM")
+			coordinator_->initialize_ADMM(oi);
+		else if (oi.COMMON_Solver_ == "Sensi")
+			coordinator_->initialize_sensi(oi);
+		else
+			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
 
 		unsigned int CPUtime_iteration(0);
 		const unsigned int dt_in_ms = static_cast<unsigned int>(oi.COMMON_dt_ * 1000);
 
 		log_->print(DebugType::Base) << "DMPC running in endless mode..." << std::endl;
 
-		while (true)
+		if (oi.COMMON_Solver_ == "ADMM")
 		{
-			// optimize
-			const auto tstart = std::chrono::steady_clock::now();
-			coordinator_->solve_ADMM(oi.ADMM_maxIterations_, oi.ADMM_innerIterations_);
-			const auto tend = std::chrono::steady_clock::now();
-			CPUtime_iteration = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
+			while (true)
+			{
+				// optimize
+				const auto tstart = std::chrono::steady_clock::now();
+				coordinator_->solve_ADMM(oi.ADMM_maxIterations_, oi.ADMM_innerIterations_);
+				const auto tend = std::chrono::steady_clock::now();
+				CPUtime_iteration = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
 
-			// simulate real time
-			if (realtime_ && static_cast<int>(dt_in_ms - CPUtime_iteration) > 0)
-				std::this_thread::sleep_for(std::chrono::milliseconds(dt_in_ms - CPUtime_iteration));
+				// simulate real time
+				if (realtime_ && static_cast<int>(dt_in_ms - CPUtime_iteration) > 0)
+					std::this_thread::sleep_for(std::chrono::milliseconds(dt_in_ms - CPUtime_iteration));
 
-			// update state and time
-			typeRNum simulate_timestep;
-			if (realtime_)
-				simulate_timestep = static_cast<typeRNum>(std::max(dt_in_ms, CPUtime_iteration)) / 1000.0;
-			else
-				simulate_timestep = oi.COMMON_dt_;
+				// update state and time
+				typeRNum simulate_timestep;
+				if (realtime_)
+					simulate_timestep = static_cast<typeRNum>(std::max(dt_in_ms, CPUtime_iteration)) / 1000.0;
+				else
+					simulate_timestep = oi.COMMON_dt_;
 
-			// update state and time
-			simulator->distributed_simulation(oi.COMMON_Integrator_, simulate_timestep);
+				// update state and time
+				simulator->distributed_simulation(oi.COMMON_Integrator_, simulate_timestep);
+			}
+		}
+		else if (oi.COMMON_Solver_ == "Sensi")
+		{
+			while (true)
+			{
+				// optimize
+				const auto tstart = std::chrono::steady_clock::now();
+				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				const auto tend = std::chrono::steady_clock::now();
+				CPUtime_iteration = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
+
+				// simulate real time
+				if (realtime_ && static_cast<int>(dt_in_ms - CPUtime_iteration) > 0)
+					std::this_thread::sleep_for(std::chrono::milliseconds(dt_in_ms - CPUtime_iteration));
+
+				// update state and time
+				typeRNum simulate_timestep;
+				if (realtime_)
+					simulate_timestep = static_cast<typeRNum>(std::max(dt_in_ms, CPUtime_iteration)) / 1000.0;
+				else
+					simulate_timestep = oi.COMMON_dt_;
+
+				// update state and time
+				simulator->distributed_simulation(oi.COMMON_Integrator_, simulate_timestep);
+			}
 		}
 	}
 
@@ -307,9 +365,9 @@ namespace grampcd
 
 		// initialize
 		agent->set_initialState(x_init, u_init);
-		agent->initialize(optimizationInfo_);
 		agent->set_desiredAgentState(x_des, u_des);
-
+		agent->initialize(optimizationInfo_);
+		
 		// safe in list
 		agents_.push_back(agent);
 	}

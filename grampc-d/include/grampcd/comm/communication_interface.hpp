@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -17,7 +17,7 @@
 namespace grampcd
 {
 
-    enum class ADMMStep;
+    enum class AlgStep;
 
     /**
      * @brief The communication interface is used by the coordinator and each agent
@@ -43,8 +43,10 @@ namespace grampcd
 
         /*Send number of neighbors to an agent.*/
         virtual const bool send_numberOfNeighbors( const int number, const int from, const int to ) = 0;
+        /*Send an local Copies to an agent.*/
+        virtual const bool send_localCopies(const AgentState& state, const int from, const int to) = 0;
         /*Send an agent state to an agent.*/
-        virtual const bool send_agentState(const AgentState& state, const int from, const int to) = 0;
+        virtual const bool send_agentState(const AgentState& state, const ConstraintState& constr_state, const int from, const int to) = 0;
         /*Send desired agent state to an agent.*/
         virtual const bool send_desiredAgentState( const AgentState& desired_state, const int from, const int to ) = 0;
         /*Send coupling state to an agent.*/
@@ -56,15 +58,15 @@ namespace grampcd
         /*Send convergence flag to the coordinator.*/
         virtual const bool send_convergenceFlag(const bool converged, const int from) = 0;
         /*send the stopped admm flag to an agent*/
-        virtual const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) = 0;
-        /*ssend the stoppped admm flag to the coordinator*/
-        virtual const bool send_flagStoppedAdmm(const bool flag, const int from) = 0;
+        virtual const bool send_stoppedAlgFlag(const bool flag, const int from, const int to) = 0;
+        /*send the stoppped admm flag to the coordinator*/
+        virtual const bool send_stoppedAlgFlag(const bool flag, const int from) = 0;
 
         /*Configure optimization.*/
         virtual const bool configure_optimization(const OptimizationInfo& info) = 0;
 
         /*Trigger a step of the ADMM algorithm.*/
-        virtual const bool trigger_step(const ADMMStep& step) = 0;
+        virtual const bool trigger_step(const AlgStep& step) = 0;
         /*Trigger simulation.*/
         virtual void trigger_simulation(const std::string& Integrator, const typeRNum dt) = 0;
 

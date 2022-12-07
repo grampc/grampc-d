@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -24,6 +24,8 @@
 
 #include "grampcd/optim/optim_util.hpp"
 #include "grampcd/optim/solver_local.hpp"
+#include "grampcd/optim/solver_local_admm.hpp"
+#include "grampcd/optim/solver_local_sensi.hpp"
 #include "grampcd/optim/solution.hpp"
 #include "grampcd/agent/step_selector.hpp"
 #include "grampcd/agent/sync_step_selector.hpp"
@@ -262,6 +264,7 @@ namespace grampcd
         const typeRNum Thor = optimizationInfo_.COMMON_Thor_;
         const auto Nxi = get_agentModel()->get_Nxi();
         const auto Nui = get_agentModel()->get_Nui();
+        const auto Nhi = get_agentModel()->get_Nhi();
         const int id = info_.id_;
 
         // create uniform time discretization
@@ -277,17 +280,20 @@ namespace grampcd
 
         resetState(previous_couplingState_, id, t);
         resetState(previous_multiplierState_, id, t);
+        resetState(previous_agentState_, id, t);
 
         resetState(penaltyState_, id, t);
 
         // resize states
         agentState_.x_.resize( Nhor * Nxi, 0.0 );
         agentState_.u_.resize( Nhor * Nui, 0.0 );
+        agentState_.lambda_.resize(Nhor * Nxi, 0.0);
         couplingState_.z_u_.resize( Nhor * Nui, 0.0 );
         multiplierState_.mu_u_.resize( Nhor * Nui, 0.0 );
 	    penaltyState_.rho_u_.resize(Nhor * Nui, initial_penalty_);
         desired_agentState_.x_.resize(Nhor * Nxi, 0.0);
         desired_agentState_.u_.resize(Nhor * Nui, 0.0);
+        desired_agentState_.lambda_.resize(Nhor * Nxi, 0.0);
 
         if(!is_approximatingDynamics_)
         {
@@ -316,6 +322,18 @@ namespace grampcd
             }
         }
 
+        // initialize adjoint states (to initial state)
+        std::vector<typeRNum> adj_init;
+        adj_init.resize(model_->get_Nxi(), 0.0);
+        model_->dVdx(&adj_init[0], agentState_.t_[Nhor - 1], &x_init_[0], &x_des_[0]);
+        for (unsigned int i = 0; i < Nhor; ++i)
+        {
+            for (unsigned int j = 0; j < model_->get_Nxi(); ++j)
+            {
+                agentState_.lambda_[i * model_->get_Nxi() + j] = adj_init[j];
+            }
+        }
+
         // initialize coupling states
         couplingState_.z_u_ = agentState_.u_;
         if( !is_approximating_ )
@@ -324,6 +342,7 @@ namespace grampcd
         // initialize previous states
         previous_couplingState_ = couplingState_;
         previous_multiplierState_ = multiplierState_;
+        previous_agentState_ = agentState_; 
 
         //initialize neighbors
         for( const auto& neighbor : neighbors_ )
@@ -342,6 +361,7 @@ namespace grampcd
         shiftState(penaltyState_, dt, t0);
         shiftState(previous_couplingState_, dt, t0);
         shiftState(previous_multiplierState_, dt, t0);
+        shiftState(previous_agentState_, dt, t0);
 
         // shift states of neighbor
         for( const auto& neighbor : neighbors_ )
@@ -379,6 +399,11 @@ namespace grampcd
         return agentState_;
     }
 
+    const AgentState& Agent::get_previous_agentState() const
+    {
+        return previous_agentState_;
+    }
+
     void Agent::set_agentState(const AgentState& state)
     {
         if(!compare_stateDimensions( agentState_, state ))
@@ -390,6 +415,7 @@ namespace grampcd
 	    }
 
         // set agent state
+        previous_agentState_ = agentState_;
 	    agentState_ = state;
 
         // evaluate predicted cost
@@ -486,11 +512,11 @@ namespace grampcd
             << coupling_info.neighbor_id_ << " (sending)." << std::endl;
     }
 
-    void Agent::fromCommunication_received_agentState(const AgentState& state, int from)
+    void Agent::fromCommunication_received_localCopies(const AgentState& state, int from)
     {
         if (state.i_ != get_id())
         {
-			log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_agentState] Agent " << get_id() << ": "
+			log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_localCopies] Agent " << get_id() << ": "
 				<< "Agent " << get_id() << " received state of agent " << state.i_ << " from agent "
 				<< from << "." << std::endl;
 
@@ -501,7 +527,7 @@ namespace grampcd
 
         if (neighbor == nullptr)
         {
-			log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_agentState] Agent " << get_id() << ": "
+			log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_localCopies] Agent " << get_id() << ": "
 				<< "Could not find neighbor with id " << from << "." << std::endl;
 
             return;
@@ -511,8 +537,42 @@ namespace grampcd
 
         if (optimizationInfo_.ASYNC_Active_)
         {
-            neighbor->reset_delays(ADMMStep::UPDATE_AGENT_STATE);
-            step_selector_->execute_admmStep(ADMMStep::UPDATE_COUPLING_STATE);    
+            neighbor->reset_delays(AlgStep::ADMM_UPDATE_AGENT_STATE);
+            step_selector_->execute_algStep(AlgStep::ADMM_UPDATE_COUPLING_STATE);    
+        }
+    }
+
+    void Agent::fromCommunication_received_agentState(const AgentState& state, const ConstraintState& constr_state, int from)
+    {
+        const auto neighbor = DataConversion::get_element_from_vector(neighbors_, from);
+
+        if (state.i_ != neighbor->get_id())
+        {
+            log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_agentState] Agent " << get_id() << ": "
+                << "Agent " << get_id() << " received state of agent " << state.i_ << " from agent "
+                << from << "." << std::endl;
+
+            return;
+        }
+
+        if (neighbor == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_agentState] Agent " << get_id() << ": "
+                << "Could not find neighbor with id " << from << "." << std::endl;
+
+            return;
+        }
+
+        // set neighbors state
+        neighbor->set_neighbors_agentState(state);
+        // only set constraint state if neighbor is receiving neighbor
+        if (neighbor->is_receivingNeighbor())
+            neighbor->set_neighbors_coupled_constraintState(constr_state);
+
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            neighbor->reset_delays(AlgStep::SENSI_UPDATE_AGENT_STATE);
+            step_selector_->execute_algStep(AlgStep::SENSI_UPDATE_AGENT_STATE);
         }
     }
 
@@ -573,8 +633,8 @@ namespace grampcd
         // asynchronous execution
         if (optimizationInfo_.ASYNC_Active_)
         {
-            neighbor->reset_delays(ADMMStep::UPDATE_COUPLING_STATE);
-            step_selector_->execute_admmStep(ADMMStep::UPDATE_MULTIPLIER_STATE);
+            neighbor->reset_delays(AlgStep::ADMM_UPDATE_COUPLING_STATE);
+            step_selector_->execute_algStep(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE);
         }
     }
 
@@ -614,8 +674,8 @@ namespace grampcd
         // asynchronous execution
         if (optimizationInfo_.ASYNC_Active_)
         {
-            neighbor->reset_delays(ADMMStep::UPDATE_COUPLING_STATE);
-            step_selector_->execute_admmStep(ADMMStep::UPDATE_MULTIPLIER_STATE);
+            neighbor->reset_delays(AlgStep::ADMM_UPDATE_COUPLING_STATE);
+            step_selector_->execute_algStep(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE);
         }
     }
 
@@ -655,8 +715,8 @@ namespace grampcd
         // asynchronous execution
         if (optimizationInfo_.ASYNC_Active_)
         {
-            neighbor->reset_delays(ADMMStep::UPDATE_MULTIPLIER_STATE);
-            step_selector_->execute_admmStep(ADMMStep::UPDATE_AGENT_STATE);
+            neighbor->reset_delays(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE);
+            step_selector_->execute_algStep(AlgStep::ADMM_UPDATE_AGENT_STATE);
         }
     }
 
@@ -665,13 +725,19 @@ namespace grampcd
         initialize(info);
 
         // create local solver
-        local_solver_.reset(new SolverLocal(this, info, log_,communication_interface_));
+        if (optimizationInfo_.COMMON_Solver_ == "ADMM")
+            local_solver_.reset(new SolverLocalADMM(this, info, log_, communication_interface_));
+        else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+            local_solver_.reset(new SolverLocalSensi(this, info, log_, communication_interface_));
+        else
+            log_->print(DebugType::Error) << "[Agent::fromCommunication_configured_optimization] Agent" << get_id() << ": "
+            << "is not initialized with a proper solver" << std::endl;
 
         // create step selector
-        if(optimizationInfo_.ASYNC_Active_)
-            step_selector_= AsyncStepSelectorPtr(new AsyncStepSelector(local_solver_,this));
-        else 
-            step_selector_ = SyncStepSelectorPtr(new SyncStepSelector(local_solver_));
+        if (optimizationInfo_.ASYNC_Active_)
+            step_selector_.reset(new AsyncStepSelector(local_solver_, this));
+        else
+            step_selector_.reset(new SyncStepSelector(local_solver_, this));
 
     }
 
@@ -695,33 +761,33 @@ namespace grampcd
         neighbor->set_numberOfNeighbors(number);
     }
 
-    void Agent::fromCommunication_trigger_step(const ADMMStep& step)
+    void Agent::fromCommunication_trigger_step(const AlgStep& step)
     {
-       step_selector_->execute_admmStep(step);
+       step_selector_->execute_algStep(step);
     }
 
-    void Agent::fromCommunication_recieved_flagToStopAdmm(const bool flag)
+    void Agent::fromCommunication_received_flagToStopAdmm(const bool flag)
     {
-        // remember flag stop ADMM
-        std::static_pointer_cast<AsyncStepSelector>(step_selector_)->set_flagStopAdmm(flag);
+        // remember flag stop algorithm
+        std::static_pointer_cast<AsyncStepSelector>(step_selector_)->set_flagStopAlg(flag);
 
         // send acknowledge flag
-        communication_interface_->send_flagStoppedAdmm(flag,this->get_id());
+        communication_interface_->send_stoppedAlgFlag(flag,this->get_id());
     }
 
-    void Agent::fromCommunication_recieved_flagStoppedAdmm(const bool flag, int from)
+    void Agent::fromCommunication_received_flagStoppedAdmm(const bool flag, int from)
     {
 
         const auto neighbor = DataConversion::get_element_from_vector(neighbors_, from);
 
         if (neighbor == nullptr)
         {
-            log_->print(DebugType::Warning) << "[Agent::fromCommunication_recieved_admmIter] Agent " << get_id() << ": "
+            log_->print(DebugType::Warning) << "[Agent::fromCommunication_received_admmIter] Agent " << get_id() << ": "
                 << "Received number of neighbors from unknown neighbor " << from << "." << std::endl;
 
             return;
         }
-        neighbor->flag_StoppedAdmm_ = true;
+        neighbor->flag_StoppedAlg_ = true;
 
     }
     
@@ -880,16 +946,32 @@ namespace grampcd
             {
                 const auto Nxj = neighbor->get_Nxj();
                 const auto Nuj = neighbor->get_Nuj();
-                const auto& local_copies = neighbor->get_localCopies();
+                if (optimizationInfo_.COMMON_Solver_ == "ADMM")
+                {
+                    const auto& local_copies = neighbor->get_localCopies();
 
-                neighbor->get_couplingModel()->lfct
-                (
-                    &cost, agentState_.t_[i], 
-                    &agentState_.x_[i * Nxi], 
-                    &agentState_.u_[i * Nui], 
-                    &local_copies.x_[i * Nxj], 
-                    &local_copies.u_[i * Nuj]
-                );
+                    neighbor->get_couplingModel()->lfct
+                    (
+                        &cost, agentState_.t_[i],
+                        &agentState_.x_[i * Nxi],
+                        &agentState_.u_[i * Nui],
+                        &local_copies.x_[i * Nxj],
+                        &local_copies.u_[i * Nuj]
+                    );
+                }
+                else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+                {
+                    const auto& neighbors_agentState = neighbor->get_neighbors_agentState();
+                    neighbor->get_couplingModel()->lfct
+                    (
+                        &cost, agentState_.t_[i],
+                        &agentState_.x_[i * Nxi],
+                        &agentState_.u_[i * Nui],
+                        &neighbors_agentState.x_[i * Nxj],
+                        &neighbors_agentState.u_[i * Nuj]
+                    );
+
+                }              
             }
         }
 
@@ -903,20 +985,31 @@ namespace grampcd
 		{
 			const auto Nxj = neighbor->get_Nxj();
 			const auto Nuj = neighbor->get_Nuj();
-			const auto& local_copies = neighbor->get_localCopies();
-
-			neighbor->get_couplingModel()->Vfct
-			(
-				&cost, agentState_.t_[Nhor - 1],
-				&agentState_.x_[(Nhor - 1) * Nxi],
-				&local_copies.x_[(Nhor - 1) * Nxj]
-			);
+            if (optimizationInfo_.COMMON_Solver_ == "ADMM")
+            {
+                const auto& local_copies = neighbor->get_localCopies();
+                neighbor->get_couplingModel()->Vfct
+                (
+                    &cost, agentState_.t_[Nhor - 1],
+                    &agentState_.x_[(Nhor - 1) * Nxi],
+                    &local_copies.x_[(Nhor - 1) * Nxj]
+                );
+            }
+            else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+            {
+                const auto& neighbors_agentState = neighbor->get_neighbors_agentState();
+                neighbor->get_couplingModel()->Vfct
+                (
+                    &cost, agentState_.t_[Nhor - 1],
+                    &agentState_.x_[(Nhor - 1) * Nxi],
+                    &neighbors_agentState.x_[(Nhor - 1) * Nxj]
+                );
+            }
 		}
-
 	    return cost;
     }
 
-    void Agent::increase_all_delays(const ADMMStep& step) const
+    void Agent::increase_all_delays(const AlgStep& step) const
     {
         for (auto& neighbor : sending_neighbors_)
             neighbor->increase_delays(step);
@@ -928,11 +1021,10 @@ namespace grampcd
             neighbor->initialize_delays();
     }
 
-    const int Agent::get_delay_sending_neighbors(const ADMMStep& step) const 
+    const int Agent::get_delay_sending_neighbors(const AlgStep& step) const 
     {
         int max_delay = 0;
 
-        // Todo: std::max wäre deutlich übersichtlicher
         for (auto& neighbor : sending_neighbors_)
         {
             int previous_max_delay = max_delay;
@@ -940,13 +1032,13 @@ namespace grampcd
             max_delay = std::max(max_delay, neighbor->get_delays(step));
 
             // ignore delay of finished neighbors
-            if(neighbor->get_delays(step) > (previous_max_delay +1) && neighbor->flag_StoppedAdmm_)
+            if(neighbor->flag_StoppedAlg_)
                 max_delay = previous_max_delay;
         }
         return max_delay;
     }
 
-    const int Agent::get_delay_recieving_neighbors(const ADMMStep& step) const
+    const int Agent::get_delay_receiving_neighbors(const AlgStep& step) const
     {
         int max_delay = 0;
 
@@ -957,7 +1049,7 @@ namespace grampcd
             max_delay = std::max(max_delay, neighbor->get_delays(step));
 
             // ignore delay of finished neighbors
-            if (neighbor->get_delays(step) > (previous_max_delay +1) && neighbor->flag_StoppedAdmm_)
+            if (neighbor->flag_StoppedAlg_)
                 max_delay = previous_max_delay;
         }
         return max_delay;
@@ -971,7 +1063,7 @@ namespace grampcd
     void Agent::reset_stopAdmmflag_of_neighbors()
     {
         for (auto& neighbor : neighbors_)
-            neighbor->flag_StoppedAdmm_ = false;
+            neighbor->flag_StoppedAlg_ = false;
     }
 
 }

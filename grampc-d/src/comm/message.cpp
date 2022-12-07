@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -27,6 +27,7 @@
 
 #include "grampcd/state/agent_state.hpp"
 #include "grampcd/state/coupling_state.hpp"
+#include "grampcd/state/constraint_state.hpp"
 
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>
@@ -56,8 +57,8 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_deregist
 CEREAL_REGISTER_TYPE(grampcd::Message_send_numberOfNeighbors);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_numberOfNeighbors)
 
-CEREAL_REGISTER_TYPE(grampcd::Message_send_agent_state);
-CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_agent_state)
+CEREAL_REGISTER_TYPE(grampcd::Message_send_local_copies);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_local_copies)
 
 CEREAL_REGISTER_TYPE(grampcd::Message_send_desired_agent_state);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_desired_agent_state)
@@ -79,6 +80,9 @@ CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_cou
 
 CEREAL_REGISTER_TYPE(grampcd::Message_send_multiplier_state);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_multiplier_state)
+
+CEREAL_REGISTER_TYPE(grampcd::Message_send_agent_state);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_agent_state)
 
 CEREAL_REGISTER_TYPE(grampcd::Message_send_optimizationInfo);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(grampcd::Message, grampcd::Message_send_optimizationInfo)

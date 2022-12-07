@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
 	// initialize communication interface
 	interface->initialize_local_communicationInterface_as_coordinator(7777);
-	
+
 	// set optimization info
 	auto optimization_info = interface->optimization_info();
 	optimization_info.COMMON_Nhor_ = 21;
@@ -33,10 +33,11 @@ int main(int argc, char** argv)
 	optimization_info.COMMON_dt_ = 0.1;
 	optimization_info.GRAMPC_MaxGradIter_ = 10;
 	optimization_info.GRAMPC_MaxMultIter_ = 1;
+	optimization_info.COMMON_Solver_ = "ADMM";
 	optimization_info.ADMM_maxIterations_ = 5;
 	optimization_info.ADMM_ConvergenceTolerance_ = 0;
 
-	optimization_info.ASYNC_Active_ = false; 
+	optimization_info.ASYNC_Active_ = false;
 	optimization_info.ASYNC_Delay_ = 0;
 
 	interface->set_optimizationInfo(optimization_info);
@@ -50,7 +51,7 @@ int main(int argc, char** argv)
 	interface->run_DMPC(0, Tsim);
 
 	// print solutions
-	interface->print_solution_to_file("all","async_Solution_agent");
+	interface->print_solution_to_file("all");
 
 	interface->send_flag_to_agents("all");
 

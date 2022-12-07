@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -71,8 +71,10 @@ namespace grampcd
 
 		/*Send number of neighbors to an agent.*/
 		const bool send_numberOfNeighbors(const int number, const int from, const int to) override;
-		const /*Send an agent state to an agent.*/
-		bool send_agentState(const AgentState& state, const int from, const int to) override;
+		 /*Send localCopies to an agent.*/
+		const bool send_localCopies(const AgentState& state, const int from, const int to) override;
+		/*Send an agent state to an agent.*/
+		const bool send_agentState(const AgentState& state, const ConstraintState& constr_state, const int from, const int to) override;
 		/*Send desired agent state to an agent.*/
 		const bool send_desiredAgentState(const AgentState& desired_state, const int from, const int to) override;
 		/*Send coupling state to an agent.*/
@@ -84,9 +86,9 @@ namespace grampcd
 		/*Send convergence flag to the coordinator.*/
 		const bool send_convergenceFlag(const bool converged, const int from) override;
 		/*send the stopped admm flag to an agent*/
-	    const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) override;
+	    const bool send_stoppedAlgFlag(const bool flag, const int from, const int to) override;
 		/*send the stopped admm flag to the coordinator*/
-		const bool send_flagStoppedAdmm(const bool flag, const int from) override;
+		const bool send_stoppedAlgFlag(const bool flag, const int from) override;
 		/*send flag to stop the admm iterations of an agent*/
 		const bool send_flagToStopAdmm(const bool flag, const int to);
 
@@ -95,7 +97,7 @@ namespace grampcd
 		void configureOptimization(const CommunicationDataPtr& comm_data);
 
 		/*Trigger a step of the ADMM algorithm.*/
-		const bool trigger_step(const ADMMStep& step) override;
+		const bool trigger_step(const AlgStep& step) override;
 		/*Trigger simulation.*/
 		void trigger_simulation(const std::string& Integrator, const typeRNum dt) override;
 
@@ -165,11 +167,11 @@ namespace grampcd
 		void fromCommunication_send_numberOfActiveCouplings(const CommunicationDataPtr& comm_data, const int number) const;
 		/*This function is called if flag is received.*/
 		void fromCommunication_send_flagToAgents(const CommunicationDataPtr& comm_data) const;
-		/*this function is called if an agent recieves a flag that its neighbor stopped the admm */
-		void fromCommunication_send_flagStoppedAdmm(const CommunicationDataPtr& comm_data, const bool flag, const int from); 
-		/*this function is called if the coordinator recieves a flag that an agent stopped its admm iterations*/
-		void fromCommunication_send_flagStoppedAdmmCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from);
-		/*This function is recieved when the agent should stop his admm iterations*/
+		/*this function is called if an agent receives a flag that its neighbor stopped the admm */
+		void fromCommunication_send_stoppedAlgFlag(const CommunicationDataPtr& comm_data, const bool flag, const int from); 
+		/*this function is called if the coordinator receives a flag that an agent stopped its admm iterations*/
+		void fromCommunication_send_stoppedAlgFlagCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from);
+		/*This function is received when the agent should stop his admm iterations*/
 		void fromCommunication_send_flagToStopAdmm(const CommunicationDataPtr& comm_data, const bool flag);
 
 		/*This function is called if requirement for agent model is received.*/
@@ -181,13 +183,17 @@ namespace grampcd
 		/*This function is called if coupling model is received.*/
 		void fromCommunication_send_couplingModel(const CommunicationDataPtr& comm_data, const std::shared_ptr< std::map<int, grampcd::CouplingModelPtr> >& model) const;
 
-		/*This function is called if agent state is received.*/
-		void fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, const int from);
+		/*This function is called if local Copies are received.*/
+		void fromCommunication_send_localCopies(const CommunicationDataPtr& comm_data, const AgentState& state, const int from);
+		/*This function is called if an agent state is received.*/
+		void fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, const ConstraintState& constr_state, const int from);
 		/*This function is called if desired agent state is received.*/
 		void fromCommunication_send_desiredAgentState(const CommunicationDataPtr& comm_data, const grampcd::AgentStatePtr& state) const;
 		/*This function is called if multiplier state is received.*/
 		void fromCommunication_send_multiplierPenaltyState( const CommunicationDataPtr& comm_data, const MultiplierState& multiplier,
 			const PenaltyState& penalty, const int from);
+		/*This function is called if a sensi state is received*/
+		void fromCommunication_send_sensiState(const CommunicationDataPtr& comm_data, const SensiState& state, int from);
 		/*This function is called if requirement for agent state for simulation is received.*/
 		void fromCommunication_get_agentState_for_simulation(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if agent state for simulation is received.*/
@@ -225,9 +231,9 @@ namespace grampcd
 		/*This function is called if acknowledgment for received optimization info is received.*/
 		void fromCommunication_received_acknowledgement_received_optimizationInfo(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if acknowledgment for executed ADMM step is received.*/
-		void fromCommunication_received_acknowledgement_executed_ADMMstep(const CommunicationDataPtr& comm_data) const;
+		void fromCommunication_received_acknowledgement_executed_AlgStep(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if ADMM step should be triggered.*/
-		void fromCommunication_triggerStep(ADMMStep step);
+		void fromCommunication_triggerStep(AlgStep step);
 
 		/*This function is called if coupling should be registered.*/
 		void fromCommunication_register_coupling(const CommunicationDataPtr& comm_data, const CouplingInfo& info);

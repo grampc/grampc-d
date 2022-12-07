@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -182,16 +182,29 @@ const bool CommunicationInterfaceCentral::send_numberOfNeighbors(const int numbe
     return true;    
 }
 
-const bool CommunicationInterfaceCentral::send_agentState(const AgentState& state, const int from, const int to)
+const bool CommunicationInterfaceCentral::send_localCopies(const AgentState& state, const int from, const int to)
 {
     if( to >= agents_.size() )
     {
-        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::send_localCopies] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
 
-    agents_[to]->fromCommunication_received_agentState(state, from);
+    agents_[to]->fromCommunication_received_localCopies(state, from);
+    return true;
+}
+
+const bool CommunicationInterfaceCentral::send_agentState(const AgentState& state, const ConstraintState& constr_state, const int from, const int to)
+{
+    if (to >= agents_.size())
+    {
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::send_agentState] "
+            << "Could not find agent with id " << to << "." << std::endl;
+        return false;
+    }
+
+    agents_[to]->fromCommunication_received_agentState(state, constr_state, from);
     return true;
 }
 
@@ -199,7 +212,7 @@ const bool CommunicationInterfaceCentral::send_desiredAgentState(const AgentStat
 {
     if( to >= agents_.size() )
     {
-        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::sendAgentState] "
+        log_->print(DebugType::Warning) << "[CentralizedCommunicationInterface::send_desiredAgentState] "
             << "Could not find agent with id " << to << "." << std::endl;
         return false;
     }
@@ -288,7 +301,7 @@ const bool CommunicationInterfaceCentral::send_convergenceFlag(const bool conver
     return true;
 }
 
-const bool  CommunicationInterfaceCentral::send_flagStoppedAdmm(const bool flag, const int from, const int to)
+const bool  CommunicationInterfaceCentral::send_stoppedAlgFlag(const bool flag, const int from, const int to)
 {
     if (to >= agents_.size())
     {
@@ -297,13 +310,13 @@ const bool  CommunicationInterfaceCentral::send_flagStoppedAdmm(const bool flag,
         return false;
     }
   
-    agents_[to]->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    agents_[to]->fromCommunication_received_flagStoppedAdmm(flag, from);
     return true;
 }
 
-const bool  CommunicationInterfaceCentral::send_flagStoppedAdmm(const bool flag, const int from)
+const bool  CommunicationInterfaceCentral::send_stoppedAlgFlag(const bool flag, const int from)
 {
-    coordinator_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+    coordinator_->fromCommunication_received_flagStoppedAlg(flag, from);
     return true;
 }
 
@@ -318,7 +331,7 @@ const bool CommunicationInterfaceCentral::configure_optimization(const Optimizat
     return true;
 }
 
-const bool CommunicationInterfaceCentral::trigger_step(const ADMMStep& step)
+const bool CommunicationInterfaceCentral::trigger_step(const AlgStep& step)
 {
     // if number of threads is chosen to be 1, simply trigger steps
     if (threads_.size() == 0)

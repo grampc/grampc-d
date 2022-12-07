@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -567,7 +567,7 @@ namespace grampcd
         return true;
     }
 
-    const bool CommunicationInterfaceLocal::send_agentState(const AgentState& state, int from, int to)
+    const bool CommunicationInterfaceLocal::send_localCopies(const AgentState& state, int from, int to)
     {
         // get CommunicationData
         const auto comm_data = get_communicationData(to);
@@ -580,8 +580,27 @@ namespace grampcd
             return false;
         }
 
-		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_agent_state>(state, from));
+		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_local_copies>(state, from));
 		async_send(comm_data, serialize(message));
+
+        return true;
+    }
+
+    const bool CommunicationInterfaceLocal::send_agentState(const AgentState& state, const ConstraintState& constr_state, int from, int to)
+    {
+        // get CommunicationData
+        const auto comm_data = get_communicationData(to);
+
+        // check if agent is known
+        if (comm_data == nullptr)
+        {
+            log_->print(DebugType::Warning) << "[CommunicationInterfaceLocal::send_agentState] "
+                << "Could not find agent with id " << to << "." << std::endl;
+            return false;
+        }
+
+        const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_send_agent_state>(state,constr_state, from));
+        async_send(comm_data, serialize(message));
 
         return true;
     }
@@ -869,7 +888,7 @@ namespace grampcd
         return true;
     }
 
-    const bool  CommunicationInterfaceLocal::send_flagStoppedAdmm(const bool flag, const int from, const int to)
+    const bool  CommunicationInterfaceLocal::send_stoppedAlgFlag(const bool flag, const int from, const int to)
     {
          // get communication data 
         const auto comm_data = get_communicationData(to);
@@ -890,7 +909,7 @@ namespace grampcd
         return true;
     }
  
-    const bool CommunicationInterfaceLocal::send_flagStoppedAdmm(const bool flag, const int from)
+    const bool CommunicationInterfaceLocal::send_stoppedAlgFlag(const bool flag, const int from)
     {
         // get CommunicationData
         const auto comm_data = get_communicationData("coordinator");
@@ -1063,7 +1082,7 @@ namespace grampcd
         }
     }
 
-    const bool CommunicationInterfaceLocal::trigger_step(const ADMMStep& step)
+    const bool CommunicationInterfaceLocal::trigger_step(const AlgStep& step)
     {
         // prepare protocol
 		const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_trigger_step>(step));
@@ -1671,24 +1690,24 @@ namespace grampcd
         conditionVariable_triggerStep_.notify_one();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_flagStoppedAdmm(const CommunicationDataPtr& comm_data, const bool flag, const int from)
+    void CommunicationInterfaceLocal::fromCommunication_send_stoppedAlgFlag(const CommunicationDataPtr& comm_data, const bool flag, const int from)
     {
         // received flag that agent stopped admm
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+        agent_->fromCommunication_received_flagStoppedAdmm(flag, from);
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_flagStoppedAdmmCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from)
+    void CommunicationInterfaceLocal::fromCommunication_send_stoppedAlgFlagCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from)
     {
-        // coordinator recieved flag that agent stopped admm
+        // coordinator received flag that agent stopped admm
         std::unique_lock<std::shared_mutex> guard(mutex_coordinator_);
-        coordinator_->fromCommunication_recieved_flagStoppedAdmm(flag, from);
+        coordinator_->fromCommunication_received_flagStoppedAlg(flag, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_flagToStopAdmm(const CommunicationDataPtr& comm_data, const bool flag)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_recieved_flagToStopAdmm(flag);
+        agent_->fromCommunication_received_flagToStopAdmm(flag);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_multiplierPenaltyState(const CommunicationDataPtr& comm_data, 
@@ -1706,10 +1725,17 @@ namespace grampcd
         comm_data->cond_var_desired_agentState_.notify_all();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, int from)
+    void CommunicationInterfaceLocal::fromCommunication_send_localCopies(const CommunicationDataPtr& comm_data, const AgentState& state, int from)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
-        agent_->fromCommunication_received_agentState(state, from);
+        agent_->fromCommunication_received_localCopies(state, from);
+    }
+
+    void CommunicationInterfaceLocal::fromCommunication_send_agentState(const CommunicationDataPtr& comm_data, const AgentState& state, 
+        const ConstraintState& constr_state, int from)
+    {
+        std::unique_lock<std::shared_mutex> guard(mutex_basics_);
+        agent_->fromCommunication_received_agentState(state, constr_state, from);
     }
 
     void CommunicationInterfaceLocal::fromCommunication_send_numberOfNeighbors(const CommunicationDataPtr& comm_data, int number, int from)
@@ -1759,7 +1785,7 @@ namespace grampcd
         conditionVariable_getSolutions_.notify_one();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_received_acknowledgement_executed_ADMMstep(const CommunicationDataPtr& comm_data) const
+    void CommunicationInterfaceLocal::fromCommunication_received_acknowledgement_executed_AlgStep(const CommunicationDataPtr& comm_data) const
     {
         std::unique_lock<std::mutex> guard(mutex_triggerStep_);
         --numberOfNotifications_triggerStep_;
@@ -1774,12 +1800,12 @@ namespace grampcd
         conditionVariable_config_optimizationInfo_.notify_one();
     }
 
-    void CommunicationInterfaceLocal::fromCommunication_triggerStep(ADMMStep step)
+    void CommunicationInterfaceLocal::fromCommunication_triggerStep(AlgStep step)
     {
         std::unique_lock<std::shared_mutex> guard(mutex_basics_);
         agent_->fromCommunication_trigger_step(step);
 
-        if (step != ADMMStep::SEND_CONVERGENCE_FLAG)
+        if (step != AlgStep::GEN_SEND_CONVERGENCE_FLAG)
         {
 			const auto message = std::static_pointer_cast<Message>(std::make_shared<Message_acknowledge_executed_ADMM_step>());
 			async_send(get_communicationData("coordinator"), serialize(message));

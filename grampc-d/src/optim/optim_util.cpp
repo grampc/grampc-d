@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -16,6 +16,8 @@
 #include "grampcd/state/coupling_state.hpp"
 #include "grampcd/state/multiplier_state.hpp"
 #include "grampcd/state/penalty_state.hpp"
+#include "grampcd/state/sensi_state.hpp"
+#include "grampcd/state/constraint_state.hpp"
 
 #include "grampcd/info/optimization_info.hpp"
 
@@ -38,7 +40,9 @@ namespace grampcd
         if(Nx > 0)
         {
             out.x_.resize(Nx);
+            out.lambda_.resize(Nx);
             interplin(&out.x_[0], &state.t_[0], &state.x_[0], t, Nx, Nt, 1);
+            interplin(&out.lambda_[0], &state.t_[0], &state.lambda_[0], t, Nx, Nt, 1);
         }
 
         // interpolate v
@@ -152,6 +156,80 @@ namespace grampcd
         }
     }
 
+    void interpolateState(const SensiState& state, double t, SensiState& out)
+    {
+        const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
+        const unsigned int Nx = static_cast<unsigned int>(state.psi_x_.size() / Nt);
+        const unsigned int Nu = static_cast<unsigned int>(state.psi_u_.size() / Nt);
+
+        const unsigned int Nxx = static_cast<unsigned int>(state.psi_xx_.size() / Nt);
+        const unsigned int Nuu = static_cast<unsigned int>(state.psi_uu_.size() / Nt);
+        const unsigned int Nxu = static_cast<unsigned int>(state.psi_xu_.size() / Nt);
+
+        out.i_ = state.i_;
+        out.t_ = state.t_;
+
+        // interpolate psi_x ( no interpolation needed for psi_V)
+        if (Nx > 0)
+        {
+            out.psi_x_.resize(Nx);
+            interplin(&out.psi_x_[0], &state.t_[0], &state.psi_x_[0], t, Nx, Nt, 1);
+        }
+
+        // interpolate psi_u
+        if (Nu > 0)
+        {
+            out.psi_u_.resize(Nu);
+            interplin(&out.psi_u_[0], &state.t_[0], &state.psi_u_[0], t, Nu, Nt, 1);
+        }
+        // interpolate psi_u
+        if (Nxx > 0)
+        {
+            out.psi_xx_.resize(Nxx);
+            interplin(&out.psi_xx_[0], &state.t_[0], &state.psi_xx_[0], t, Nxx, Nt, 1);
+        }
+
+        // interpolate psi_u
+        if (Nuu > 0)
+        {
+            out.psi_uu_.resize(Nuu);
+            interplin(&out.psi_uu_[0], &state.t_[0], &state.psi_uu_[0], t, Nuu, Nt, 1);
+        }
+
+        // interpolate psi_u
+        if (Nxu > 0)
+        {
+            out.psi_xu_.resize(Nxu);
+            interplin(&out.psi_xu_[0], &state.t_[0], &state.psi_xu_[0], t, Nxu, Nt, 1);
+        }
+    }
+
+    void interpolateState(const ConstraintState& state, double t, ConstraintState& out)
+    {
+        const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
+        const unsigned int Ng = static_cast<unsigned int>(state.mu_g_.size() / Nt);
+        const unsigned int Nh = static_cast<unsigned int>(state.mu_h_.size() / Nt);
+
+        out.i_ = state.i_;
+        out.t_ = state.t_;
+
+        // interpolate psi_x ( no interpolation needed for psi_V)
+        if (Ng > 0)
+        {
+            out.mu_g_.resize(Ng);
+            interplin(&out.mu_g_[0], &state.t_[0], &state.mu_g_[0], t, Ng, Nt, 1);
+            interplin(&out.c_g_[0], &state.t_[0], &state.mu_g_[0], t, Ng, Nt, 1);
+        }
+
+        // interpolate psi_u
+        if (Nh > 0)
+        {
+            out.mu_h_.resize(Nh);
+            interplin(&out.mu_h_[0], &state.t_[0], &state.mu_h_[0], t, Nh, Nt, 1);
+            interplin(&out.c_h_[0], &state.t_[0], &state.mu_g_[0], t, Ng, Nt, 1);
+        }
+    }
+
     void shiftState(AgentState& state, typeRNum dt, typeRNum t0)
     {
         const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
@@ -162,8 +240,11 @@ namespace grampcd
             const unsigned int Nv = static_cast<unsigned int>(state.v_.size() / Nt);
 
             // shift x
-            if(Nx > 0)
+            if (Nx > 0)
+            {
                 shiftTrajectory(&state.x_[0], Nt, Nx, Nx, dt, &state.t_[0]);
+                shiftTrajectory(&state.lambda_[0], Nt, Nx, Nx, dt, &state.t_[0]);
+            }
 
             // shift v
             if(Nv > 0)
@@ -260,6 +341,80 @@ namespace grampcd
 	    state.t0_ = std::max(state.t0_ + dt, t0);
     }
 
+    void shiftState(SensiState& state, typeRNum dt, typeRNum t0)
+    {
+        const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
+        if (Nt > 0)
+        {
+            const unsigned int Nx = static_cast<unsigned int>(state.psi_x_.size() / Nt);
+            const unsigned int Nu = static_cast<unsigned int>(state.psi_u_.size() / Nt);
+
+            const unsigned int Nxx = static_cast<unsigned int>(state.psi_xx_.size() / Nt);
+            const unsigned int Nuu = static_cast<unsigned int>(state.psi_uu_.size() / Nt);
+            const unsigned int Nxu = static_cast<unsigned int>(state.psi_xu_.size() / Nt);
+
+            // shift x
+            if (Nx > 0)
+            {
+                shiftTrajectory(&state.psi_x_[0], Nt, Nx, Nx, dt, &state.t_[0]);
+            }
+
+            // shift u
+            if (Nu > 0)
+                shiftTrajectory(&state.psi_u_[0], Nt, Nu, Nu, dt, &state.t_[0]);
+
+            // shift psi_xx
+            if (Nxx > 0)
+            {
+                shiftTrajectory(&state.psi_xx_[0], Nt, Nxx, Nxx, dt, &state.t_[0]);
+            }
+
+            // interpolate psi_u
+            if (Nuu > 0)
+            {
+                shiftTrajectory(&state.psi_uu_[0], Nt, Nuu, Nuu, dt, &state.t_[0]);
+            }
+
+            // interpolate psi_u
+            if (Nxu > 0)
+            {
+                shiftTrajectory(&state.psi_xu_[0], Nt, Nxu, Nxu, dt, &state.t_[0]);
+            }
+        }
+
+        // This maximum ensures that all agents have the same time base 
+        // even in case of plug-and-play scenarios
+        state.t0_ = std::max(state.t0_ + dt, t0 + dt);
+    }
+
+    void shiftState(ConstraintState& state, typeRNum dt, typeRNum t0)
+    {
+        const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
+        if (Nt > 0)
+        {
+            const unsigned int Ng = static_cast<unsigned int>(state.mu_g_.size() / Nt);
+            const unsigned int Nh = static_cast<unsigned int>(state.mu_h_.size() / Nt);
+
+            // shift x
+            if (Ng > 0)
+            {
+                shiftTrajectory(&state.mu_g_[0], Nt, Ng, Ng, dt, &state.t_[0]);
+                shiftTrajectory(&state.c_g_[0], Nt, Ng, Ng, dt, &state.t_[0]);
+            }
+
+            // shift u
+            if (Nh > 0)
+            {
+                shiftTrajectory(&state.mu_h_[0], Nt, Ng, Ng, dt, &state.t_[0]);
+                shiftTrajectory(&state.c_h_[0], Nt, Ng, Ng, dt, &state.t_[0]);
+            }
+        }
+
+        // This maximum ensures that all agents have the same time base 
+        // even in case of plug-and-play scenarios
+        state.t0_ = std::max(state.t0_ + dt, t0 + dt);
+    }
+
     void configureSolver(std::shared_ptr< grampc::Grampc>& solver, const OptimizationInfo& info)
     {
         solver->setparam_real("Thor", info.COMMON_Thor_);
@@ -327,6 +482,7 @@ namespace grampcd
         state.u_.clear();
         state.v_.clear();
         state.x_.clear();
+        state.lambda_.clear();
     }
 
     void resetState(CouplingState& state, int i, std::vector<typeRNum> t)
@@ -356,10 +512,36 @@ namespace grampcd
         state.rho_x_.clear();
     }
 
+    void resetState(SensiState& state, int i, std::vector<typeRNum> t)
+    {
+        state.i_ = i;
+        state.t_ = t;
+        state.t0_ = 0;
+        state.psi_u_.clear();
+        state.psi_x_.clear();
+        state.psi_V_.clear();
+        state.psi_xx_.clear();
+        state.psi_uu_.clear();
+        state.psi_xu_.clear();
+        state.psi_VV_.clear();
+    }
+
+    void resetState(ConstraintState& state, int i, std::vector<typeRNum> t)
+    {
+        state.i_ = i;
+        state.t_ = t;
+        state.t0_ = 0;
+        state.mu_g_.clear();
+        state.mu_h_.clear();
+        state.c_g_.clear();
+        state.c_h_.clear();
+    }
+
     const bool compare_stateDimensions( const AgentState& state_1, const AgentState& state_2 )
     {
         return state_1.x_.size() == state_2.x_.size() && state_1.u_.size() == state_2.u_.size()
-                && state_1.v_.size() == state_2.v_.size() && state_1.t_.size() == state_2.t_.size();
+                && state_1.v_.size() == state_2.v_.size() && state_1.t_.size() == state_2.t_.size() 
+                && state_1.lambda_.size() == state_2.lambda_.size();
     }
 
     const bool compare_stateDimensions( const CouplingState& state_1, const CouplingState& state_2 )
@@ -378,6 +560,21 @@ namespace grampcd
     {
         return state_1.rho_x_.size() == state_2.rho_x_.size() && state_1.rho_u_.size() == state_2.rho_u_.size()
                 && state_1.rho_v_.size() == state_2.rho_v_.size() && state_1.t_.size() == state_2.t_.size();
+    }
+
+    const bool compare_stateDimensions(const SensiState& state_1, const SensiState& state_2)
+    {
+        return state_1.psi_x_.size() == state_2.psi_x_.size() && state_1.psi_u_.size() == state_2.psi_u_.size()
+            && state_1.psi_V_.size() == state_2.psi_V_.size() && state_1.psi_xx_.size() == state_2.psi_xx_.size()
+            && state_1.psi_uu_.size() == state_2.psi_uu_.size() && state_1.psi_xu_.size() == state_2.psi_xu_.size()
+            && state_1.psi_VV_.size() == state_2.psi_VV_.size() && state_1.t_.size() == state_2.t_.size();
+    }
+
+    const bool compare_stateDimensions(const ConstraintState& state_1, const ConstraintState& state_2)
+    {
+        return state_1.mu_g_.size() == state_2.mu_g_.size() && state_1.mu_h_.size() == state_2.mu_h_.size()
+            && state_1.c_g_.size() == state_2.c_g_.size() && state_1.c_h_.size() == state_2.c_h_.size() 
+            && state_1.t_.size() == state_2.t_.size();
     }
 
 }

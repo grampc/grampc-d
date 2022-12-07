@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -29,14 +29,15 @@ int main(int argc, char** argv)
     optimization_info.COMMON_dt_ = 0.02;
     optimization_info.GRAMPC_MaxGradIter_ = 15;
     optimization_info.GRAMPC_MaxMultIter_ = 1;
-    optimization_info.ADMM_maxIterations_ = 80;
+    optimization_info.COMMON_Solver_ = "ADMM";
+    optimization_info.ADMM_maxIterations_ = 50;   // dont choose to high to prevent stack overflow
     optimization_info.ADMM_ConvergenceTolerance_ = 0.0;
 
-    optimization_info.ADMM_DebugCost_ = true;
+    optimization_info.COMMON_DebugCost_ = true;
     optimization_info.ASYNC_Active_ = true;
     // vector of delays
     std::vector<int> delays{ 0, 1, 10 };
-   
+
 
     typeRNum Tsim = 0.01;
 
@@ -67,65 +68,65 @@ int main(int argc, char** argv)
         optimization_info.ASYNC_Delay_ = delays[num_delay];
         interface->set_optimizationInfo(optimization_info);
 
-    for (unsigned int i = 0; i < n_agents_x; ++i)
-    {
-        for (unsigned int j = 0; j < n_agents_y; ++j)
+        for (unsigned int i = 0; i < n_agents_x; ++i)
         {
-            agentInfo.id_ = i * n_agents_x + j;
+            for (unsigned int j = 0; j < n_agents_y; ++j)
+            {
+                agentInfo.id_ = i * n_agents_x + j;
 
-            //define offset in x and y
-            ctypeRNum offset_x = i % 2 ? -0.4 : 0.4;
-            ctypeRNum offset_y = j % 2 ? -0.3 : 0.3;
-            const std::vector<typeRNum> x_init = { static_cast<typeRNum>(i + offset_x), 0.0, static_cast<typeRNum>(j + offset_y), 0.0 };
-            const std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
-            interface->register_agent(agentInfo, x_init, { 0, 0 }, x_des, { 0, 0 });
+                //define offset in x and y
+                ctypeRNum offset_x = i % 2 ? -0.4 : 0.4;
+                ctypeRNum offset_y = j % 2 ? -0.3 : 0.3;
+                const std::vector<typeRNum> x_init = { static_cast<typeRNum>(i + offset_x), 0.0, static_cast<typeRNum>(j + offset_y), 0.0 };
+                const std::vector<typeRNum> x_des = { static_cast<typeRNum>(i), 0, static_cast<typeRNum>(j), 0 };
+                interface->register_agent(agentInfo, x_init, { 0, 0 }, x_des, { 0, 0 });
+            }
         }
-    }
 
-    // register couplings
-    auto coupling_info = interface->coupling_info();
-    coupling_info.model_name_ = "ssms2d_couplingModel";
-    coupling_info.model_parameters_ = { m_agent, c };
+        // register couplings
+        auto coupling_info = interface->coupling_info();
+        coupling_info.model_name_ = "ssms2d_couplingModel";
+        coupling_info.model_parameters_ = { m_agent, c };
 
-    unsigned int idx = 0;
+        unsigned int idx = 0;
 
-    for (unsigned int i = 0; i < n_agents_y; ++i)
-    {
-        for (unsigned j = 0; j < n_agents_x; ++j)
+        for (unsigned int i = 0; i < n_agents_y; ++i)
         {
-            coupling_info.agent_id_ = idx;
-
-            // coupling with neighbor on the left
-            if (j > 0)
+            for (unsigned j = 0; j < n_agents_x; ++j)
             {
-                coupling_info.neighbor_id_ = idx - 1;
-                interface->register_coupling(coupling_info);
-            }
+                coupling_info.agent_id_ = idx;
 
-            // coupling with neighbor on the right
-            if (j < n_agents_x - 1)
-            {
-                coupling_info.neighbor_id_ = idx + 1;
-                interface->register_coupling(coupling_info);
-            }
+                // coupling with neighbor on the left
+                if (j > 0)
+                {
+                    coupling_info.neighbor_id_ = idx - 1;
+                    interface->register_coupling(coupling_info);
+                }
 
-            // coupling with neighbor above
-            if (i > 0)
-            {
-                coupling_info.neighbor_id_ = idx - n_agents_x;
-                interface->register_coupling(coupling_info);
-            }
+                // coupling with neighbor on the right
+                if (j < n_agents_x - 1)
+                {
+                    coupling_info.neighbor_id_ = idx + 1;
+                    interface->register_coupling(coupling_info);
+                }
 
-            // coupling with neighbor below
-            if (i < n_agents_y - 1)
-            {
-                coupling_info.neighbor_id_ = idx + n_agents_x;
-                interface->register_coupling(coupling_info);
-            }
+                // coupling with neighbor above
+                if (i > 0)
+                {
+                    coupling_info.neighbor_id_ = idx - n_agents_x;
+                    interface->register_coupling(coupling_info);
+                }
 
-            idx = idx + 1;
+                // coupling with neighbor below
+                if (i < n_agents_y - 1)
+                {
+                    coupling_info.neighbor_id_ = idx + n_agents_x;
+                    interface->register_coupling(coupling_info);
+                }
+
+                idx = idx + 1;
+            }
         }
-    }
 
         // run DMPC
         interface->run_DMPC(0, Tsim);
@@ -136,7 +137,7 @@ int main(int argc, char** argv)
 
 
         // print solution
-        interface->print_solution_to_file("all",name);
+        interface->print_solution_to_file("all", name);
 
         // deregister agents
         for (unsigned int i = 0; i < n_agents_x; ++i)

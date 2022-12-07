@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -52,8 +52,10 @@ namespace grampcd
 
 		/*Send number of neighbors to an agent.*/
 		const bool send_numberOfNeighbors(const int number, const int from, const int to) override;
-		/*Send an agent state to an agent.*/
-		const bool send_agentState(const AgentState& state, const int from, const int to) override;
+		/*Send local Copies to an agent.*/
+		const bool send_localCopies(const AgentState& state, const int from, const int to) override;
+		/*Send local Copies to an agent.*/
+		const bool send_agentState(const AgentState& state, const ConstraintState& constr_state,const int from, const int to) override;
 		/*Send desired agent state to an agent.*/
 		const bool send_desiredAgentState(const AgentState& desired_state, const int from, const int to) override;
 		/*Send coupling state to an agent.*/
@@ -65,15 +67,15 @@ namespace grampcd
 		/*Send convergence flag to the coordinator.*/
 		const bool send_convergenceFlag(const bool converged, const int from) override;
 		/*send the stopped admm flag to an agent*/
-		const bool send_flagStoppedAdmm(const bool flag, const int from, const int to) override;
+		const bool send_stoppedAlgFlag(const bool flag, const int from, const int to) override;
 		/*send the stopped admm flag to the coordinator*/
-		const bool send_flagStoppedAdmm(const bool flag, const int from) override;
+		const bool send_stoppedAlgFlag(const bool flag, const int from) override;
 
 		/*Configure optimization.*/
 		const bool configure_optimization(const OptimizationInfo& info) override;
 
 		/*Trigger a step of the ADMM algorithm.*/
-		const bool trigger_step(const ADMMStep& step) override;
+		const bool trigger_step(const AlgStep& step) override;
 		/*Trigger simulation.*/
 		void trigger_simulation(const std::string& Integrator, const typeRNum dt) override;
 

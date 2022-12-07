@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -211,13 +211,13 @@ namespace grampcd
         communication_interface_->configure_optimization(oi);
 
         // send initial agent states
-        communication_interface_->trigger_step(ADMMStep::SEND_AGENT_STATE);
+        communication_interface_->trigger_step(AlgStep::ADMM_SEND_AGENT_STATE);
 
         // send initial coupling states
-        communication_interface_->trigger_step(ADMMStep::SEND_COUPLING_STATE);
+        communication_interface_->trigger_step(AlgStep::ADMM_SEND_COUPLING_STATE);
 
         // send initial multiplier states
-        communication_interface_->trigger_step(ADMMStep::SEND_MULTIPLIER_STATE);
+        communication_interface_->trigger_step(AlgStep::ADMM_SEND_MULTIPLIER_STATE);
     }
 
     const bool Coordinator::solve_ADMM(int outer_iterations, int inner_iterations)
@@ -225,57 +225,125 @@ namespace grampcd
 
         // reset agents that converged and finished 
         agents_thatConverged_.clear();
-        agents_thatStoppedAdmm_.clear();
+        agents_thatStoppedAlg_.clear();
 
         if (optimizationInfo_.ASYNC_Active_)
         {
-            communication_interface_->trigger_step(ADMMStep::INITIALIZE);
+            communication_interface_->trigger_step(AlgStep::ADMM_INITIALIZE);
 
-            communication_interface_->trigger_step(ADMMStep::START_ASYNC_ADMM);
+            communication_interface_->trigger_step(AlgStep::ADMM_START_ASYNC_ADMM);
 
             // wait for agents to execute ADMM algorithm 
-            std::unique_lock<std::mutex> guard(mutex_stop_ADMM_);
-            cond_var_stop_ADMM_.wait(guard, [this]()
+            std::unique_lock<std::mutex> guard(mutex_stop_alg_);
+            cond_var_stop_alg_.wait(guard, [this]()
                 {
-                    return agents_thatStoppedAdmm_.size() == agents_.size();
+                    return agents_thatStoppedAlg_.size() == agents_.size();
                 });
 
             return true;
         }
         else
         {
-            communication_interface_->trigger_step(ADMMStep::INITIALIZE);
+            communication_interface_->trigger_step(AlgStep::ADMM_INITIALIZE);
 
             for (int i = 0; i < outer_iterations; ++i)
             {
                 for (int j = 0; j < inner_iterations; ++j)
                 {
                     // solve local minimization problem for agent states
-                    communication_interface_->trigger_step(ADMMStep::UPDATE_AGENT_STATE);
+                    communication_interface_->trigger_step(AlgStep::ADMM_UPDATE_AGENT_STATE);
 
                     // send updated agent states to receiving neighbors
-                    communication_interface_->trigger_step(ADMMStep::SEND_AGENT_STATE);
+                    communication_interface_->trigger_step(AlgStep::ADMM_SEND_AGENT_STATE);
 
                     // solve local minimization problem for coupling states
-                    communication_interface_->trigger_step(ADMMStep::UPDATE_COUPLING_STATE);
+                    communication_interface_->trigger_step(AlgStep::ADMM_UPDATE_COUPLING_STATE);
 
                     // send updated coupling states to sending neighbors
-                    communication_interface_->trigger_step(ADMMStep::SEND_COUPLING_STATE);
+                    communication_interface_->trigger_step(AlgStep::ADMM_SEND_COUPLING_STATE);
                 }
 
                 // solve local maximization problem for multiplier states
-                communication_interface_->trigger_step(ADMMStep::UPDATE_MULTIPLIER_STATE);
+                communication_interface_->trigger_step(AlgStep::ADMM_UPDATE_MULTIPLIER_STATE);
 
                 // send updated multiplier states to receiving neighbors
-                communication_interface_->trigger_step(ADMMStep::SEND_MULTIPLIER_STATE);
+                communication_interface_->trigger_step(AlgStep::ADMM_SEND_MULTIPLIER_STATE);
 
-                if (optimizationInfo_.ADMM_DebugCost_)
-                    communication_interface_->trigger_step(ADMMStep::PRINT);
+                if (optimizationInfo_.COMMON_DebugCost_)
+                    communication_interface_->trigger_step(AlgStep::GEN_PRINT);
 
                 // evaluate convergence
-                ADMM_converged_ = true;
-                communication_interface_->trigger_step(ADMMStep::SEND_CONVERGENCE_FLAG);
-                if (ADMM_converged_)
+                alg_converged_ = true;
+                communication_interface_->trigger_step(AlgStep::GEN_SEND_CONVERGENCE_FLAG);
+                if (alg_converged_)
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    /*************************************************************************
+     coordination of sensitivity-based algorithm
+     *************************************************************************/
+
+    void Coordinator::initialize_sensi(const OptimizationInfo& oi)
+    {
+        // get optimzation info
+        optimizationInfo_ = oi;
+
+        // initialize local solvers
+        communication_interface_->configure_optimization(oi);
+
+        // send initial trajectories
+        communication_interface_->trigger_step(AlgStep::SENSI_SEND_AGENT_STATE);
+            
+    }
+
+    const bool Coordinator::solve_sensi(int iter)
+    {
+
+        // reset agents that converged and finished 
+        agents_thatConverged_.clear();
+        agents_thatStoppedAlg_.clear();
+
+        if (optimizationInfo_.ASYNC_Active_)
+        {
+            communication_interface_->trigger_step(AlgStep::SENSI_INITIALIZE);
+
+            communication_interface_->trigger_step(AlgStep::SENSI_START_ASYNC_SENSI);
+
+            // wait for agents to execute ADMM algorithm 
+            std::unique_lock<std::mutex> guard(mutex_stop_alg_);
+            cond_var_stop_alg_.wait(guard, [this]()
+                {
+                    return agents_thatStoppedAlg_.size() == agents_.size();
+                });
+
+            return true;
+        }
+        else 
+        {
+            communication_interface_->trigger_step(AlgStep::SENSI_INITIALIZE);
+
+            for (int i = 0; i < iter; ++i)
+            {
+                // Calculate Sensitivities for neighbors 
+                communication_interface_->trigger_step(AlgStep::SENSI_UPDATE_SENSI_STATE);
+
+                // solve local optimal control problem
+                communication_interface_->trigger_step(AlgStep::SENSI_UPDATE_AGENT_STATE);
+
+                // send updated state and control trajectories to neighbors
+                communication_interface_->trigger_step(AlgStep::SENSI_SEND_AGENT_STATE);
+
+                // Debug Cost
+                if (optimizationInfo_.COMMON_DebugCost_)
+                    communication_interface_->trigger_step(AlgStep::GEN_PRINT);
+
+                // evaluate convergence
+                alg_converged_ = true;
+                communication_interface_->trigger_step(AlgStep::GEN_SEND_CONVERGENCE_FLAG);
+                if (alg_converged_)
                     return true;
             }
             return false;
@@ -284,21 +352,22 @@ namespace grampcd
 
     void Coordinator::fromCommunication_received_convergenceFlag(bool converged, int from)
     {
-        ADMM_converged_ = ADMM_converged_ && converged;
+        // only active in synchronous method 
+        alg_converged_ = alg_converged_ && converged;
 
         if (!DataConversion::is_element_in_vector(agents_thatConverged_, from))
             agents_thatConverged_.push_back(from);
     }
 
-    void Coordinator::fromCommunication_recieved_flagStoppedAdmm(bool flag, int from)
+    void Coordinator::fromCommunication_received_flagStoppedAlg(bool flag, int from)
     {
      
-        if (!DataConversion::is_element_in_vector(agents_thatStoppedAdmm_, from))
-            agents_thatStoppedAdmm_.push_back(from);
+        if (!DataConversion::is_element_in_vector(agents_thatStoppedAlg_, from))
+            agents_thatStoppedAlg_.push_back(from);
 
-        if (agents_thatStoppedAdmm_.size() == agents_.size())
+        if (agents_thatStoppedAlg_.size() == agents_.size())
         {
-            cond_var_stop_ADMM_.notify_one();
+            cond_var_stop_alg_.notify_one();
         }
     }
 

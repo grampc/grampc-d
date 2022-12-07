@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -60,13 +60,20 @@ namespace grampcd
         void initialize_ADMM(const OptimizationInfo& oi);
 
         /* Solve optimization problem using alternating direction method of multipliers (ADMM) */
-        const bool solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);;
+        const bool solve_ADMM(int outer_iterations = 1, int inner_iterations = 1);
 
-        /* Received convergence flag from agent */
-        void fromCommunication_received_convergenceFlag(bool converged, int from);
+        /*************************************************************************
+        coordination sensitivity-based algorithm
+        *************************************************************************/
+        /* Initialize agents for sensitivity-based algorithm */
+        void initialize_sensi(const OptimizationInfo& oi);
 
-        /*Recieved flag of agent which executed all ADMM steps*/
-        void fromCommunication_recieved_flagStoppedAdmm(bool flag, int from);
+        /* Solve optimization problem using sensitivity-based algorithm */
+        const bool solve_sensi(int iterations = 1);
+
+        /*************************************************************************
+       Algorithm generic steps 
+       *************************************************************************/
 
         /* Advance all agents to next sampling step */
         void trigger_simulation(const std::string& Integrator, typeRNum dt) const;
@@ -74,19 +81,27 @@ namespace grampcd
         /*Returns optimization info.*/
         const OptimizationInfo& get_optimizationInfo() const;
 
+        /* Received convergence flag from agent */
+        void fromCommunication_received_convergenceFlag(bool converged, int from);
+
+        /*received flag of agent which executed all algorithm steps*/
+        void fromCommunication_received_flagStoppedAlg(bool flag, int from);
+
     private:
 	    std::map<unsigned int, AgentInfoPtr > agents_;
         CommunicationInterfacePtr communication_interface_;
         std::map< unsigned int, std::vector< CouplingInfoPtr > > sending_neighbors_;
         std::map< unsigned int, std::vector< CouplingInfoPtr > > receiving_neighbors_;
-        std::vector< int> agents_thatStoppedAdmm_;
+        // Algorithm variables 
+        std::vector< int> agents_thatStoppedAlg_;
         std::vector< int> agents_thatConverged_;
-        std::mutex mutex_stop_ADMM_;
-        std::condition_variable cond_var_stop_ADMM_;
+        std::mutex mutex_stop_alg_;
+        std::condition_variable cond_var_stop_alg_;
+        bool alg_converged_ = false;
 
         LoggingPtr log_;
 
-        bool ADMM_converged_ = false;
+       
         bool simulation_ = false;
         OptimizationInfo optimizationInfo_;
     };

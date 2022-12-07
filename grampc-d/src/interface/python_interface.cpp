@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -350,7 +350,7 @@ namespace grampcd
 			.def_readwrite("ADMM_PenaltyInit_", &OptimizationInfo::ADMM_PenaltyInit_)
 			.def_readwrite("ADMM_AdaptPenaltyParameter_", &OptimizationInfo::ADMM_AdaptPenaltyParameter_)
 			.def_readwrite("ADMM_innerIterations_", &OptimizationInfo::ADMM_innerIterations_)
-			.def_readwrite("ADMM_DebugCost_", &OptimizationInfo::ADMM_DebugCost_)
+			.def_readwrite("COMMON_Debug_cost_", &OptimizationInfo::COMMON_Debug_cost_)
 
 			// parameters for neighbor approximation
 			.def_readwrite("APPROX_ApproximateCost_", &OptimizationInfo::APPROX_ApproximateCost_)

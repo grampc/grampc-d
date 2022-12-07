@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -37,11 +37,13 @@ namespace grampcd
         std::vector<typeRNum> u_;
         /*Vector that contains external influence*/
 		std::vector<typeRNum> v_;
+        /*Vector that contains the adjoint States of the OCP*/
+        std::vector<typeRNum> lambda_;
 
 		template<class Archive>
 		void serialize(Archive& ar)
 		{
-			ar(i_, t0_, t_, x_, u_, v_);
+			ar(i_, t0_, t_, x_, u_, v_,lambda_);
 		}
     };
 }

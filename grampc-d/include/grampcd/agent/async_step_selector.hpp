@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -23,28 +23,28 @@ namespace grampcd
 		AsyncStepSelector(SolverLocalPtr& local_solver, Agent* agent);
 
 		/*executes an ADMM Step*/
-		void execute_admmStep(const ADMMStep& step) override;
+		void execute_algStep(const AlgStep& step) override;
 		/*returns the current ADMM iterations*/
-		const unsigned int get_admmIter() override;
-		/*sets the flag to stop the ADMM algorithm*/
-		void set_flagStopAdmm( bool flag);
+		const unsigned int get_algIter() override;
+		/*sets the flag to stop an algorithm (ADMM or Sensi)*/
+		void set_flagStopAlg( bool flag);
 		/*returns the flag if the algorithm has stopped*/
-		const bool get_flagStopAdmm();
+		const bool get_flagStopAlg();
 		/*checks the delays of the neighbors*/
-		const bool check_delays(const ADMMStep& step);
+		const bool check_delays(const AlgStep& step);
 		/*checks how to continue the ADMM algorithm*/
 		void check_continuation();
 		/*evaluates the criterion for the delay*/
 		const int check_criterionRegardingDelay();
 		/*checks if the admm iterations are finished*/
-		void check_admmIterations();
+		void check_algIterations();
 		/*checks if convergence has been achieved*/
 		void check_convergence();
 
 		// steps of ADMM algorithm
-		ADMMStep previous_step_;
-		ADMMStep current_step_;
-		ADMMStep next_step_;
+		AlgStep previous_step_;
+		AlgStep current_step_;
+		AlgStep next_step_;
 
 
 	private:
@@ -53,8 +53,8 @@ namespace grampcd
 		// agent
 		const Agent* agent_;
 
-		// flag to stop admm
-	    bool flagStopAdmm_;
+		// flag to stop Algorithm (ADMM or Sensi)
+	    bool flagStopAlg_;
 
 	};
 

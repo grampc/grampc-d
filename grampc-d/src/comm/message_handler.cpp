@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -27,10 +27,10 @@ namespace grampcd
 
 		switch (message_type)
 		{
-		case Messagetype::SEND_AGENT_STATE:
+		case Messagetype::SEND_LOCAL_COPIES:
 		{
-			const auto my_message = std::static_pointer_cast<Message_send_agent_state>(message);
-			communication_interface_->fromCommunication_send_agentState(comm_data, *my_message->agent_state_, my_message->from_);
+			const auto my_message = std::static_pointer_cast<Message_send_local_copies>(message);
+			communication_interface_->fromCommunication_send_localCopies(comm_data, *my_message->agent_state_, my_message->from_);
 
 			break;
 		}
@@ -54,6 +54,13 @@ namespace grampcd
 			const auto my_message = std::static_pointer_cast<Message_send_multiplier_state>(message);
 			communication_interface_->fromCommunication_send_multiplierPenaltyState(comm_data, *my_message->multiplier_state_, 
 				*my_message->penalty_state_, my_message->from_);
+
+			break;
+		}
+		case Messagetype::SEND_AGENT_STATE:
+		{
+			const auto my_message = std::static_pointer_cast<Message_send_agent_state>(message);
+			communication_interface_->fromCommunication_send_agentState(comm_data, *my_message->agent_state_, *my_message->constr_state_, my_message->from_);
 
 			break;
 		}
@@ -201,7 +208,7 @@ namespace grampcd
 		}
 		case Messagetype::ACKNOWELDGE_EXECUTED_ADMM_STEP:
 		{
-			communication_interface_->fromCommunication_received_acknowledgement_executed_ADMMstep(comm_data);
+			communication_interface_->fromCommunication_received_acknowledgement_executed_AlgStep(comm_data);
 			break;
 		}
 		case Messagetype::SEND_COUPLING_MODELS:
@@ -271,7 +278,7 @@ namespace grampcd
 		case Messagetype::SEND_FLAG_STOPPED_ADMM:
 		{
 			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_admm>(message);
-			communication_interface_->fromCommunication_send_flagStoppedAdmm(comm_data,my_message->flag_stoppedAdmm_, my_message->from_);
+			communication_interface_->fromCommunication_send_stoppedAlgFlag(comm_data,my_message->flag_stoppedAdmm_, my_message->from_);
 
 			break;
 		}
@@ -279,7 +286,7 @@ namespace grampcd
 		case Messagetype::SEND_FLAG_STOPPED_ADMM_COORDINATOR:
 		{
 			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_admm_coordinator>(message);
-			communication_interface_->fromCommunication_send_flagStoppedAdmmCoordinator(comm_data, my_message->flag_stoppedAdmm_, my_message->from_);
+			communication_interface_->fromCommunication_send_stoppedAlgFlagCoordinator(comm_data, my_message->flag_stoppedAdmm_, my_message->from_);
 
 			break;
 		}

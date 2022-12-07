@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -103,6 +103,8 @@ namespace grampcd
 
         /*Return the agents agent state.*/
 	    const AgentState& get_agentState() const;
+        /*Returns the agents previous agent state*/
+        const AgentState&  get_previous_agentState() const;
 	    /*Return the agents coupling state.*/
 	    const CouplingState& get_couplingState() const;
 	    /*Return the agents previous coupling state.*/
@@ -149,8 +151,10 @@ namespace grampcd
         void fromCommunication_deregistered_coupling(const CouplingInfo& coupling_info);
         /*This function is called if a message is received including the number of a neighbors neighbors..*/
         void fromCommunication_received_numberOfNeighbors( const unsigned int number, const int from );
+        /*This function is called if a message is received including the neighbors local copies.*/
+        void fromCommunication_received_localCopies(const AgentState& state, int from);
         /*This function is called if a message is received including the neighbors agent state.*/
-        void fromCommunication_received_agentState(const AgentState& state, int from);
+        void fromCommunication_received_agentState(const AgentState& state, const ConstraintState& constr_state, int from);
         /*This function is called if a message is received including the neighbors desired agent state.*/
         void fromCommunication_received_desiredAgentState(const AgentState& state, int from);
         /*This function is called if a message is received including the neighbors coupling state.*/
@@ -159,14 +163,16 @@ namespace grampcd
         void fromCommunication_received_couplingState(const CouplingState& state, const CouplingState& state2, int from);
         /*This function is called if a message is received including the neighbors multiplier state.*/
         void fromCommunication_received_multiplierState(const MultiplierState& state, PenaltyState penalty, int from);
+        /*This function is called if a message is received including the neighbors sensi states*/
+        void fromCommunication_received_sensiState(const SensiState& state, int from);
         /*This function is called if a message is received including the optimization info.*/
         void fromCommunication_configured_optimization(const OptimizationInfo& info);
         /*This function is called if a message is received to trigger an ADMM step.*/
-        void fromCommunication_trigger_step(const ADMMStep& step);
-        /*this function is called if a message is recieved to stop the ADMM algorithm*/
-        void fromCommunication_recieved_flagToStopAdmm(const bool flag);
-        /*this function is called if a message is recieved containing the ADMM iterations of the neighbors*/
-        void fromCommunication_recieved_flagStoppedAdmm(const bool flag, int from);
+        void fromCommunication_trigger_step(const AlgStep& step);
+        /*this function is called if a message is received to stop the ADMM algorithm*/
+        void fromCommunication_received_flagToStopAdmm(const bool flag);
+        /*this function is called if a message is received containing the ADMM iterations of the neighbors*/
+        void fromCommunication_received_flagStoppedAdmm(const bool flag, int from);
 
         /*************************************************************************
         end of communication functions
@@ -182,16 +188,34 @@ namespace grampcd
         void reset_solution();
         /*writes predicted debug cost to solution*/
         void print_debugCost();
+
+        /************************************************************************
+        asynchronous functions/
+        *************************************************************************/
+
         /*increase all the corresponding delays of the neighbors*/
-        void increase_all_delays(const ADMMStep& step) const;
+        void increase_all_delays(const AlgStep& step) const;
         /*initialize the delays of the neighbors*/
         void initialize_allNeighborDelays() const ;
         /*returns the delay of the corresponding neighbor*/
-        const int get_delay_sending_neighbors(const ADMMStep& step) const;
+        const int get_delay_sending_neighbors(const AlgStep& step) const;
         /*returns the delay of the corresponding neighbor*/
-        const int get_delay_recieving_neighbors(const ADMMStep& step) const;
+        const int get_delay_receiving_neighbors(const AlgStep& step) const;
         /*resets the flag stopAdmmflag*/
         void reset_stopAdmmflag_of_neighbors();
+
+        /************************************************************************
+        end of asynchronous functions/
+       *************************************************************************/
+
+       /*************************************************************************
+        sensi functions
+        *************************************************************************/
+
+
+        /*************************************************************************
+        end of sensi functions
+        *************************************************************************/
        
 
     private:
@@ -228,6 +252,7 @@ namespace grampcd
 
         AgentState desired_agentState_;
         AgentState agentState_;
+        AgentState previous_agentState_;
 
         CouplingState couplingState_;
         CouplingState previous_couplingState_;

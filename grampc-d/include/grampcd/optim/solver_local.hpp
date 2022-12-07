@@ -1,9 +1,9 @@
 /* This file is part of GRAMPC-D - (https://github.com/grampc-d/grampc-d.git)
  *
  * GRAMPC-D -- A software framework for distributed model predictive control (DMPC)
- * based on the alternating direction method of multipliers (ADMM).
+ * 
  *
- * Copyright 2020 by Daniel Burk, Andreas Voelz, Knut Graichen
+ * Copyright 2023 by Daniel Burk, Maximilian Pierer von Esch, Andreas Voelz, Knut Graichen
  * All rights reserved.
  *
  * GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -12,58 +12,46 @@
 
 #pragma once
 
-#include "grampcd/info/optimization_info.hpp"
-#include "grampcd/optim/problem_description_local_default.hpp"
-#include "grampcd/optim/problem_description_local_neighbor_approximation.hpp"
-#include "grampcd/comm/communication_interface.hpp"
+#include "grampcd/util/class_forwarding.hpp"
 
 namespace grampcd
 {
 
+    /**
+     * @brief abstract solver class for the distributed optimization 
+     */
     class SolverLocal
     {
     public:
-        SolverLocal(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log, const CommunicationInterfacePtr& communication_interface);
+        virtual ~SolverLocal();
 
-        void update_agentStates();
-        void update_couplingStates();
-        void update_multiplierStates();
+        /***********************************************
+        Generic functions
+        ************************************************/
+        virtual void update_agentStates() = 0;
+        virtual void send_agentStates() = 0;
 
-        void send_agentStates();
-        void send_couplingStates();
-        void send_multiplierStates();
-        void send_numberofNeighbors();
-        void send_convergenceFlag();
-        void send_flagStoppedAdmm();
+        virtual const bool is_converged() = 0;
+        virtual void print_debugCost() = 0;
+        virtual void send_convergenceFlag() = 0;
+        virtual void send_stoppedAlgFlag() = 0;
 
-        const bool is_converged() const;
-        void initialize_ADMM();
-        void print_debugCost();
+        /***********************************************
+        ADMM functions 
+        ************************************************/
+       virtual void initialize_ADMM();
+       virtual void update_couplingStates();
+       virtual void send_couplingStates();
+       virtual void update_multiplierStates();
+       virtual void send_multiplierStates();
+       virtual void send_numberofNeighbors();
 
-        const std::vector<int>& get_x_index_xji() const;
-        const std::vector<int>& get_u_index_uji() const;
-        const std::vector<int>& get_u_index_xji() const;
-        const std::vector<int>& get_u_index_vji() const;
-        const int get_x_index_xji(int j) const;
-        const int get_u_index_xji(int j) const;
-        const int get_u_index_vji(int j) const;
-        const int get_u_index_uji(int j) const;
-
-    protected:
-	    ProblemDescriptionLocalDefault default_problem_description_;
-        ProblemDescriptionLocalNeighborApproximation neighbor_approximation_problem_description_;
-
-	    SolverPtr solver_;
-        LoggingPtr log_;
-	    double ADMM_PrimalResiduum = 0.0;
-	    double ADMM_DualResiduum = 0.0;
-
-        typeRNum adaptPenaltyParameter( typeRNum primal_residuum, typeRNum dual_residuum, typeRNum penalty );
-	    void penaltyParameterAdaption();
-
-	    Agent* agent_;
-	    OptimizationInfo info_;
-        CommunicationInterfacePtr communication_interface_;
+        /***********************************************
+        Sensi functions
+        ************************************************/
+       virtual void initialize_Sensi();
+       virtual void update_sensiStates();
+        
     };
 
 }
