@@ -44,7 +44,7 @@ optimization_info.GRAMPC_MaxMultIter_ = 1
 optimization_info.ADMM_maxIterations_ = 50 # dont choose to high to prevent stack overflow
 optimization_info.ADMM_ConvergenceTolerance_ = 0.0
 optimization_info.ASYNC_Active_ = 1
-optimization_info.COMMON_Debug_cost_ = 1
+optimization_info.COMMON_DebugCost_ = 1
 delays = [0,1,10]
 
 Tsim = 0.01

@@ -321,6 +321,8 @@ namespace grampcd
 			.def_readwrite("COMMON_Nhor_", &OptimizationInfo::COMMON_Nhor_)
 			.def_readwrite("COMMON_ShiftControl_", &OptimizationInfo::COMMON_ShiftControl_)
 			.def_readwrite("COMMON_Integrator_", &OptimizationInfo::COMMON_Integrator_)
+			.def_readwrite("COMMON_DebugCost_", &OptimizationInfo::COMMON_DebugCost_)
+			.def_readwrite("COMMON_Solver_", &OptimizationInfo::COMMON_Solver_)
 
 			// parameters for GRAMPC
 			.def_readwrite("GRAMPC_MaxGradIter_", &OptimizationInfo::GRAMPC_MaxGradIter_)
@@ -350,7 +352,16 @@ namespace grampcd
 			.def_readwrite("ADMM_PenaltyInit_", &OptimizationInfo::ADMM_PenaltyInit_)
 			.def_readwrite("ADMM_AdaptPenaltyParameter_", &OptimizationInfo::ADMM_AdaptPenaltyParameter_)
 			.def_readwrite("ADMM_innerIterations_", &OptimizationInfo::ADMM_innerIterations_)
-			.def_readwrite("COMMON_Debug_cost_", &OptimizationInfo::COMMON_Debug_cost_)
+			
+			// parameters for SENSI
+			.def_readwrite("SENSI_maxIterations_",&OptimizationInfo::SENSI_maxIterations_)
+			.def_readwrite("SENSI_ConvexivityTerm_", &OptimizationInfo::SENSI_ConvexivityTerm_)
+			.def_readwrite("SENSI_ConvexFactor_x_", &OptimizationInfo::SENSI_ConvexFactor_x_)
+			.def_readwrite("SENSI_ConvexFactor_u_", &OptimizationInfo::SENSI_ConvexFactor_u_)
+			.def_readwrite("SENSI_ConvexSum_", &OptimizationInfo::SENSI_ConvexSum_)
+			.def_readwrite("SENSI_ConvexSumAlpha_", &OptimizationInfo::SENSI_ConvexSumAlpha_)
+			.def_readwrite("SENSI_ConvergenceTolerance_", &OptimizationInfo::SENSI_ConvergenceTolerance_)
+			.def_readwrite("SENSI_higherOrder_", &OptimizationInfo::SENSI_higherOrder_)
 
 			// parameters for neighbor approximation
 			.def_readwrite("APPROX_ApproximateCost_", &OptimizationInfo::APPROX_ApproximateCost_)

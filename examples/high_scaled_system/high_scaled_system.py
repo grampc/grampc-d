@@ -43,7 +43,7 @@ optimization_info.GRAMPC_MaxMultIter_ = 1
 optimization_info.ADMM_maxIterations_ = 10;
 optimization_info.ADMM_ConvergenceTolerance_ = 0.001;
 
-optimization_info.COMMON_Debug_cost_ = 0
+optimization_info.COMMON_DebugCost_ = 0
 optimization_info.ASYNC_Delay_ = 0
 
 interface.set_optimizationInfo(optimization_info)

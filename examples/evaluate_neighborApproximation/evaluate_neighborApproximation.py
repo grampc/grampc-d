@@ -43,7 +43,7 @@ optimization_info.GRAMPC_MaxMultIter_ = 2
 optimization_info.ADMM_innerIterations_ = 5
 optimization_info.ADMM_maxIterations_ = 100
 optimization_info.ADMM_ConvergenceTolerance_ = 0.009
-optimization_info.COMMON_Debug_cost_ = 1
+optimization_info.COMMON_DebugCost_ = 1
 
 approx = 1
 optimization_info.APPROX_ApproximateCost_ = approx
