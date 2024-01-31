@@ -8,7 +8,7 @@
 #
 # GRAMPC-D is distributed under the BSD-3-Clause license, see LICENSE.txt
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 project(grampcd VERSION 1.0.0)
 
 set(PYTHON_AVAILABLE FALSE)
