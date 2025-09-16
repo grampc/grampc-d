@@ -169,9 +169,9 @@ namespace grampcd
 			agent->initialize(optimization_info);
 
 		// Run optimization and measure required time
-		const auto tstart = std::chrono::high_resolution_clock::now();
+		const auto tstart = std::chrono::steady_clock::now();
 		solver.solve();
-		const auto elapsed = std::chrono::high_resolution_clock::now() - tstart;
+		const auto elapsed = std::chrono::steady_clock::now() - tstart;
 		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 		ctypeRNum measured_time = static_cast<typeRNum>(microseconds);
 
@@ -199,9 +199,9 @@ namespace grampcd
 		coordinator_->initialize_ADMM(optimization_info);
 
 		// Run optimization and measure required time
-		const auto tstart = std::chrono::high_resolution_clock::now();
+		const auto tstart = std::chrono::steady_clock::now();
 		const bool converged = coordinator_->solve_ADMM(optimization_info.ADMM_maxIterations_, optimization_info.ADMM_innerIterations_);
-		const auto elapsed = std::chrono::high_resolution_clock::now() - tstart;
+		const auto elapsed = std::chrono::steady_clock::now() - tstart;
 		const long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
 		typeRNum measured_time = static_cast<typeRNum>(microseconds) / static_cast<typeRNum>(agents_.size());
 
