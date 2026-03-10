@@ -35,7 +35,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # link_directories should treat paths as relative to the source directory
 cmake_policy(SET CMP0015 NEW)
 
-#add libs
+# add libs
 add_subdirectory(libs)
 
 # add grampc-d

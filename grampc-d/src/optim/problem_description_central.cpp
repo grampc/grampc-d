@@ -84,7 +84,7 @@ namespace grampcd
         *NhT = 0;
     }
 
-    void ProblemDescriptionCentral::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionCentral::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
         for(const AgentPtr& agent : agents_)
@@ -104,7 +104,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionCentral::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
         for(const AgentPtr& agent : agents_)
@@ -127,7 +127,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionCentral::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
         for(const AgentPtr& agent : agents_)
@@ -150,7 +150,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionCentral::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, 1);
         for(const AgentPtr& agent : agents_)
@@ -169,7 +169,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionCentral::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
         for(const AgentPtr& agent : agents_)
@@ -190,7 +190,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionCentral::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
         for(const AgentPtr& agent : agents_)
@@ -211,7 +211,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionCentral::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, 1);
         for(const AgentPtr& agent : agents_)
@@ -230,7 +230,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionCentral::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
         for(const AgentPtr& agent : agents_)
@@ -251,7 +251,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionCentral::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Ng_);
         int idx = 0;
@@ -276,7 +276,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionCentral::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
         int idx = 0;
@@ -304,7 +304,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionCentral::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
         int idx = 0;
@@ -332,7 +332,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionCentral::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nh_);
         int idx = 0;
@@ -357,7 +357,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionCentral::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
         int idx = 0;
@@ -385,7 +385,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionCentral::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionCentral::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
         int idx = 0;

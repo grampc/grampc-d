@@ -1,10 +1,11 @@
-/* This file is part of GRAMPC - (https://sourceforge.net/projects/grampc/)
+/* This file is part of GRAMPC - (https://github.com/grampc/grampc)
  *
  * GRAMPC -- A software framework for embedded nonlinear model predictive
  * control using a gradient-based augmented Lagrangian approach
  *
- * Copyright 2014-2019 by Tobias Englert, Knut Graichen, Felix Mesmer,
- * Soenke Rhein, Andreas Voelz, Bartosz Kaepernick (<v2.0), Tilman Utz (<v2.0).
+ * Copyright 2014-2025 by Knut Graichen, Andreas Voelz, Thore Wietzke,
+ * Tobias Englert (<v2.3), Felix Mesmer (<v2.3), Soenke Rhein (<v2.3),
+ * Bartosz Kaepernick (<v2.0), Tilman Utz (<v2.0).
  * All rights reserved.
  *
  * GRAMPC is distributed under the BSD-3-Clause license, see LICENSE.txt
@@ -12,11 +13,11 @@
  */
 
 
-#include "trapezodial.h"
+#include "trapezoidal.h"
 
 
-void trapezodial(typeRNum *s, ctypeRNum *t, ctypeRNum *x, ctypeRNum *u,
-	ctypeRNum *p_, const typeGRAMPC *grampc)
+void trapezoidal(typeRNum *s, ctypeRNum *t, ctypeRNum *x, ctypeRNum *u,
+	ctypeRNum *p, const typeGRAMPC *grampc)
 {
 	typeInt i;
 	typeRNum h;
@@ -33,7 +34,7 @@ void trapezodial(typeRNum *s, ctypeRNum *t, ctypeRNum *x, ctypeRNum *u,
 	/* Integration */
 	for (i = 0; i < grampc->opt->Nhor; i++) {
 
-		WintCost(s1, t[i], x + i * grampc->param->Nx, u + i * grampc->param->Nu, p_,
+		WintCost(s1, t[i], x + i * grampc->param->Nx, u + i * grampc->param->Nu, p,
 			mult + i * grampc->param->Nc, pen + i * grampc->param->Nc, cfct + i * grampc->param->Nc, grampc);
 
 		if (i == 0) {

@@ -53,37 +53,37 @@ namespace grampcd
 		virtual void ocp_dim(typeInt* Nx, typeInt* Nu, typeInt* Np, typeInt* Ng, typeInt* Nh, typeInt* NgT, typeInt* NhT) override;
 
 		/*Dynamics*/
-		virtual void ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p) override;
+		virtual void ffct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the dynamics with respect to states*/
-		virtual void dfdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* vec, ctypeRNum* u, ctypeRNum* p) override;
+		virtual void dfdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the dynamics with respect to controls*/
-		virtual void dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* vec, ctypeRNum* u, ctypeRNum* p) override;
+		virtual void dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 
 		/*Cost function*/
-		virtual void lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* xdes, ctypeRNum* udes) override;
+		virtual void lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the cost function with respect to states*/
-		virtual void dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* xdes, ctypeRNum* udes) override;
+		virtual void dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the cost function with respect to controls*/
-		virtual void dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* xdes, ctypeRNum* udes) override;
+		virtual void dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 
 		/*Terminal cost*/
-		virtual void Vfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* p, ctypeRNum* xdes) override;
+		virtual void Vfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the terminal cost with respect to states*/
-		virtual void dVdx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* p, ctypeRNum* xdes) override;
+		virtual void dVdx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* p, const typeGRAMPCparam* param) override;
 
 		/*Equality constraints*/
-		virtual void gfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p) override;
+		virtual void gfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the equality constraints with respect to states*/
-		virtual void dgdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec) override;
+		virtual void dgdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the equality constraints with respect to controls*/
-		virtual void dgdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec) override;
+		virtual void dgdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 
 		/*Inequality constraints*/
-		virtual void hfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p) override;
+		virtual void hfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the inequality constraints with respect to states*/
-		virtual void dhdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec) override;
+		virtual void dhdx_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 		/*Partial derivate of the inequality constraints with respect to controls*/
-		virtual void dhdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec) override;
+		virtual void dhdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* p, ctypeRNum* vec, const typeGRAMPCparam* param) override;
 
 	private:
 		Agent* agent_;

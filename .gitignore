@@ -1,14 +1,8 @@
 build
-dmpc.config
-dmpc.creator
-dmpc.creator.user
-dmpc.files
-dmpc.includes
 CMakeCache.txt
 CMakeFiles/
 Makefile
 bin/
-backup_high_scaled/
 .vs/
 asio/
 *.a

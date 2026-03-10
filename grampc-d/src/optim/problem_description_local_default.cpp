@@ -125,7 +125,7 @@ namespace grampcd
         *NhT = 0;
     }
 
-    void ProblemDescriptionLocalDefault::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalDefault::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nx_);
 
@@ -141,7 +141,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalDefault::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -157,7 +157,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalDefault::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
 
@@ -179,7 +179,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalDefault::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, 1);
 
@@ -275,7 +275,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalDefault::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -333,7 +333,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalDefault::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
 
         MatSetScalar(out, 0, 1, Nu_);
@@ -447,7 +447,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalDefault::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, 1);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -455,7 +455,7 @@ namespace grampcd
         agent_->get_agentModel()->Vfct(out, t, x, &desired_state_.x_[0]);
     }
 
-    void ProblemDescriptionLocalDefault::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalDefault::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -463,7 +463,7 @@ namespace grampcd
         agent_->get_agentModel()->dVdx(out, t, x, &desired_state_.x_[0]);
     }
 
-    void ProblemDescriptionLocalDefault::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalDefault::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Ng_);
 
@@ -495,7 +495,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalDefault::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -523,7 +523,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalDefault::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nu_);
         // equality constraints \partial g_i(x_i, u_i) / \partial u_i
@@ -571,7 +571,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalDefault::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nh_);
         // inequality constraints h_i(x_i, u_i) <= 0
@@ -602,7 +602,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalDefault::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
         // inequality constraints \partial h_i(x_i, u_i) / \partial x_i
@@ -629,7 +629,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalDefault::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalDefault::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nu_);
         // inequality constraints \partial h_i(x_i, u_i) / \partial u_i

@@ -128,7 +128,7 @@ namespace grampcd
         *NhT = 0;
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalNeighborApproximation::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, Nx_);
@@ -149,7 +149,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalNeighborApproximation::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, Nx_);
@@ -175,7 +175,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalNeighborApproximation::dfdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, Nu_);
@@ -201,7 +201,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalNeighborApproximation::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, 1);
@@ -318,7 +318,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalNeighborApproximation::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, Nx_);
@@ -413,7 +413,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalNeighborApproximation::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         // reset out
         MatSetScalar(out, 0, 1, Nu_);
@@ -551,7 +551,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalNeighborApproximation::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, 1);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -576,7 +576,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalNeighborApproximation::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -604,7 +604,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalNeighborApproximation::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Ng_);
 
@@ -639,7 +639,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalNeighborApproximation::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -684,7 +684,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalNeighborApproximation::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nu_);
 
@@ -730,7 +730,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalNeighborApproximation::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nh_);
 
@@ -765,7 +765,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalNeighborApproximation::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -810,7 +810,7 @@ namespace grampcd
         }
     }
 
-    void ProblemDescriptionLocalNeighborApproximation::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalNeighborApproximation::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec, const typeGRAMPCparam* param)
     {
 	    MatSetScalar(out, 0, 1, Nu_);
 

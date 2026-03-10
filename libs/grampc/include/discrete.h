@@ -11,16 +11,16 @@
  * GRAMPC is distributed under the BSD-3-Clause license, see LICENSE.txt
  *
  */
-
-
-#ifndef RUKU45_H_
-#define RUKU45_H_
+#ifndef DISCRETE_H_
+#define DISCRETE_H_
 
 #include "grampc_init.h"
-#include "grampc_util.h"
-#include "grampc_mess.h"
+#include "grampc_run.h"
 
-void intsysRuKu45(typeRNum *y, ctypeInt pInt, ctypeInt Nint, ctypeRNum *t, ctypeRNum *x,
-	ctypeRNum *u, ctypeRNum *p, ctypeRNum *dcdx, const typeGRAMPC *grampc, const typeSysPtr pfct);
+void intsysDiscrete(typeRNum *y, ctypeInt pInt, ctypeInt Nint, ctypeRNum *t, ctypeRNum *x,
+    ctypeRNum *u, ctypeRNum *p, ctypeRNum *dcdx, const typeGRAMPC *grampc, const typeSysPtr pfct);
 
-#endif /* RUKU45_H_ */
+void intcostDiscrete(typeRNum *s, ctypeRNum *t, ctypeRNum *x, ctypeRNum *u,
+                     ctypeRNum *p, const typeGRAMPC *grampc);
+
+#endif /* DISCRETE_H_ */
