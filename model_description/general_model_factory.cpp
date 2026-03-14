@@ -41,6 +41,10 @@
 #include "smart_grid/include/smartGrid_agentModel.hpp"
 #include "smart_grid/include/smartGrid_couplingModel.hpp"
 
+#include "mobile_robot/include/mobile_robot_leader_model.hpp"
+#include "mobile_robot/include/mobile_robot_follower_model.hpp"
+#include "mobile_robot/include/mobile_robot_coupling_model.hpp"
+
 GeneralModelFactory::GeneralModelFactory(const grampcd::LoggingPtr& log) :
 	log_(log)
 {
@@ -66,6 +70,10 @@ GeneralModelFactory::GeneralModelFactory(const grampcd::LoggingPtr& log) :
 
 	map_agentModels_["smartGrid_agentModel"] = SmartGridAgentModel::create;
 	map_couplingModels_["smartGrid_couplingModel"] = SmartGridCouplingModel::create;
+
+	map_agentModels_["mobile_robot_leader_model"] = MobileRobotLeaderModel::create;
+	map_agentModels_["mobile_robot_follower_model"] = MobileRobotFollowerModel::create;
+	map_couplingModels_["mobile_robot_coupling_model"] = MobileRobotCouplingModel::create;
 }
 
 grampcd::AgentModelPtr GeneralModelFactory::create_agentModel(const grampcd::AgentInfo& info) const

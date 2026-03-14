@@ -35,6 +35,10 @@ add_library(factory
 
 	smart_grid/src/smartGrid_agentModel.cpp
 	smart_grid/src/smartGrid_couplingModel.cpp
+
+	mobile_robot/src/mobile_robot_leader_model.cpp
+	mobile_robot/src/mobile_robot_follower_model.cpp
+	mobile_robot/src/mobile_robot_coupling_model.cpp
 )
 
 target_include_directories(factory PUBLIC include)
