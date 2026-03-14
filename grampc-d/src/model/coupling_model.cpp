@@ -21,6 +21,7 @@ namespace grampcd
                                  const std::string& model_name)
         : Nxi_(Nxi), Nui_(Nui), Nxj_(Nxj), Nuj_(Nuj), Ngij_(Ngij), Nhij_(Nhij),
           model_parameters_(model_parameters),
+          cost_parameters_(cost_parameters),
           model_name_(model_name)
     {}
 
