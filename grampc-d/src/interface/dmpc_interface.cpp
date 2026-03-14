@@ -54,7 +54,7 @@ namespace grampcd
 	{
 		SolverCentral solver(agents, oi);
 		const unsigned int maxSimIter = static_cast<unsigned int>(Tsim / oi.COMMON_dt_);
-		std::chrono::milliseconds CPUtime(0);
+		std::chrono::microseconds CPUtime(0);
 
 		// initialize agents
 		for (const auto& agent : agents)
@@ -69,7 +69,7 @@ namespace grampcd
 			const auto tstart = std::chrono::steady_clock::now();
 			solver.solve();
 			const auto tend = std::chrono::steady_clock::now();
-			CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
+			CPUtime += std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart);
 
 			// update state and time
 			simulator->centralized_simulation(&solver, oi.COMMON_Integrator_, oi.COMMON_dt_);
@@ -81,7 +81,7 @@ namespace grampcd
 		log_->print(DebugType::Progressbar) << std::endl;
 
 		log_->print(DebugType::Base) << "MPC finished. Average computation time: "
-			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " ms." << std::endl << std::endl;
+			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " µs." << std::endl << std::endl;
 	}
 
 	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents, const SimulatorPtr& simulator, const OptimizationInfo& oi)
@@ -129,7 +129,7 @@ namespace grampcd
 	)
 	{
 		const unsigned int maxSimIter = static_cast<unsigned int>(Tsim / oi.COMMON_dt_);
-		std::chrono::milliseconds CPUtime(0);
+		std::chrono::microseconds CPUtime(0);
 
 		// main loop for distributed solution
 		if(oi.COMMON_Solver_=="ADMM")
@@ -143,7 +143,7 @@ namespace grampcd
 
 		simulator_->set_t0(t_0);
 
-		std::chrono::milliseconds::rep CPUtime_max = 0;
+		std::chrono::microseconds::rep CPUtime_max = 0;
 		if (oi.COMMON_Solver_ == "ADMM")
 		{
 			for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
@@ -152,8 +152,8 @@ namespace grampcd
 				const auto tstart = std::chrono::steady_clock::now();
 				coordinator_->solve_ADMM(oi.ADMM_maxIterations_, oi.ADMM_innerIterations_);
 				const auto tend = std::chrono::steady_clock::now();
-				CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
-				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
+				CPUtime += std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart);
+				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart).count());
 
 				// update state and time
 				simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
@@ -170,8 +170,8 @@ namespace grampcd
 				const auto tstart = std::chrono::steady_clock::now();
 				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
 				const auto tend = std::chrono::steady_clock::now();
-				CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
-				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
+				CPUtime += std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart);
+				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart).count());
 
 				// update state and time
 				simulator->distributed_simulation(oi.COMMON_Integrator_, oi.COMMON_dt_);
@@ -185,10 +185,10 @@ namespace grampcd
 		const auto number_of_agents = communication_interface_->get_numberOfAgents();
 		log_->print(DebugType::Base) << "DMPC finished." << std::endl
 			<< "Maximum computation time : "
-			<< CPUtime_max << " ms in total or " << CPUtime_max / number_of_agents << " ms per agent." << std::endl
+			<< CPUtime_max << " µs in total or " << CPUtime_max / number_of_agents << " µs per agent." << std::endl
 			<< "Average computation time : "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " ms in total or "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / number_of_agents << " ms per agent." << std::endl << std::endl;
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " µs in total or "
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / number_of_agents << " µs per agent." << std::endl << std::endl;
 	}
 
 	void DmpcInterface::run_DMPC(const SimulatorPtr& simulator, const OptimizationInfo& oi)
