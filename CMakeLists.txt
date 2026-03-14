@@ -20,6 +20,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(WIN32)
+    # this define enables constants like M_PI
+    add_compile_definitions(_USE_MATH_DEFINES)
+endif()
+
 # include missing compiler flags
 if(MSVC)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D_WIN32_WINNT=0x0A00 -bigobj")
