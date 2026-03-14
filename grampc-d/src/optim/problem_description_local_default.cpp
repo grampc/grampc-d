@@ -233,20 +233,18 @@ namespace grampcd
             interpolateState(agent_->get_multiplierState(), t, multiplierState_);
             interpolateState(agent_->get_penaltyState(), t, penaltyState_);
 
-            const PenaltyState& penalty = agent_->get_penaltyState();
-
             // consistency constraints ( zx_i - x_i )
             for(unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
                 const typeRNum zx_min_x = couplingState_.z_x_[k] - x[k];
-                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penalty.rho_x_[k] * std::pow(zx_min_x, 2);
+                out[0] += multiplierState_.mu_x_[k] * zx_min_x + 0.5 * penaltyState_.rho_x_[k] * std::pow(zx_min_x, 2);
             }
 
             // consistency constraints ( zu_i - u_i )
             for(unsigned int k = 0; k < agent_->get_Nui(); ++k)
             {
                 const typeRNum zu_min_u = couplingState_.z_u_[k] - u[k];
-                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penalty.rho_u_[k] * std::pow(zu_min_u, 2);
+                out[0] += multiplierState_.mu_u_[k] * zu_min_u + 0.5 * penaltyState_.rho_u_[k] * std::pow(zu_min_u, 2);
             }
         }
 

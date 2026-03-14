@@ -22,7 +22,7 @@
 namespace grampcd
 {
 
-        ProblemDescriptionCentral::ProblemDescriptionCentral(const std::vector<AgentPtr>& agents)
+    ProblemDescriptionCentral::ProblemDescriptionCentral(const std::vector<AgentPtr>& agents)
       : agents_(agents)
     {
         // create mapping from agent id to indices of xi and ui within x and u

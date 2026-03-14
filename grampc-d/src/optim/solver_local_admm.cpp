@@ -150,6 +150,8 @@ namespace grampcd
         solver_->setparam_real_vector("umin", &umin[0]);
         solver_->setparam_real_vector("umax", &umax[0]);
 
+        // solver_->check_gradients(1e-6, 1e-8);
+
         // solve
         solver_->run();
 
