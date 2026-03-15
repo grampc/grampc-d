@@ -184,7 +184,7 @@ namespace grampcd
                const unsigned int Ngji = copied_coupling_model->get_Ngij();
                const unsigned int Nhji = copied_coupling_model->get_Nhij();
 
-               // reset sensi state 
+               // reset SBDP state 
                resetState(sensiState, neighbor->get_id(),sensiState.t_);
                sensiState.psi_x_.resize(Nxi * Nhor, 0.0);
                sensiState.psi_u_.resize(Nui * Nhor, 0.0);
@@ -201,18 +201,18 @@ namespace grampcd
                for (unsigned int i = 0; i < Nhor;++i)
                {   
                    // first-order sensitivities
-                   // sensi w.r.t dynamics and costs
+                   // sensitivity w.r.t dynamics and costs
                    copied_coupling_model->dfdxj_vec(&sensiState.psi_x_[i * Nxi], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_agentState.lambda_.data() + i * Nxj);
                    copied_coupling_model->dldxj(&sensiState.psi_x_[i * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
 
                    copied_coupling_model->dfduj_vec(&sensiState.psi_u_[i * Nui], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_agentState.lambda_.data() + i * Nxj);
                    copied_coupling_model->dlduj(&sensiState.psi_u_[i * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
 
-                   // sensi w.r.t equality constraints 
+                   // sensitivity w.r.t equality constraints 
                    copied_coupling_model->dgdxj_vec(&sensiState.psi_x_[i * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                    copied_coupling_model->dgduj_vec(&sensiState.psi_u_[i * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                    
-                   // sensi w.r.t transformed inequality constraints 
+                   // sensitivity w.r.t transformed inequality constraints 
                    for (unsigned int k = 0; k < Nhji; ++k)
                    {
                       typeRNum cfct = 0;
@@ -228,7 +228,7 @@ namespace grampcd
                    // second-order sensitivities 
                    if (info_.SENSI_higherOrder_)
                    {                    
-                       // sensi w.r.t dynamics and costs
+                       // sensitivity w.r.t dynamics and costs
                        copied_coupling_model->dfdxjdxj_vec(&sensiState.psi_xx_[i * Nxi * Nxi], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_agentState.lambda_.data() + i * Nxj);
                        copied_coupling_model->dldxjdxj(&sensiState.psi_xx_[i * Nxi * Nxi], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
 
@@ -238,12 +238,12 @@ namespace grampcd
                        copied_coupling_model->dfdxjduj_vec(&sensiState.psi_xu_[i * Nxi * Nui], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_agentState.lambda_.data() + i * Nxj);
                        copied_coupling_model->dldxjduj(&sensiState.psi_xu_[i * Nxi * Nui], agentState.t0_ + agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
 
-                       // sensi w.r.t equality constraints 
+                       // sensitivity w.r.t equality constraints 
                        copied_coupling_model->dgdxjdxj_vec(&sensiState.psi_xx_[i * Nxi * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                        copied_coupling_model->dgdujduj_vec(&sensiState.psi_uu_[i * Nui * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                        copied_coupling_model->dgdxjduj_vec(&sensiState.psi_xu_[i * Nxi * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                       
-                       // sensi w.r.t transformed inequality constraints 
+                       // sensitivity w.r.t transformed inequality constraints 
                        for (unsigned int k = 0; k < Nhji; ++k)
                        {
                            typeRNum cfct = 0;
@@ -267,7 +267,7 @@ namespace grampcd
                    copied_coupling_model->dVdxjdxj(&sensiState.psi_VV_[0], agentState.t0_ + agentState.t_.back(), agentState.x_.data() + ((Nhor - 1) * Nxi), neighbors_agentState.x_.data() + ((Nhor - 1) * Nxj));
                }
 
-               // set sensi State
+               // set sensitivity State
                neighbor->set_sensiState(sensiState);
             }
     }

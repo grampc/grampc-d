@@ -353,7 +353,7 @@ namespace grampcd
 			.def_readwrite("ADMM_AdaptPenaltyParameter_", &OptimizationInfo::ADMM_AdaptPenaltyParameter_)
 			.def_readwrite("ADMM_innerIterations_", &OptimizationInfo::ADMM_innerIterations_)
 			
-			// parameters for SENSI
+			// parameters for SBDP
 			.def_readwrite("SENSI_maxIterations_",&OptimizationInfo::SENSI_maxIterations_)
 			.def_readwrite("SENSI_ConvexivityTerm_", &OptimizationInfo::SENSI_ConvexivityTerm_)
 			.def_readwrite("SENSI_ConvexFactor_x_", &OptimizationInfo::SENSI_ConvexFactor_x_)

@@ -727,7 +727,7 @@ namespace grampcd
         // create local solver
         if (optimizationInfo_.COMMON_Solver_ == "ADMM")
             local_solver_.reset(new SolverLocalADMM(this, info, log_, communication_interface_));
-        else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+        else if (optimizationInfo_.COMMON_Solver_ == "SBDP")
             local_solver_.reset(new SolverLocalSensi(this, info, log_, communication_interface_));
         else
             log_->print(DebugType::Error) << "[Agent::fromCommunication_configured_optimization] Agent" << get_id() << ": "
@@ -959,7 +959,7 @@ namespace grampcd
                         &local_copies.u_[i * Nuj]
                     );
                 }
-                else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+                else if (optimizationInfo_.COMMON_Solver_ == "SBDP")
                 {
                     const auto& neighbors_agentState = neighbor->get_neighbors_agentState();
                     neighbor->get_couplingModel()->lfct
@@ -995,7 +995,7 @@ namespace grampcd
                     &local_copies.x_[(Nhor - 1) * Nxj]
                 );
             }
-            else if (optimizationInfo_.COMMON_Solver_ == "Sensi")
+            else if (optimizationInfo_.COMMON_Solver_ == "SBDP")
             {
                 const auto& neighbors_agentState = neighbor->get_neighbors_agentState();
                 neighbor->get_couplingModel()->Vfct

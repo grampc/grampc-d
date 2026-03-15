@@ -42,11 +42,11 @@ namespace grampcd
         void send_stoppedAlgFlag() override;
 
         /***********************************************
-       Sensi functions
+       SBDP functions
        ************************************************/
         /*evaluates the sensitivities for all receiving neighbors*/
         void update_sensiStates() override;
-        /*Initializes the local sensi solver*/
+        /*Initializes the local SBDP solver*/
         void initialize_Sensi() override;
 
     protected: 

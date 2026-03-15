@@ -163,7 +163,7 @@ namespace grampcd
         void fromCommunication_received_couplingState(const CouplingState& state, const CouplingState& state2, int from);
         /*This function is called if a message is received including the neighbors multiplier state.*/
         void fromCommunication_received_multiplierState(const MultiplierState& state, PenaltyState penalty, int from);
-        /*This function is called if a message is received including the neighbors sensi states*/
+        /*This function is called if a message is received including the neighbors SBDP states*/
         void fromCommunication_received_sensiState(const SensiState& state, int from);
         /*This function is called if a message is received including the optimization info.*/
         void fromCommunication_configured_optimization(const OptimizationInfo& info);
@@ -209,12 +209,12 @@ namespace grampcd
        *************************************************************************/
 
        /*************************************************************************
-        sensi functions
+        SBDP functions
         *************************************************************************/
 
 
         /*************************************************************************
-        end of sensi functions
+        end of SBDP functions
         *************************************************************************/
        
 

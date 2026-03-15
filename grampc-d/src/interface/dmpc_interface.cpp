@@ -134,7 +134,7 @@ namespace grampcd
 		// main loop for distributed solution
 		if(oi.COMMON_Solver_=="ADMM")
 			coordinator_->initialize_ADMM(oi);
-		else if(oi.COMMON_Solver_ == "Sensi")
+		else if(oi.COMMON_Solver_ == "SBDP")
 			coordinator_->initialize_sensi(oi);
 		else 
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
@@ -162,7 +162,7 @@ namespace grampcd
 				print_progressbar(iMPC, maxSimIter);
 			}
 		}
-		else if (oi.COMMON_Solver_ == "Sensi")
+		else if (oi.COMMON_Solver_ == "SBDP")
 		{
 			for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
 			{
@@ -196,7 +196,7 @@ namespace grampcd
 		// main loop for distributed solution
 		if (oi.COMMON_Solver_ == "ADMM")
 			coordinator_->initialize_ADMM(oi);
-		else if (oi.COMMON_Solver_ == "Sensi")
+		else if (oi.COMMON_Solver_ == "SBDP")
 			coordinator_->initialize_sensi(oi);
 		else
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
@@ -231,7 +231,7 @@ namespace grampcd
 				simulator->distributed_simulation(oi.COMMON_Integrator_, simulate_timestep);
 			}
 		}
-		else if (oi.COMMON_Solver_ == "Sensi")
+		else if (oi.COMMON_Solver_ == "SBDP")
 		{
 			while (true)
 			{

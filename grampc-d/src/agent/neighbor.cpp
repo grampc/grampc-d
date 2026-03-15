@@ -360,7 +360,7 @@ namespace grampcd
             sensiState_ = state;
         else
             log_->print(DebugType::Error) << "[Neighbor::set_sensiState] "
-            << "Failed to set sensi state, as dimensions don't fit." << std::endl;
+            << "Failed to set SBDP state, as dimensions don't fit." << std::endl;
     }
 
     void Neighbor::set_coupled_constraintState(const ConstraintState& state)

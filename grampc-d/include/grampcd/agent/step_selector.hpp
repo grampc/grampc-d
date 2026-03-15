@@ -29,7 +29,7 @@ namespace grampcd
 		
 		// ADMM Iterations
 		unsigned int admmIter_ = 0;
-		// Sensi Iterations 
+		// SBDP Iterations 
 		unsigned int sensiIter_ = 0;
 
 	protected:

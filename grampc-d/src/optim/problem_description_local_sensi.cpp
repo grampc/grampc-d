@@ -136,13 +136,13 @@ namespace grampcd
             for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
             {
                 interpolateState(neighbor->get_sensiState(), t, sensiState_);
-                // first-order sensi w.r.t. x 
+                // first-order sensitivity w.r.t. x 
                 for (unsigned int k = 0; k < Nx_; ++k)
                 {
                     out[0] += sensiState_.psi_x_[k] * (x[k] - previous_agentState_.x_[k]);
                 }
 
-                // first order sensi w.r.t u 
+                // first order sensitivity w.r.t u 
                 for (unsigned int k = 0; k < Nu_; ++k)
                 {
                     out[0] += sensiState_.psi_u_[k] * (u[k] - previous_agentState_.u_[k]);
@@ -151,7 +151,7 @@ namespace grampcd
                 // consider higher order terms of Tayler approximation
                 if (agent_->get_optimizationInfo().SENSI_higherOrder_)
                 {
-                    // second-order sensi w.r.t x
+                    // second-order sensitivity w.r.t x
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nx_; ++j)
@@ -159,7 +159,7 @@ namespace grampcd
                             out[0] += 0.5 * (x[k] - previous_agentState_.x_[k]) * sensiState_.psi_xx_[k + Nx_ * j] * (x[j] - previous_agentState_.x_[j]);
                         }
                     }
-                    // second-order sensi w.r.t u
+                    // second-order sensitivity w.r.t u
                     for (unsigned int k = 0; k < Nu_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
@@ -167,7 +167,7 @@ namespace grampcd
                             out[0] += 0.5 * (u[k] - previous_agentState_.u_[k]) * sensiState_.psi_uu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
                         }
                     }
-                    // second-order sensi w.r.t x and u 
+                    // second-order sensitivity w.r.t x and u 
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
@@ -227,7 +227,7 @@ namespace grampcd
             {
                 interpolateState(neighbor->get_sensiState(), t, sensiState_);
 
-                // first-order sensi w.r.t. x 
+                // first-order sensitivity w.r.t. x 
                 for (unsigned int k = 0; k < Nx_; ++k)
                 {
                     out[k] += sensiState_.psi_x_[k];
@@ -235,7 +235,7 @@ namespace grampcd
                 // consider higher order terms of Tayler approximation
                 if (agent_->get_optimizationInfo().SENSI_higherOrder_)
                 {
-                    // second-order sensi w.r.t.x
+                    // second-order sensitivity w.r.t.x
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nx_; ++j)
@@ -243,7 +243,7 @@ namespace grampcd
                             out[k] += (x[j] - previous_agentState_.x_[j]) * sensiState_.psi_xx_[k * Nx_ + j];
                         }
                     }
-                    // second-order sensi w.r.t x and u 
+                    // second-order sensitivity w.r.t x and u 
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
@@ -298,7 +298,7 @@ namespace grampcd
             for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
             {
                 interpolateState(neighbor->get_sensiState(), t, sensiState_);
-                // sensi w.r.t. u 
+                // sensitivity w.r.t. u 
                 for (unsigned int k = 0; k < Nu_; ++k)
                 {
                     out[k] += sensiState_.psi_u_[k];
@@ -306,7 +306,7 @@ namespace grampcd
                 // consider higher order terms of Tayler approximation
                 if (agent_->get_optimizationInfo().SENSI_higherOrder_)
                 {
-                    // second-order sensi w.r.t.u
+                    // second-order sensitivity w.r.t.u
                     for (unsigned int k = 0; k < Nu_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
@@ -314,7 +314,7 @@ namespace grampcd
                             out[k] += (u[j] - previous_agentState_.u_[j]) * sensiState_.psi_uu_[k * Nu_ + j] ;
                         }
                     }
-                    // second-order sensi w.r.t x and u 
+                    // second-order sensitivity w.r.t x and u 
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
@@ -357,12 +357,12 @@ namespace grampcd
         // consider sensitivities of coupled terminal costs
         for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
         {
-            // Terminal cost only invloves sensi w.r.t. x 
+            // Terminal cost only invloves sensitivity w.r.t. x 
             for (unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
                 out[0] += neighbor->get_sensiState().psi_V_[k] * (x[k] - previous_agentState_.x_[k]);
 
-                // consider higher order terms of Tayler approximation
+                // consider higher order terms of Taylor approximation
                 if (agent_->get_optimizationInfo().SENSI_higherOrder_)
                 {
                     for (unsigned int j = 0; j < agent_->get_Nxi(); ++j)
@@ -395,7 +395,7 @@ namespace grampcd
         // consider sensitivities of coupled terminal costs
         for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
         {
-            // Terminal cost only invloves sensi w.r.t. x 
+            // Terminal cost only invloves sensitivity w.r.t. x 
             for (unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
                 out[k] += neighbor->get_sensiState().psi_V_[k];

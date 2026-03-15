@@ -92,7 +92,7 @@ namespace grampcd
         /*Activate penalty adaption*/
         bool ADMM_AdaptPenaltyParameter_ = true;
 
-        /*Maximium number of sensi iterations*/
+        /*Maximium number of SBDP iterations*/
         unsigned int SENSI_maxIterations_ = 10;
         /*Activate convexification term*/
         bool SENSI_ConvexivityTerm_ = false;

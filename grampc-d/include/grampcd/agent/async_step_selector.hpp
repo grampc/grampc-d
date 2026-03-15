@@ -26,7 +26,7 @@ namespace grampcd
 		void execute_algStep(const AlgStep& step) override;
 		/*returns the current ADMM iterations*/
 		const unsigned int get_algIter() override;
-		/*sets the flag to stop an algorithm (ADMM or Sensi)*/
+		/*sets the flag to stop an algorithm (ADMM or SBDP)*/
 		void set_flagStopAlg( bool flag);
 		/*returns the flag if the algorithm has stopped*/
 		const bool get_flagStopAlg();
@@ -53,7 +53,7 @@ namespace grampcd
 		// agent
 		const Agent* agent_;
 
-		// flag to stop Algorithm (ADMM or Sensi)
+		// flag to stop Algorithm (ADMM or SBDP)
 	    bool flagStopAlg_;
 
 	};

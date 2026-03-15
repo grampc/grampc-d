@@ -81,7 +81,7 @@ namespace grampcd
         }
         
         /*****************************
-       Sensi STEPS
+       SBDP STEPS
        ******************************/
 
         case AlgStep::SENSI_INITIALIZE:
@@ -106,7 +106,7 @@ namespace grampcd
         {
             local_solver_->send_agentStates();
 
-            // increase sensi Iterations 
+            // increase SBDP Iterations 
             ++sensiIter_;
             break;
         }
@@ -135,7 +135,7 @@ namespace grampcd
     {
         if (agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM")
             return admmIter_;
-        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi")
+        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP")
             return sensiIter_;
         else
             return 0;

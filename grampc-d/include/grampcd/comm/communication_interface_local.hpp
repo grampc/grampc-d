@@ -192,7 +192,7 @@ namespace grampcd
 		/*This function is called if multiplier state is received.*/
 		void fromCommunication_send_multiplierPenaltyState( const CommunicationDataPtr& comm_data, const MultiplierState& multiplier,
 			const PenaltyState& penalty, const int from);
-		/*This function is called if a sensi state is received*/
+		/*This function is called if a SBDP state is received*/
 		void fromCommunication_send_sensiState(const CommunicationDataPtr& comm_data, const SensiState& state, int from);
 		/*This function is called if requirement for agent state for simulation is received.*/
 		void fromCommunication_get_agentState_for_simulation(const CommunicationDataPtr& comm_data) const;

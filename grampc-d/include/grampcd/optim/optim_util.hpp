@@ -47,7 +47,7 @@ namespace grampcd
     void shiftState(MultiplierState& state, typeRNum dt, typeRNum t0);
     /*Shift penalty states.*/
     void shiftState(PenaltyState& state, typeRNum dt, typeRNum t0);
-    /*Shift Sensi states.*/
+    /*Shift SBDP states.*/
     void shiftState(SensiState& state, typeRNum dt, typeRNum t0);
     /*Shift Constraint states.*/
     void shiftState(ConstraintState& state, typeRNum dt, typeRNum t0);
@@ -64,7 +64,7 @@ namespace grampcd
     void resetState(MultiplierState& state, int i, std::vector<typeRNum> t);
     /*Reset penalty states.*/
     void resetState(PenaltyState& state, int i, std::vector<typeRNum> t);
-    /*Reset Sensi states.*/
+    /*Reset SBDP states.*/
     void resetState(SensiState& state, int i, std::vector<typeRNum> t);
     /*Reset Constraint states.*/
     void resetState(ConstraintState& state, int i, std::vector<typeRNum> t);
@@ -81,7 +81,7 @@ namespace grampcd
     const bool compare_stateDimensions( const MultiplierState& state_1, const MultiplierState& state_2 );
     /*Compare penalty states.*/
     const bool compare_stateDimensions( const PenaltyState& state_1, const PenaltyState& state_2 );
-    /*Compare Sensi states.*/
+    /*Compare SBDP states.*/
     const bool compare_stateDimensions(const SensiState& state_1, const SensiState& state_2);
     /*Compare Constraint states.*/
     const bool compare_stateDimensions(const ConstraintState& state_1, const ConstraintState& state_2);

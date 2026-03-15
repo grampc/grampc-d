@@ -173,7 +173,7 @@ namespace grampcd
         }
 
         /*****************************
-         Sensi STEPS
+         SBDP STEPS
          ******************************/
 
         case AlgStep::SENSI_INITIALIZE:
@@ -285,7 +285,7 @@ namespace grampcd
     {
         if (agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM")
             return admmIter_;
-        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi")
+        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP")
             return sensiIter_;
         else
             return 0;
@@ -367,9 +367,9 @@ namespace grampcd
 
     void AsyncStepSelector::check_algIterations()
     {
-        // check if maximum iterations have been reached for ADMM and Sensi case 
+        // check if maximum iterations have been reached for ADMM and SBDP case 
         if ((agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM" && get_algIter() == agent_->get_optimizationInfo().ADMM_maxIterations_ ) 
-            || (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi" && get_algIter() == agent_->get_optimizationInfo().SENSI_maxIterations_))
+            || (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP" && get_algIter() == agent_->get_optimizationInfo().SENSI_maxIterations_))
         {
             set_flagStopAlg(true);
 
