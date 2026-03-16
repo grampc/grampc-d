@@ -190,21 +190,21 @@ namespace grampcd
 		communication_info_(std::make_shared<CommunicationInfo>(communication_info)) {}
 	const Messagetype Message_successfully_registered_coupling::get_message_type() const { return Messagetype::SUCCESSFULLY_REGISTERED_COUPLING; }
 
-	Message_send_flag_stopped_admm::Message_send_flag_stopped_admm() {}
-	Message_send_flag_stopped_admm::Message_send_flag_stopped_admm(const bool flag_stoppedAdmm, const int from)
-		:flag_stoppedAdmm_(flag_stoppedAdmm),
+	Message_send_flag_stopped_ADMM::Message_send_flag_stopped_ADMM() {}
+	Message_send_flag_stopped_ADMM::Message_send_flag_stopped_ADMM(const bool flag_stoppedADMM, const int from)
+		:flag_stoppedADMM_(flag_stoppedADMM),
 		 from_(from) {}
-	const Messagetype Message_send_flag_stopped_admm::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM; }
+	const Messagetype Message_send_flag_stopped_ADMM::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM; }
 
-	Message_send_flag_stopped_admm_coordinator::Message_send_flag_stopped_admm_coordinator() {}
-	Message_send_flag_stopped_admm_coordinator::Message_send_flag_stopped_admm_coordinator(const bool flag_stoppedAdmm, const int from)
-		: flag_stoppedAdmm_(flag_stoppedAdmm),
+	Message_send_flag_stopped_ADMM_coordinator::Message_send_flag_stopped_ADMM_coordinator() {}
+	Message_send_flag_stopped_ADMM_coordinator::Message_send_flag_stopped_ADMM_coordinator(const bool flag_stoppedADMM, const int from)
+		: flag_stoppedADMM_(flag_stoppedADMM),
 		  from_(from) {}
-	const Messagetype Message_send_flag_stopped_admm_coordinator::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM_COORDINATOR; }
+	const Messagetype Message_send_flag_stopped_ADMM_coordinator::get_message_type() const { return Messagetype::SEND_FLAG_STOPPED_ADMM_COORDINATOR; }
 
-	Message_send_flag_to_stop_admm::Message_send_flag_to_stop_admm() {}
-	Message_send_flag_to_stop_admm::Message_send_flag_to_stop_admm(const bool flag_toStopAdmm)
-		: flag_toStopAdmm_(flag_toStopAdmm){}
-	const Messagetype Message_send_flag_to_stop_admm::get_message_type() const { return Messagetype::SEND_FLAG_TO_STOP_ADMM; }
+	Message_send_flag_to_stop_ADMM::Message_send_flag_to_stop_ADMM() {}
+	Message_send_flag_to_stop_ADMM::Message_send_flag_to_stop_ADMM(const bool flag_toStopADMM)
+		: flag_toStopADMM_(flag_toStopADMM){}
+	const Messagetype Message_send_flag_to_stop_ADMM::get_message_type() const { return Messagetype::SEND_FLAG_TO_STOP_ADMM; }
 
 }

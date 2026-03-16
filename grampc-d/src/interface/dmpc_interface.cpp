@@ -135,7 +135,7 @@ namespace grampcd
 		if(oi.COMMON_Solver_=="ADMM")
 			coordinator_->initialize_ADMM(oi);
 		else if(oi.COMMON_Solver_ == "SBDP")
-			coordinator_->initialize_sensi(oi);
+			coordinator_->initialize_SBDP(oi);
 		else 
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
 
@@ -168,7 +168,7 @@ namespace grampcd
 			{
 				// optimize
 				const auto tstart = std::chrono::steady_clock::now();
-				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				coordinator_->solve_SBDP(oi.SBDP_maxIterations_);
 				const auto tend = std::chrono::steady_clock::now();
 				CPUtime += std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart);
 				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
@@ -197,7 +197,7 @@ namespace grampcd
 		if (oi.COMMON_Solver_ == "ADMM")
 			coordinator_->initialize_ADMM(oi);
 		else if (oi.COMMON_Solver_ == "SBDP")
-			coordinator_->initialize_sensi(oi);
+			coordinator_->initialize_SBDP(oi);
 		else
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
 
@@ -237,7 +237,7 @@ namespace grampcd
 			{
 				// optimize
 				const auto tstart = std::chrono::steady_clock::now();
-				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				coordinator_->solve_SBDP(oi.SBDP_maxIterations_);
 				const auto tend = std::chrono::steady_clock::now();
 				CPUtime_iteration = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
 

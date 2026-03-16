@@ -66,10 +66,10 @@ namespace grampcd
         coordination sensitivity-based algorithm
         *************************************************************************/
         /* Initialize agents for sensitivity-based algorithm */
-        void initialize_sensi(const OptimizationInfo& oi);
+        void initialize_SBDP(const OptimizationInfo& oi);
 
         /* Solve optimization problem using sensitivity-based algorithm */
-        const bool solve_sensi(int iterations = 1);
+        const bool solve_SBDP(int iterations = 1);
 
         /*************************************************************************
        Algorithm generic steps 

@@ -50,8 +50,8 @@ namespace grampcd
         delay_agentState_ = 0;
         delay_couplingState_ = 0;
         delay_multiplierState_ = 0;
-        delay_sensiState_ = 0;
-        delay_sensiAgentState_ = 0;
+        delay_SBDPState_ = 0;
+        delay_SBDPAgentState_ = 0;
     }
 
     const int Neighbor::get_id() const
@@ -159,9 +159,9 @@ namespace grampcd
         return coupled_penaltyState_;
     }
 
-    const SensiState& Neighbor::get_sensiState() const
+    const SBDPState& Neighbor::get_SBDPState() const
     {
-        return sensiState_;
+        return sbdpState_;
     }
 
     const ConstraintState& Neighbor::get_coupled_constraintState() const
@@ -354,12 +354,12 @@ namespace grampcd
             << "Failed to set coupled penalty state, as dimensions don't fit." << std::endl;
     }
 
-    void Neighbor::set_sensiState(const SensiState& state)
+    void Neighbor::set_SBDPState(const SBDPState& state)
     {
-        if (compare_stateDimensions(sensiState_, state))
-            sensiState_ = state;
+        if (compare_stateDimensions(sbdpState_, state))
+            sbdpState_ = state;
         else
-            log_->print(DebugType::Error) << "[Neighbor::set_sensiState] "
+            log_->print(DebugType::Error) << "[Neighbor::set_sbdpState] "
             << "Failed to set SBDP state, as dimensions don't fit." << std::endl;
     }
 
@@ -622,18 +622,18 @@ namespace grampcd
             const auto Ngji = get_copied_couplingModel()->get_Ngij();
             const auto Nhji = get_copied_couplingModel()->get_Nhij();
 
-            sensiState_.t_ = t;
-            sensiState_.i_ = agent->get_id();
-            sensiState_.psi_x_.resize(Nxi * Nhor, 0.0);
-            sensiState_.psi_u_.resize(Nui * Nhor, 0.0);
-            sensiState_.psi_V_.resize(Nxi, 0.0);
+            sbdpState_.t_ = t;
+            sbdpState_.i_ = agent->get_id();
+            sbdpState_.psi_x_.resize(Nxi * Nhor, 0.0);
+            sbdpState_.psi_u_.resize(Nui * Nhor, 0.0);
+            sbdpState_.psi_V_.resize(Nxi, 0.0);
 
-            if (optimization_info.SENSI_higherOrder_)
+            if (optimization_info.SBDP_higherOrder_)
             {
-                sensiState_.psi_xx_.resize(Nxi * Nxi * Nhor, 0.0);
-                sensiState_.psi_uu_.resize(Nui * Nui * Nhor, 0.0);
-                sensiState_.psi_xu_.resize(Nxi * Nui * Nhor, 0.0);
-                sensiState_.psi_VV_.resize(Nxi * Nxi, 0.0);
+                sbdpState_.psi_xx_.resize(Nxi * Nxi * Nhor, 0.0);
+                sbdpState_.psi_uu_.resize(Nui * Nui * Nhor, 0.0);
+                sbdpState_.psi_xu_.resize(Nxi * Nui * Nhor, 0.0);
+                sbdpState_.psi_VV_.resize(Nxi * Nxi, 0.0);
             }
 
             neighbors_coupled_constraintState_.t_ = t;
@@ -672,7 +672,7 @@ namespace grampcd
         resetState(neighbors_externalInfluence_multiplierState_, j, t);
 
         resetState(neighbors_agentState_, j, t);
-        resetState(sensiState_, j, t);
+        resetState(sbdpState_, j, t);
         resetState(coupled_constraintState_, j, t);
         resetState(neighbors_coupled_constraintState_, j, t);
 
@@ -725,7 +725,7 @@ namespace grampcd
         shiftState(neighbors_externalInfluence_penaltyState_, dt, t0);
 
         shiftState(neighbors_agentState_, dt, t0);
-        shiftState(sensiState_, dt, t0);
+        shiftState(sbdpState_, dt, t0);
         shiftState(coupled_constraintState_, dt, t0);
         shiftState(neighbors_coupled_constraintState_, dt, t0);
 
@@ -786,8 +786,8 @@ namespace grampcd
             ++delay_multiplierState_;
             break;
 
-        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
-            ++delay_sensiAgentState_;
+        case (AlgStep::SBDP_UPDATE_AGENT_STATE):
+            ++delay_SBDPAgentState_;
             break;
 
         default:
@@ -811,8 +811,8 @@ namespace grampcd
             delay_multiplierState_ = 0;
             break;
 
-        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
-            delay_sensiAgentState_ = 0;
+        case (AlgStep::SBDP_UPDATE_AGENT_STATE):
+            delay_SBDPAgentState_ = 0;
             break;
 
         default:
@@ -836,8 +836,8 @@ namespace grampcd
             return delay_multiplierState_;
             break;
 
-        case (AlgStep::SENSI_UPDATE_AGENT_STATE):
-            return delay_sensiAgentState_;
+        case (AlgStep::SBDP_UPDATE_AGENT_STATE):
+            return delay_SBDPAgentState_;
             break;
 
         default:
@@ -851,7 +851,7 @@ namespace grampcd
         delay_agentState_ = 65535;
         delay_couplingState_ = 65535;
         delay_multiplierState_ = 0;
-        delay_sensiAgentState_ = 0;   
+        delay_SBDPAgentState_ = 0;   
     }
 
 }

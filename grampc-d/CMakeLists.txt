@@ -38,12 +38,12 @@ add_library(grampcd
     src/optim/solver_central.cpp
     src/optim/solver_local.cpp
     src/optim/solver_local_admm.cpp
-    src/optim/solver_local_sensi.cpp
+    src/optim/solver_local_sbdp.cpp
 
     src/optim/problem_description_central.cpp
     src/optim/problem_description_local_default.cpp
     src/optim/problem_description_local_neighbor_approximation.cpp
-    src/optim/problem_description_local_sensi.cpp
+    src/optim/problem_description_local_sbdp.cpp
     src/optim/approximate_neighbor.cpp
     src/util/auto_tune.cpp
     src/agent/step_selector.cpp

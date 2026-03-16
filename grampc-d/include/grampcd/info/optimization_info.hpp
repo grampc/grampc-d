@@ -93,21 +93,21 @@ namespace grampcd
         bool ADMM_AdaptPenaltyParameter_ = true;
 
         /*Maximium number of SBDP iterations*/
-        unsigned int SENSI_maxIterations_ = 10;
+        unsigned int SBDP_maxIterations_ = 10;
         /*Activate convexification term*/
-        bool SENSI_ConvexivityTerm_ = false;
+        bool SBDP_ConvexivityTerm_ = false;
         /*Factors for convexivity term w.r.t x*/
-        std::vector<typeRNum> SENSI_ConvexFactor_x_; 
+        std::vector<typeRNum> SBDP_ConvexFactor_x_; 
         /*Factors for convexivity term w.r.t u*/
-        std::vector<typeRNum> SENSI_ConvexFactor_u_;
+        std::vector<typeRNum> SBDP_ConvexFactor_u_;
         /*Activate simple convex sum*/
-        bool SENSI_ConvexSum_ = false;
+        bool SBDP_ConvexSum_ = false;
         /*Factors for simple convex sum w.r.t u*/
-        typeRNum SENSI_ConvexSumAlpha_ = 1;
+        typeRNum SBDP_ConvexSumAlpha_ = 1;
         /*Convergence tolerance*/
-        typeRNum SENSI_ConvergenceTolerance_ = 0.01;
+        typeRNum SBDP_ConvergenceTolerance_ = 0.01;
         /*Activate Higher Order Sensitivities*/
-        bool SENSI_higherOrder_ = false; 
+        bool SBDP_higherOrder_ = false; 
 
 
 
@@ -135,8 +135,8 @@ namespace grampcd
                 ADMM_maxIterations_, ADMM_innerIterations_, ADMM_ConvergenceTolerance_, 
                 ADMM_PenaltyIncreaseFactor_, ADMM_PenaltyDecreaseFactor_, ADMM_PenaltyMin_, 
                 ADMM_PenaltyMax_, ADMM_PenaltyInit_, ADMM_AdaptPenaltyParameter_, 
-                SENSI_maxIterations_, SENSI_ConvexivityTerm_, SENSI_ConvexFactor_x_, SENSI_ConvexFactor_u_,
-                SENSI_ConvexSum_, SENSI_ConvexSumAlpha_, SENSI_ConvergenceTolerance_,
+                SBDP_maxIterations_, SBDP_ConvexivityTerm_, SBDP_ConvexFactor_x_, SBDP_ConvexFactor_u_,
+                SBDP_ConvexSum_, SBDP_ConvexSumAlpha_, SBDP_ConvergenceTolerance_,
                 APPROX_ApproximateCost_, APPROX_ApproximateConstraints_, APPROX_ApproximateDynamics_,
                 ASYNC_Active_, ASYNC_Delay_);
 		}

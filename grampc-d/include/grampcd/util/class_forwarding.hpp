@@ -46,7 +46,7 @@ namespace grampcd
 	DMPC_CLASS_FORWARD(SolverCentral);
 	DMPC_CLASS_FORWARD(SolverLocal);
 	DMPC_CLASS_FORWARD(SolverLocalADMM);
-	DMPC_CLASS_FORWARD(SolverLocalSensi);
+	DMPC_CLASS_FORWARD(SolverLocalSBDP);
 	DMPC_CLASS_FORWARD(Simulator);
 
 	DMPC_STRUCT_FORWARD(AgentInfo);
@@ -56,7 +56,7 @@ namespace grampcd
 	DMPC_STRUCT_FORWARD(CouplingState);
 	DMPC_STRUCT_FORWARD(MultiplierState);
 	DMPC_STRUCT_FORWARD(PenaltyState);
-	DMPC_STRUCT_FORWARD(SensiState);
+	DMPC_STRUCT_FORWARD(SBDPState);
 	DMPC_STRUCT_FORWARD(ConstraintState);
 
 

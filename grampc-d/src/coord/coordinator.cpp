@@ -286,7 +286,7 @@ namespace grampcd
      coordination of sensitivity-based algorithm
      *************************************************************************/
 
-    void Coordinator::initialize_sensi(const OptimizationInfo& oi)
+    void Coordinator::initialize_SBDP(const OptimizationInfo& oi)
     {
         // get optimzation info
         optimizationInfo_ = oi;
@@ -295,11 +295,11 @@ namespace grampcd
         communication_interface_->configure_optimization(oi);
 
         // send initial trajectories
-        communication_interface_->trigger_step(AlgStep::SENSI_SEND_AGENT_STATE);
+        communication_interface_->trigger_step(AlgStep::SBDP_SEND_AGENT_STATE);
             
     }
 
-    const bool Coordinator::solve_sensi(int iter)
+    const bool Coordinator::solve_SBDP(int iter)
     {
 
         // reset agents that converged and finished 
@@ -308,9 +308,9 @@ namespace grampcd
 
         if (optimizationInfo_.ASYNC_Active_)
         {
-            communication_interface_->trigger_step(AlgStep::SENSI_INITIALIZE);
+            communication_interface_->trigger_step(AlgStep::SBDP_INITIALIZE);
 
-            communication_interface_->trigger_step(AlgStep::SENSI_START_ASYNC_SENSI);
+            communication_interface_->trigger_step(AlgStep::SBDP_START_ASYNC_SBDP);
 
             // wait for agents to execute ADMM algorithm 
             std::unique_lock<std::mutex> guard(mutex_stop_alg_);
@@ -323,18 +323,18 @@ namespace grampcd
         }
         else 
         {
-            communication_interface_->trigger_step(AlgStep::SENSI_INITIALIZE);
+            communication_interface_->trigger_step(AlgStep::SBDP_INITIALIZE);
 
             for (int i = 0; i < iter; ++i)
             {
                 // Calculate Sensitivities for neighbors 
-                communication_interface_->trigger_step(AlgStep::SENSI_UPDATE_SENSI_STATE);
+                communication_interface_->trigger_step(AlgStep::SBDP_UPDATE_SBDP_STATE);
 
                 // solve local optimal control problem
-                communication_interface_->trigger_step(AlgStep::SENSI_UPDATE_AGENT_STATE);
+                communication_interface_->trigger_step(AlgStep::SBDP_UPDATE_AGENT_STATE);
 
                 // send updated state and control trajectories to neighbors
-                communication_interface_->trigger_step(AlgStep::SENSI_SEND_AGENT_STATE);
+                communication_interface_->trigger_step(AlgStep::SBDP_SEND_AGENT_STATE);
 
                 // Debug Cost
                 if (optimizationInfo_.COMMON_DebugCost_)

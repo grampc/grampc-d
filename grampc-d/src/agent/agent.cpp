@@ -25,7 +25,7 @@
 #include "grampcd/optim/optim_util.hpp"
 #include "grampcd/optim/solver_local.hpp"
 #include "grampcd/optim/solver_local_admm.hpp"
-#include "grampcd/optim/solver_local_sensi.hpp"
+#include "grampcd/optim/solver_local_sbdp.hpp"
 #include "grampcd/optim/solution.hpp"
 #include "grampcd/agent/step_selector.hpp"
 #include "grampcd/agent/sync_step_selector.hpp"
@@ -571,8 +571,8 @@ namespace grampcd
 
         if (optimizationInfo_.ASYNC_Active_)
         {
-            neighbor->reset_delays(AlgStep::SENSI_UPDATE_AGENT_STATE);
-            step_selector_->execute_algStep(AlgStep::SENSI_UPDATE_AGENT_STATE);
+            neighbor->reset_delays(AlgStep::SBDP_UPDATE_AGENT_STATE);
+            step_selector_->execute_algStep(AlgStep::SBDP_UPDATE_AGENT_STATE);
         }
     }
 
@@ -728,7 +728,7 @@ namespace grampcd
         if (optimizationInfo_.COMMON_Solver_ == "ADMM")
             local_solver_.reset(new SolverLocalADMM(this, info, log_, communication_interface_));
         else if (optimizationInfo_.COMMON_Solver_ == "SBDP")
-            local_solver_.reset(new SolverLocalSensi(this, info, log_, communication_interface_));
+            local_solver_.reset(new SolverLocalSBDP(this, info, log_, communication_interface_));
         else
             log_->print(DebugType::Error) << "[Agent::fromCommunication_configured_optimization] Agent" << get_id() << ": "
             << "is not initialized with a proper solver" << std::endl;
@@ -766,7 +766,7 @@ namespace grampcd
        step_selector_->execute_algStep(step);
     }
 
-    void Agent::fromCommunication_received_flagToStopAdmm(const bool flag)
+    void Agent::fromCommunication_received_flagToStopADMM(const bool flag)
     {
         // remember flag stop algorithm
         std::static_pointer_cast<AsyncStepSelector>(step_selector_)->set_flagStopAlg(flag);
@@ -775,7 +775,7 @@ namespace grampcd
         communication_interface_->send_stoppedAlgFlag(flag,this->get_id());
     }
 
-    void Agent::fromCommunication_received_flagStoppedAdmm(const bool flag, int from)
+    void Agent::fromCommunication_received_flagStoppedADMM(const bool flag, int from)
     {
 
         const auto neighbor = DataConversion::get_element_from_vector(neighbors_, from);
@@ -1060,7 +1060,7 @@ namespace grampcd
         return step_selector_;
     }
 
-    void Agent::reset_stopAdmmflag_of_neighbors()
+    void Agent::reset_stopADMMflag_of_neighbors()
     {
         for (auto& neighbor : neighbors_)
             neighbor->flag_StoppedAlg_ = false;

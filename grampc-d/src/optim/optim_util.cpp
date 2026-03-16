@@ -16,7 +16,7 @@
 #include "grampcd/state/coupling_state.hpp"
 #include "grampcd/state/multiplier_state.hpp"
 #include "grampcd/state/penalty_state.hpp"
-#include "grampcd/state/sensi_state.hpp"
+#include "grampcd/state/sbdp_state.hpp"
 #include "grampcd/state/constraint_state.hpp"
 
 #include "grampcd/info/optimization_info.hpp"
@@ -156,7 +156,7 @@ namespace grampcd
         }
     }
 
-    void interpolateState(const SensiState& state, double t, SensiState& out)
+    void interpolateState(const SBDPState& state, double t, SBDPState& out)
     {
         const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
         const unsigned int Nx = static_cast<unsigned int>(state.psi_x_.size() / Nt);
@@ -341,7 +341,7 @@ namespace grampcd
 	    state.t0_ = std::max(state.t0_ + dt, t0);
     }
 
-    void shiftState(SensiState& state, typeRNum dt, typeRNum t0)
+    void shiftState(SBDPState& state, typeRNum dt, typeRNum t0)
     {
         const unsigned int Nt = static_cast<unsigned int>(state.t_.size());
         if (Nt > 0)
@@ -512,7 +512,7 @@ namespace grampcd
         state.rho_x_.clear();
     }
 
-    void resetState(SensiState& state, int i, std::vector<typeRNum> t)
+    void resetState(SBDPState& state, int i, std::vector<typeRNum> t)
     {
         state.i_ = i;
         state.t_ = t;
@@ -562,7 +562,7 @@ namespace grampcd
                 && state_1.rho_v_.size() == state_2.rho_v_.size() && state_1.t_.size() == state_2.t_.size();
     }
 
-    const bool compare_stateDimensions(const SensiState& state_1, const SensiState& state_2)
+    const bool compare_stateDimensions(const SBDPState& state_1, const SBDPState& state_2)
     {
         return state_1.psi_x_.size() == state_2.psi_x_.size() && state_1.psi_u_.size() == state_2.psi_u_.size()
             && state_1.psi_V_.size() == state_2.psi_V_.size() && state_1.psi_xx_.size() == state_2.psi_xx_.size()

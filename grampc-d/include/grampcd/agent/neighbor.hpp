@@ -18,7 +18,7 @@
 #include "grampcd/state/coupling_state.hpp"
 #include "grampcd/state/multiplier_state.hpp"
 #include "grampcd/state/penalty_state.hpp"
-#include "grampcd/state/sensi_state.hpp"
+#include "grampcd/state/sbdp_state.hpp"
 #include "grampcd/state/constraint_state.hpp"
 
 namespace grampcd
@@ -122,7 +122,7 @@ public:
     /*returns the received state of the neighbor*/
     const AgentState& get_neighbors_agentState() const;
     /*returns the sensitivities sent by the neighbor dJ_j/du_i*/
-    const SensiState& get_sensiState() const;
+    const SBDPState& get_SBDPState() const;
     /*sets the calculated constraint mutlipliers of the neighbor*/
     const ConstraintState& get_coupled_constraintState()const;
     /*sets the received constraint multipliers of the neighbors*/
@@ -169,8 +169,8 @@ public:
     /*sets the received state of the neighbor*/
     void set_neighbors_agentState(const AgentState& state);
     /*sets the sensitivities sent by the neighbor dJ_j/du_i*/
-    void set_sensiState(const SensiState& state);
-    /*sets the calculated constraint mutlipliers of the neighbor*/
+    void set_SBDPState(const SBDPState& state);
+    /*sets the calculated constraint multipliers of the neighbor*/
     void set_coupled_constraintState(const ConstraintState& state); 
     /*sets the received constraint multipliers of the neighbors*/
     void set_neighbors_coupled_constraintState(const ConstraintState& state);
@@ -243,8 +243,8 @@ private:
     unsigned int delay_agentState_ ;
     unsigned int delay_couplingState_;
     unsigned int delay_multiplierState_;
-    unsigned int delay_sensiState_;
-    unsigned int delay_sensiAgentState_;
+    unsigned int delay_SBDPState_;
+    unsigned int delay_SBDPAgentState_;
 
     /************************
      States for neighbor
@@ -277,7 +277,7 @@ private:
     CouplingState previous_neighbors_couplingState_;
 
     AgentState neighbors_agentState_;
-    SensiState sensiState_;
+    SBDPState sbdpState_;
     ConstraintState coupled_constraintState_;
     ConstraintState neighbors_coupled_constraintState_;
 

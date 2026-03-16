@@ -13,7 +13,7 @@
 #include"grampcd/agent/async_step_selector.hpp"
 
 #include "grampcd/optim/solver_local_admm.hpp"
-#include "grampcd/optim/solver_local_sensi.hpp"
+#include "grampcd/optim/solver_local_sbdp.hpp"
 
 #include "grampcd/agent/agent.hpp"
 
@@ -176,46 +176,46 @@ namespace grampcd
          SBDP STEPS
          ******************************/
 
-        case AlgStep::SENSI_INITIALIZE:
+        case AlgStep::SBDP_INITIALIZE:
         {
-            sensiIter_ = 0;
-            local_solver_->initialize_Sensi();
+            sbdpIter_ = 0;
+            local_solver_->initialize_SBDP();
             set_flagStopAlg(false);
 
             // set steps
-            previous_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
-            current_step_ = AlgStep::SENSI_INITIALIZE;
-            next_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+            previous_step_ = AlgStep::SBDP_UPDATE_AGENT_STATE;
+            current_step_ = AlgStep::SBDP_INITIALIZE;
+            next_step_ = AlgStep::SBDP_UPDATE_AGENT_STATE;
             break;
         }
 
-        case AlgStep::SENSI_START_ASYNC_SENSI:
+        case AlgStep::SBDP_START_ASYNC_SBDP:
         {
-            current_step_ = AlgStep::SENSI_START_ASYNC_SENSI;
+            current_step_ = AlgStep::SBDP_START_ASYNC_SBDP;
             break;
         }
 
-        case AlgStep::SENSI_UPDATE_AGENT_STATE:
+        case AlgStep::SBDP_UPDATE_AGENT_STATE:
         {
 
             // set previous and current step
             current_step_ = step;
-            previous_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+            previous_step_ = AlgStep::SBDP_UPDATE_AGENT_STATE;
 
             // stopping criteria
             if (get_flagStopAlg())
                 break;
-            if (next_step_ != AlgStep::SENSI_UPDATE_AGENT_STATE)
+            if (next_step_ != AlgStep::SBDP_UPDATE_AGENT_STATE)
                 break;
             if (!check_delays(current_step_))
                 break;
 
             // set next step
-            next_step_ = AlgStep::SENSI_UPDATE_AGENT_STATE;
+            next_step_ = AlgStep::SBDP_UPDATE_AGENT_STATE;
 
            // sensitivities do not have delays
            // calculate sensitivities for neighbors 
-            local_solver_->update_sensiStates();
+            local_solver_->update_SBDPStates();
 
             // minimize local OCP w.r.t. local variables
             local_solver_->update_agentStates();
@@ -228,7 +228,7 @@ namespace grampcd
                 local_solver_->print_debugCost();
 
             // increase admm iterations 
-            ++sensiIter_;
+            ++sbdpIter_;
 
             // check if maximum iterations have been reached and set flag if so 
             check_algIterations();
@@ -242,7 +242,7 @@ namespace grampcd
         }
 
 
-        case AlgStep::SENSI_SEND_AGENT_STATE:
+        case AlgStep::SBDP_SEND_AGENT_STATE:
         {
             local_solver_->send_agentStates();
             break;
@@ -286,7 +286,7 @@ namespace grampcd
         if (agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM")
             return admmIter_;
         else if (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP")
-            return sensiIter_;
+            return sbdpIter_;
         else
             return 0;
       
@@ -324,12 +324,12 @@ namespace grampcd
             return false;
             break;
 
-        case AlgStep::SENSI_UPDATE_AGENT_STATE:
-                if (agent_->get_delay_sending_neighbors(AlgStep::SENSI_UPDATE_AGENT_STATE) > check_criterionRegardingDelay())
+        case AlgStep::SBDP_UPDATE_AGENT_STATE:
+                if (agent_->get_delay_sending_neighbors(AlgStep::SBDP_UPDATE_AGENT_STATE) > check_criterionRegardingDelay())
                     return false;
                 break;
 
-        case AlgStep::SENSI_SEND_AGENT_STATE:
+        case AlgStep::SBDP_SEND_AGENT_STATE:
             return false; 
             break; 
 
@@ -351,7 +351,7 @@ namespace grampcd
     void  AsyncStepSelector::check_continuation()
     {
         // only continue if there is no flag to stop or initialize step
-        if (!get_flagStopAlg() && current_step_!=AlgStep::ADMM_INITIALIZE && current_step_ != AlgStep::SENSI_INITIALIZE)
+        if (!get_flagStopAlg() && current_step_!=AlgStep::ADMM_INITIALIZE && current_step_ != AlgStep::SBDP_INITIALIZE)
         {
           if (check_delays(next_step_))
                 execute_algStep(next_step_);
@@ -360,8 +360,8 @@ namespace grampcd
         // set step after initializing
         if (current_step_ == AlgStep::ADMM_INITIALIZE)
             current_step_ = AlgStep::ADMM_START_ASYNC_ADMM;
-        if (current_step_ == AlgStep::SENSI_INITIALIZE)
-            current_step_ = AlgStep::SENSI_START_ASYNC_SENSI;
+        if (current_step_ == AlgStep::SBDP_INITIALIZE)
+            current_step_ = AlgStep::SBDP_START_ASYNC_SBDP;
 
     }
 
@@ -369,7 +369,7 @@ namespace grampcd
     {
         // check if maximum iterations have been reached for ADMM and SBDP case 
         if ((agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM" && get_algIter() == agent_->get_optimizationInfo().ADMM_maxIterations_ ) 
-            || (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP" && get_algIter() == agent_->get_optimizationInfo().SENSI_maxIterations_))
+            || (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP" && get_algIter() == agent_->get_optimizationInfo().SBDP_maxIterations_))
         {
             set_flagStopAlg(true);
 

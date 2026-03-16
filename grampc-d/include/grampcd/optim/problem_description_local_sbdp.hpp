@@ -16,7 +16,7 @@
 #include "grampcd/util/types.hpp"
 
 #include "grampcd/state/agent_state.hpp"
-#include "grampcd/state/sensi_state.hpp"
+#include "grampcd/state/sbdp_state.hpp"
 
 namespace grampcd
 {
@@ -24,10 +24,10 @@ namespace grampcd
 	/**
 	 * @brief Description of the local optimization problem for solution with GRAMPC.
 	 */
-	class ProblemDescriptionLocalSensi : public grampc::ProblemDescription
+	class ProblemDescriptionLocalSBDP : public grampc::ProblemDescription
 	{
 	public:
-		ProblemDescriptionLocalSensi(Agent* agent);
+		ProblemDescriptionLocalSBDP(Agent* agent);
 
 		/*Set dimensions of the OCP*/
 		virtual void ocp_dim(typeInt* Nx, typeInt* Nu, typeInt* Np, typeInt* Ng, typeInt* Nh, typeInt* NgT, typeInt* NhT) override;
@@ -76,7 +76,7 @@ namespace grampcd
 		AgentState desired_state_;
 		AgentState previous_agentState_;
 		AgentState neighbors_agentState_;
-		SensiState sensiState_;
+		SBDPState sbdpState_;
 	};
 
 }

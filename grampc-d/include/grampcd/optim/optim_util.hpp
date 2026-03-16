@@ -33,7 +33,7 @@ namespace grampcd
     void interpolateState(const PenaltyState& state, double t, PenaltyState& out);
 
     /*Compute interpolated states psi_x(t) and psi_u(t)*/
-    void interpolateState(const SensiState& state, double t, SensiState& out);
+    void interpolateState(const SBDPState& state, double t, SBDPState& out);
 
     //*********************************************
     // shift states
@@ -48,7 +48,7 @@ namespace grampcd
     /*Shift penalty states.*/
     void shiftState(PenaltyState& state, typeRNum dt, typeRNum t0);
     /*Shift SBDP states.*/
-    void shiftState(SensiState& state, typeRNum dt, typeRNum t0);
+    void shiftState(SBDPState& state, typeRNum dt, typeRNum t0);
     /*Shift Constraint states.*/
     void shiftState(ConstraintState& state, typeRNum dt, typeRNum t0);
 
@@ -65,7 +65,7 @@ namespace grampcd
     /*Reset penalty states.*/
     void resetState(PenaltyState& state, int i, std::vector<typeRNum> t);
     /*Reset SBDP states.*/
-    void resetState(SensiState& state, int i, std::vector<typeRNum> t);
+    void resetState(SBDPState& state, int i, std::vector<typeRNum> t);
     /*Reset Constraint states.*/
     void resetState(ConstraintState& state, int i, std::vector<typeRNum> t);
 
@@ -82,7 +82,7 @@ namespace grampcd
     /*Compare penalty states.*/
     const bool compare_stateDimensions( const PenaltyState& state_1, const PenaltyState& state_2 );
     /*Compare SBDP states.*/
-    const bool compare_stateDimensions(const SensiState& state_1, const SensiState& state_2);
+    const bool compare_stateDimensions(const SBDPState& state_1, const SBDPState& state_2);
     /*Compare Constraint states.*/
     const bool compare_stateDimensions(const ConstraintState& state_1, const ConstraintState& state_2);
 
@@ -98,12 +98,12 @@ namespace grampcd
         ADMM_INITIALIZE,
         ADMM_SEND_TRUE_STATE,
         ADMM_START_ASYNC_ADMM,
-        SENSI_INITIALIZE,
-        SENSI_UPDATE_AGENT_STATE,
-        SENSI_SEND_AGENT_STATE,
-        SENSI_UPDATE_SENSI_STATE,
-        SENSI_SEND_SENSI_STATE,
-        SENSI_START_ASYNC_SENSI,
+        SBDP_INITIALIZE,
+        SBDP_UPDATE_AGENT_STATE,
+        SBDP_SEND_AGENT_STATE,
+        SBDP_UPDATE_SBDP_STATE,
+        SBDP_SEND_SBDP_STATE,
+        SBDP_START_ASYNC_SBDP,
         GEN_PRINT,
         GEN_SEND_CONVERGENCE_FLAG,
     };

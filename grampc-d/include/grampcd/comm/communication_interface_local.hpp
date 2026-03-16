@@ -90,7 +90,7 @@ namespace grampcd
 		/*send the stopped admm flag to the coordinator*/
 		const bool send_stoppedAlgFlag(const bool flag, const int from) override;
 		/*send flag to stop the admm iterations of an agent*/
-		const bool send_flagToStopAdmm(const bool flag, const int to);
+		const bool send_flagToStopADMM(const bool flag, const int to);
 
 		/*Configure optimization.*/
 		const bool configure_optimization(const OptimizationInfo& info) override;
@@ -172,7 +172,7 @@ namespace grampcd
 		/*this function is called if the coordinator receives a flag that an agent stopped its admm iterations*/
 		void fromCommunication_send_stoppedAlgFlagCoordinator(const CommunicationDataPtr& comm_data, const bool flag, const int from);
 		/*This function is received when the agent should stop his admm iterations*/
-		void fromCommunication_send_flagToStopAdmm(const CommunicationDataPtr& comm_data, const bool flag);
+		void fromCommunication_send_flagToStopADMM(const CommunicationDataPtr& comm_data, const bool flag);
 
 		/*This function is called if requirement for agent model is received.*/
 		void fromCommunication_get_agentModelFromAgent(const CommunicationDataPtr& comm_data) const;
@@ -193,7 +193,7 @@ namespace grampcd
 		void fromCommunication_send_multiplierPenaltyState( const CommunicationDataPtr& comm_data, const MultiplierState& multiplier,
 			const PenaltyState& penalty, const int from);
 		/*This function is called if a SBDP state is received*/
-		void fromCommunication_send_sensiState(const CommunicationDataPtr& comm_data, const SensiState& state, int from);
+		void fromCommunication_send_SBDPState(const CommunicationDataPtr& comm_data, const SBDPState& state, int from);
 		/*This function is called if requirement for agent state for simulation is received.*/
 		void fromCommunication_get_agentState_for_simulation(const CommunicationDataPtr& comm_data) const;
 		/*This function is called if agent state for simulation is received.*/

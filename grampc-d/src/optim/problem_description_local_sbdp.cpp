@@ -13,7 +13,7 @@
 #include "grampcd/agent/agent.hpp"
 #include "grampcd/agent/neighbor.hpp"
 
-#include "grampcd/optim/problem_description_local_sensi.hpp"
+#include "grampcd/optim/problem_description_local_sbdp.hpp"
 #include "grampcd/optim/optim_util.hpp"
 
 #include "grampcd/model/agent_model.hpp"
@@ -24,7 +24,7 @@
 namespace grampcd
 {
 
-    ProblemDescriptionLocalSensi::ProblemDescriptionLocalSensi(Agent* agent)
+    ProblemDescriptionLocalSBDP::ProblemDescriptionLocalSBDP(Agent* agent)
       : agent_(agent),
         Nx_( agent->get_agentModel()->get_Nxi() ),
         Nu_( agent->get_agentModel()->get_Nui() ),
@@ -43,7 +43,7 @@ namespace grampcd
     }
 
 
-    void ProblemDescriptionLocalSensi::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
+    void ProblemDescriptionLocalSBDP::ocp_dim(typeInt *Nx, typeInt *Nu, typeInt *Np, typeInt *Ng, typeInt *Nh, typeInt *NgT, typeInt *NhT)
     {
         *Nx = Nx_;
         *Nu = Nu_;
@@ -54,7 +54,7 @@ namespace grampcd
         *NhT = 0;
     }
 
-    void ProblemDescriptionLocalSensi::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalSBDP::ffct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -69,7 +69,7 @@ namespace grampcd
         } 
     }
 
-    void ProblemDescriptionLocalSensi::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalSBDP::dfdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *vec, ctypeRNum *u, ctypeRNum *p)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -86,7 +86,7 @@ namespace grampcd
        
     }
 
-    void ProblemDescriptionLocalSensi::dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* vec, ctypeRNum* u, ctypeRNum* p)
+    void ProblemDescriptionLocalSBDP::dfdu_vec(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* vec, ctypeRNum* u, ctypeRNum* p)
     {
         MatSetScalar(out, 0, 1, Nu_);
 
@@ -103,7 +103,7 @@ namespace grampcd
 
     }
 
-    void ProblemDescriptionLocalSensi::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalSBDP::lfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
         MatSetScalar(out, 0, 1, 1);
 
@@ -135,28 +135,28 @@ namespace grampcd
             // consider first-order sensitivities
             for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
             {
-                interpolateState(neighbor->get_sensiState(), t, sensiState_);
+                interpolateState(neighbor->get_SBDPState(), t, sbdpState_);
                 // first-order sensitivity w.r.t. x 
                 for (unsigned int k = 0; k < Nx_; ++k)
                 {
-                    out[0] += sensiState_.psi_x_[k] * (x[k] - previous_agentState_.x_[k]);
+                    out[0] += sbdpState_.psi_x_[k] * (x[k] - previous_agentState_.x_[k]);
                 }
 
                 // first order sensitivity w.r.t u 
                 for (unsigned int k = 0; k < Nu_; ++k)
                 {
-                    out[0] += sensiState_.psi_u_[k] * (u[k] - previous_agentState_.u_[k]);
+                    out[0] += sbdpState_.psi_u_[k] * (u[k] - previous_agentState_.u_[k]);
                 }
 
                 // consider higher order terms of Tayler approximation
-                if (agent_->get_optimizationInfo().SENSI_higherOrder_)
+                if (agent_->get_optimizationInfo().SBDP_higherOrder_)
                 {
                     // second-order sensitivity w.r.t x
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nx_; ++j)
                         {
-                            out[0] += 0.5 * (x[k] - previous_agentState_.x_[k]) * sensiState_.psi_xx_[k + Nx_ * j] * (x[j] - previous_agentState_.x_[j]);
+                            out[0] += 0.5 * (x[k] - previous_agentState_.x_[k]) * sbdpState_.psi_xx_[k + Nx_ * j] * (x[j] - previous_agentState_.x_[j]);
                         }
                     }
                     // second-order sensitivity w.r.t u
@@ -164,7 +164,7 @@ namespace grampcd
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
                         {
-                            out[0] += 0.5 * (u[k] - previous_agentState_.u_[k]) * sensiState_.psi_uu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
+                            out[0] += 0.5 * (u[k] - previous_agentState_.u_[k]) * sbdpState_.psi_uu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
                         }
                     }
                     // second-order sensitivity w.r.t x and u 
@@ -172,30 +172,30 @@ namespace grampcd
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
                         {
-                            out[0] += (x[k] - previous_agentState_.x_[k]) * sensiState_.psi_xu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
+                            out[0] += (x[k] - previous_agentState_.x_[k]) * sbdpState_.psi_xu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
                         }
                     }
                 }
                 // consider convexification term 
-                if (agent_->get_optimizationInfo().SENSI_ConvexivityTerm_)
+                if (agent_->get_optimizationInfo().SBDP_ConvexivityTerm_)
                 {
                     // convexivity term w.r.t. x
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
-                        out[0] += (x[k] - previous_agentState_.x_[k]) * agent_->get_optimizationInfo().SENSI_ConvexFactor_x_[k] * (x[k] - previous_agentState_.x_[k]);
+                        out[0] += (x[k] - previous_agentState_.x_[k]) * agent_->get_optimizationInfo().SBDP_ConvexFactor_x_[k] * (x[k] - previous_agentState_.x_[k]);
                     }
 
                     // convexivity term w.r.t. u
                     for (unsigned int k = 0; k < Nu_; ++k)
                     {
-                        out[0] += (u[k] - previous_agentState_.u_[k]) * agent_->get_optimizationInfo().SENSI_ConvexFactor_u_[k] * (u[k] - previous_agentState_.u_[k]);
+                        out[0] += (u[k] - previous_agentState_.u_[k]) * agent_->get_optimizationInfo().SBDP_ConvexFactor_u_[k] * (u[k] - previous_agentState_.u_[k]);
                     }
                 }
             }
         }
     }
 
-    void ProblemDescriptionLocalSensi::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalSBDP::dldx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -225,22 +225,22 @@ namespace grampcd
             // consider sensitivities
             for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
             {
-                interpolateState(neighbor->get_sensiState(), t, sensiState_);
+                interpolateState(neighbor->get_SBDPState(), t, sbdpState_);
 
                 // first-order sensitivity w.r.t. x 
                 for (unsigned int k = 0; k < Nx_; ++k)
                 {
-                    out[k] += sensiState_.psi_x_[k];
+                    out[k] += sbdpState_.psi_x_[k];
                 }
                 // consider higher order terms of Tayler approximation
-                if (agent_->get_optimizationInfo().SENSI_higherOrder_)
+                if (agent_->get_optimizationInfo().SBDP_higherOrder_)
                 {
                     // second-order sensitivity w.r.t.x
                     for (unsigned int k = 0; k < Nx_; ++k)
                     {
                         for (unsigned int j = 0; j < Nx_; ++j)
                         {
-                            out[k] += (x[j] - previous_agentState_.x_[j]) * sensiState_.psi_xx_[k * Nx_ + j];
+                            out[k] += (x[j] - previous_agentState_.x_[j]) * sbdpState_.psi_xx_[k * Nx_ + j];
                         }
                     }
                     // second-order sensitivity w.r.t x and u 
@@ -248,24 +248,24 @@ namespace grampcd
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
                         {
-                            out[k] += sensiState_.psi_xu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
+                            out[k] += sbdpState_.psi_xu_[k + Nu_ * j] * (u[j] - previous_agentState_.u_[j]);
                         }
                     }
                 }
             }
             // consider convexification term 
-            if (agent_->get_optimizationInfo().SENSI_ConvexivityTerm_)
+            if (agent_->get_optimizationInfo().SBDP_ConvexivityTerm_)
             {   
                 // convexivity term w.r.t. x
                 for (unsigned int k = 0; k < Nx_; ++k)
                 {
-                    out[k] += 2 * agent_->get_optimizationInfo().SENSI_ConvexFactor_x_[k] * (x[k] - previous_agentState_.x_[k]);
+                    out[k] += 2 * agent_->get_optimizationInfo().SBDP_ConvexFactor_x_[k] * (x[k] - previous_agentState_.x_[k]);
                 }
             }
         }
     }
 
-    void ProblemDescriptionLocalSensi::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
+    void ProblemDescriptionLocalSBDP::dldu(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *xdes, ctypeRNum *udes)
     {
         MatSetScalar(out, 0, 1, Nu_);
 
@@ -297,21 +297,21 @@ namespace grampcd
             // consider sensitivities
             for (const NeighborPtr& neighbor : agent_->get_receivingNeighbors())
             {
-                interpolateState(neighbor->get_sensiState(), t, sensiState_);
+                interpolateState(neighbor->get_SBDPState(), t, sbdpState_);
                 // sensitivity w.r.t. u 
                 for (unsigned int k = 0; k < Nu_; ++k)
                 {
-                    out[k] += sensiState_.psi_u_[k];
+                    out[k] += sbdpState_.psi_u_[k];
                 }
                 // consider higher order terms of Tayler approximation
-                if (agent_->get_optimizationInfo().SENSI_higherOrder_)
+                if (agent_->get_optimizationInfo().SBDP_higherOrder_)
                 {
                     // second-order sensitivity w.r.t.u
                     for (unsigned int k = 0; k < Nu_; ++k)
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
                         {
-                            out[k] += (u[j] - previous_agentState_.u_[j]) * sensiState_.psi_uu_[k * Nu_ + j] ;
+                            out[k] += (u[j] - previous_agentState_.u_[j]) * sbdpState_.psi_uu_[k * Nu_ + j] ;
                         }
                     }
                     // second-order sensitivity w.r.t x and u 
@@ -319,24 +319,24 @@ namespace grampcd
                     {
                         for (unsigned int j = 0; j < Nu_; ++j)
                         {
-                            out[j] += (x[k] - previous_agentState_.x_[k]) * sensiState_.psi_xu_[k * Nu_ + j];
+                            out[j] += (x[k] - previous_agentState_.x_[k]) * sbdpState_.psi_xu_[k * Nu_ + j];
                         }
                     }
                 }
             }
             // consider convexification term 
-            if (agent_->get_optimizationInfo().SENSI_ConvexivityTerm_)
+            if (agent_->get_optimizationInfo().SBDP_ConvexivityTerm_)
             {
                 // convexivity term w.r.t. x
                 for (unsigned int k = 0; k < Nu_; ++k)
                 {
-                    out[k] += 2 * agent_->get_optimizationInfo().SENSI_ConvexFactor_u_[k] * (u[k] - previous_agentState_.u_[k]);
+                    out[k] += 2 * agent_->get_optimizationInfo().SBDP_ConvexFactor_u_[k] * (u[k] - previous_agentState_.u_[k]);
                 }
             }
         }
     }
 
-    void ProblemDescriptionLocalSensi::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalSBDP::Vfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
         MatSetScalar(out, 0, 1, 1);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -360,21 +360,21 @@ namespace grampcd
             // Terminal cost only invloves sensitivity w.r.t. x 
             for (unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
-                out[0] += neighbor->get_sensiState().psi_V_[k] * (x[k] - previous_agentState_.x_[k]);
+                out[0] += neighbor->get_SBDPState().psi_V_[k] * (x[k] - previous_agentState_.x_[k]);
 
                 // consider higher order terms of Taylor approximation
-                if (agent_->get_optimizationInfo().SENSI_higherOrder_)
+                if (agent_->get_optimizationInfo().SBDP_higherOrder_)
                 {
                     for (unsigned int j = 0; j < agent_->get_Nxi(); ++j)
                     {
-                        out[0] += 0.5 * (x[k] - previous_agentState_.x_[k]) * neighbor->get_sensiState().psi_VV_[k + Nx_ * j] * (x[j] - previous_agentState_.x_[j]);
+                        out[0] += 0.5 * (x[k] - previous_agentState_.x_[k]) * neighbor->get_SBDPState().psi_VV_[k + Nx_ * j] * (x[j] - previous_agentState_.x_[j]);
                     }
                 }
             }
         }    
     }
 
-    void ProblemDescriptionLocalSensi::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
+    void ProblemDescriptionLocalSBDP::dVdx(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *p, ctypeRNum *xdes)
     {
         MatSetScalar(out, 0, 1, Nx_);
         interpolateState(agent_->get_desiredAgentState(), t, desired_state_);
@@ -398,21 +398,21 @@ namespace grampcd
             // Terminal cost only invloves sensitivity w.r.t. x 
             for (unsigned int k = 0; k < agent_->get_Nxi(); ++k)
             {
-                out[k] += neighbor->get_sensiState().psi_V_[k];
+                out[k] += neighbor->get_SBDPState().psi_V_[k];
 
                 // consider higher order terms of Tayler approximation
-                if (agent_->get_optimizationInfo().SENSI_higherOrder_)
+                if (agent_->get_optimizationInfo().SBDP_higherOrder_)
                 {
                     for (unsigned int j = 0; j < agent_->get_Nxi(); ++j)
                     {
-                        out[k] += (x[j] - previous_agentState_.x_[j]) * neighbor->get_sensiState().psi_VV_[k * Nx_ + j];
+                        out[k] += (x[j] - previous_agentState_.x_[j]) * neighbor->get_SBDPState().psi_VV_[k * Nx_ + j];
                     }
                 }
             }
         }      
     }
 
-    void ProblemDescriptionLocalSensi::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalSBDP::gfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
         MatSetScalar(out, 0, 1, Ng_);
 
@@ -433,7 +433,7 @@ namespace grampcd
         }  
     }
 
-    void ProblemDescriptionLocalSensi::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalSBDP::dgdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
         MatSetScalar(out, 0, 1, Nx_);
 
@@ -455,7 +455,7 @@ namespace grampcd
         }   
     }
 
-    void ProblemDescriptionLocalSensi::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalSBDP::dgdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
         MatSetScalar(out, 0, 1, Nu_);
         // equality constraints \partial g_i(x_i, u_i) / \partial u_i
@@ -478,7 +478,7 @@ namespace grampcd
         }      
     }
 
-    void ProblemDescriptionLocalSensi::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
+    void ProblemDescriptionLocalSBDP::hfct(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p)
     {
         MatSetScalar(out, 0, 1, Nh_);
         // inequality constraints h_i(x_i, u_i) <= 0
@@ -499,7 +499,7 @@ namespace grampcd
         }  
     }
 
-    void ProblemDescriptionLocalSensi::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalSBDP::dhdx_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
         MatSetScalar(out, 0, 1, Nx_);
         // inequality constraints \partial h_i(x_i, u_i) / \partial x_i
@@ -522,7 +522,7 @@ namespace grampcd
     
     }
 
-    void ProblemDescriptionLocalSensi::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
+    void ProblemDescriptionLocalSBDP::dhdu_vec(typeRNum *out, ctypeRNum t, ctypeRNum *x, ctypeRNum *u, ctypeRNum *p, ctypeRNum *vec)
     {
         MatSetScalar(out, 0, 1, Nu_);
         // inequality constraints \partial h_i(x_i, u_i) / \partial u_i

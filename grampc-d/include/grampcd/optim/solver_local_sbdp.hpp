@@ -14,16 +14,16 @@
 
 #include "grampcd/info/optimization_info.hpp"
 #include "grampcd/comm/communication_interface.hpp"
-#include "grampcd/optim/problem_description_local_sensi.hpp"
+#include "grampcd/optim/problem_description_local_sbdp.hpp"
 #include "grampcd/optim/solver_local.hpp"
 
 namespace grampcd
 {
 
-    class SolverLocalSensi : public SolverLocal
+    class SolverLocalSBDP : public SolverLocal
     {
     public:
-        SolverLocalSensi(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log, const CommunicationInterfacePtr& communication_interface);
+        SolverLocalSBDP(Agent* agent, const OptimizationInfo& info, const LoggingPtr& log, const CommunicationInterfacePtr& communication_interface);
 
         /***********************************************
        Generic functions
@@ -45,12 +45,12 @@ namespace grampcd
        SBDP functions
        ************************************************/
         /*evaluates the sensitivities for all receiving neighbors*/
-        void update_sensiStates() override;
+        void update_SBDPStates() override;
         /*Initializes the local SBDP solver*/
-        void initialize_Sensi() override;
+        void initialize_SBDP() override;
 
     protected: 
-        ProblemDescriptionLocalSensi sensi_problem_description_;
+        ProblemDescriptionLocalSBDP sbdp_problem_description_;
         SolverPtr solver_;
         LoggingPtr log_;
         Agent* agent_; 
