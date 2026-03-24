@@ -72,7 +72,7 @@ void MobileRobotLeaderModel::lfct(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctyp
     // non-quadratic cost function
     out[0] += cost_parameters_[0] * POW4(elon)
             + cost_parameters_[1] * POW2(elat)
-            + cost_parameters_[2] * POW4(x[2] - p[2])
+            + cost_parameters_[2] * POW4(sin(x[2] - p[2]) / 2)
             + cost_parameters_[3] * POW4(u[0] - u[2])
             + cost_parameters_[4] * POW4(u[1] - u[2])
             + cost_parameters_[5] * POW4(u[2] - 1.0);
@@ -88,10 +88,10 @@ void MobileRobotLeaderModel::dldx(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctyp
     // gradient of non-quadratic cost function
     out[0] += cost_parameters_[0] * 4 * POW3(elon) * cos(p[2]) + cost_parameters_[1] * 2 * elat * -sin(p[2]);
     out[1] += cost_parameters_[0] * 4 * POW3(elon) * sin(p[2]) + cost_parameters_[1] * 2 * elat *  cos(p[2]);
-    out[2] += cost_parameters_[2] * 4 * POW3(x[2] - p[2]);
+    out[2] += cost_parameters_[2] * 4 * POW3(sin((x[2] - p[2]) / 2)) * (cos((x[2] - p[2]) / 2) / 2);
     out[3] += cost_parameters_[0] * 4 * POW3(elon) * (-sin(p[2]) * x[0] + cos(p[2]) * x[1])
             + cost_parameters_[1] * 2 *      elat  * (-cos(p[2]) * x[0] - sin(p[2]) * x[1])
-            + cost_parameters_[2] * 4 * POW3(x[2] - p[2]) * (-1);
+            + cost_parameters_[2] * 4 * POW3(sin((x[2] - p[2]) / 2)) * -(cos((x[2] - p[2]) / 2) / 2);
 }
 
 void MobileRobotLeaderModel::dldu(typeRNum* out, ctypeRNum t, ctypeRNum* x, ctypeRNum* u, ctypeRNum* xdes)

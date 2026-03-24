@@ -71,7 +71,7 @@ void MobileRobotCouplingModel::lfct(typeRNum* out, typeRNum t, ctypeRNum* xi, ct
     // non-quadratic cost function
     out[0] += cost_parameters_[0] * POW4(elon)
             + cost_parameters_[1] * POW2(elat)
-            + cost_parameters_[2] * POW4(xi[2] - xj[2])
+            + cost_parameters_[2] * POW4(sin((xi[2] - xj[2]) / 2))
 			+ cost_parameters_[3] * POW4(ui[0] - uj[0])
             + cost_parameters_[4] * POW4(ui[1] - uj[1]);
 }
@@ -84,7 +84,7 @@ void MobileRobotCouplingModel::dldxi(typeRNum* out, typeRNum t, ctypeRNum* xi, c
     // gradient of non-quadratic cost function
     out[0] += cost_parameters_[0] * 4 * POW3(elon) * cos(xj[2]) + cost_parameters_[1] * 2 * elat * -sin(xj[2]);
     out[1] += cost_parameters_[0] * 4 * POW3(elon) * sin(xj[2]) + cost_parameters_[1] * 2 * elat * cos(xj[2]);
-    out[2] += cost_parameters_[2] * 4 * POW3(xi[2] - xj[2]);
+    out[2] += cost_parameters_[2] * 4 * POW3(sin(xi[2] - xj[2]) / 2) * (cos((xi[2] - xj[2]) / 2) / 2);
 }
 
 void MobileRobotCouplingModel::dldui(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
@@ -103,7 +103,7 @@ void MobileRobotCouplingModel::dldxj(typeRNum* out, typeRNum t, ctypeRNum* xi, c
     out[1] += cost_parameters_[0] * 4 * POW3(elon) * -sin(xj[2]) + cost_parameters_[1] * 2 * elat * -cos(xj[2]);
     out[2] += cost_parameters_[0] * 4 * POW3(elon) * (-sin(xj[2]) * (xi[0] - xj[0]) + cos(xj[2]) * (xi[1] - xj[1]))
 	        + cost_parameters_[1] * 2 *      elat  * (-cos(xj[2]) * (xi[0] - xj[0]) - sin(xj[2]) * (xi[1] - xj[1]))
-			+ cost_parameters_[2] * 4 * POW3(xi[2] - xj[2]) * (-1);
+			+ cost_parameters_[2] * 4 * POW3(sin(xi[2] - xj[2]) / 2) * -(cos((xi[2] - xj[2]) / 2) / 2);
 }
 
 void MobileRobotCouplingModel::dlduj(typeRNum* out, typeRNum t, ctypeRNum* xi, ctypeRNum* ui, ctypeRNum* xj, ctypeRNum* uj)
