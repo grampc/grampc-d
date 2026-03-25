@@ -98,10 +98,12 @@ namespace grampcd
         AgentState state = agent_->get_agentState();
         for (unsigned int i = 0; i < Nhor; ++i)
         {
-            // update state trajectory x_i
+            // update state trajectory x_i and adjoint trajectory lambda_i
             for (unsigned int k = 0; k < Nxi; ++k)
             {
                 state.x_[i * Nxi + k] = solver_->getWorkspace()->x[i * Nx + k];
+                state.lambda_[i * Nxi + k] = solver_->getWorkspace()->adj[i * Nx + k];
+
             }
 
             // update control trajectory u_i
@@ -115,12 +117,6 @@ namespace grampcd
                     typeRNum alpha = agent_->get_optimizationInfo().SBDP_ConvexSumAlpha_;
                     state.u_[i * Nui + k] = alpha * solver_->getWorkspace()->u[i * Nu + k] + (1 - alpha) * agent_->get_previous_agentState().u_[i * Nu + k];
                 }
-            }
-
-            // update adjoint states
-            for (unsigned int k = 0; k < Nxi; ++k)
-            {
-                state.lambda_[i * Nxi + k] = solver_->getWorkspace()->adj[i * Nx + k];
             }
         }
         agent_->set_agentState(state);
@@ -159,7 +155,6 @@ namespace grampcd
             neighbor->set_coupled_constraintState(constraintState);
         }
     }
-       
 
     void SolverLocalSBDP::update_SBDPStates()
     {
@@ -185,6 +180,8 @@ namespace grampcd
                const CouplingModelPtr& copied_coupling_model = neighbor->get_copied_couplingModel();
                const unsigned int Ngji = copied_coupling_model->get_Ngij();
                const unsigned int Nhji = copied_coupling_model->get_Nhij();
+               std::vector<typeRNum> cfct;
+               cfct.resize(Nhji * Nhor, 0.0);
 
                // reset SBDP state 
                resetState(sbdpState, neighbor->get_id(),sbdpState.t_);
@@ -215,16 +212,18 @@ namespace grampcd
                    copied_coupling_model->dgduj_vec(&sbdpState.psi_u_[i * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                    
                    // sensitivity w.r.t transformed inequality constraints 
-                   for (unsigned int k = 0; k < Nhji; ++k)
+                   if (Nhji > 0)
                    {
-                      typeRNum cfct = 0;
-                      copied_coupling_model->hfct(&cfct, agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
-
-                      if (cfct > - neighbors_constraintState.mu_h_[i * k] / neighbors_constraintState.c_h_[i * k])
-                      {
-                          copied_coupling_model->dhdxj_vec(&sbdpState.psi_x_[i * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
-                          copied_coupling_model->dhduj_vec(&sbdpState.psi_u_[i * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
-                      }
+                       copied_coupling_model->hfct(&cfct[i * Nhji], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
+                       // sensi w.r.t transformed inequality constraints 
+                       for (unsigned int k = 0; k < Nhji; ++k)
+                       {
+                           if (cfct[i * Nhji + k] > -neighbors_constraintState.mu_h_[i * Nhji + k] / neighbors_constraintState.c_h_[i * Nhji + k])
+                           {
+                               copied_coupling_model->dhdxj_vec(&sbdpState.psi_x_[i * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                               copied_coupling_model->dhduj_vec(&sbdpState.psi_u_[i * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                           }
+                       }
                    }
 
                    // second-order sensitivities 
@@ -246,16 +245,17 @@ namespace grampcd
                        copied_coupling_model->dgdxjduj_vec(&sbdpState.psi_xu_[i * Nxi * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_g_.data() + i * Ngji);
                       
                        // sensitivity w.r.t transformed inequality constraints 
-                       for (unsigned int k = 0; k < Nhji; ++k)
+                       if (Nhji > 0)
                        {
-                           typeRNum cfct = 0;
-                           copied_coupling_model->hfct(&cfct, agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui);
-
-                           if (cfct > -neighbors_constraintState.mu_h_[i * k] / neighbors_constraintState.c_h_[i * k])
+                           // sensi w.r.t transformed inequality constraints 
+                           for (unsigned int k = 0; k < Nhji; ++k)
                            {
-                               copied_coupling_model->dhdxjdxj_vec(&sbdpState.psi_xx_[i * Nxi * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
-                               copied_coupling_model->dhdujduj_vec(&sbdpState.psi_uu_[i * Nui * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
-                               copied_coupling_model->dhdxjduj_vec(&sbdpState.psi_xu_[i * Nxi * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                               if (cfct[i * Nhji + k] > -neighbors_constraintState.mu_h_[i * Nhji + k] / neighbors_constraintState.c_h_[i * Nhji + k])
+                               {
+                                   copied_coupling_model->dhdxjdxj_vec(&sbdpState.psi_xx_[i * Nxi * Nxi], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                                   copied_coupling_model->dhdujduj_vec(&sbdpState.psi_uu_[i * Nui * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                                   copied_coupling_model->dhdxjduj_vec(&sbdpState.psi_xu_[i * Nxi * Nui], agentState.t_[i], neighbors_agentState.x_.data() + i * Nxj, neighbors_agentState.u_.data() + i * Nuj, agentState.x_.data() + i * Nxi, agentState.u_.data() + i * Nui, neighbors_constraintState.mu_h_.data() + i * Nhji);
+                               }
                            }
                        }
                    }

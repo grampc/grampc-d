@@ -614,7 +614,7 @@ namespace grampcd
             coupled_constraintState_.mu_g_.resize(Ngij* Nhor, 0.0);
             coupled_constraintState_.mu_h_.resize(Nhij* Nhor, 0.0);
             coupled_constraintState_.c_g_.resize(Ngij* Nhor, 0.0);
-            coupled_constraintState_.c_h_.resize(Nhij* Nhor, 0.0);
+            coupled_constraintState_.c_h_.resize(Nhij* Nhor, 1.0);
 
         }
         if (is_receivingNeighbor())
@@ -641,7 +641,7 @@ namespace grampcd
             neighbors_coupled_constraintState_.mu_g_.resize(Ngji* Nhor, 0.0);
             neighbors_coupled_constraintState_.mu_h_.resize(Nhji* Nhor, 0.0);
             neighbors_coupled_constraintState_.c_g_.resize(Ngji* Nhor, 0.0);
-            neighbors_coupled_constraintState_.c_h_.resize(Nhji* Nhor, 0.0);
+            neighbors_coupled_constraintState_.c_h_.resize(Nhji* Nhor, 1.0);
 
         }
     }
