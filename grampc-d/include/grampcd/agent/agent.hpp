@@ -163,16 +163,16 @@ namespace grampcd
         void fromCommunication_received_couplingState(const CouplingState& state, const CouplingState& state2, int from);
         /*This function is called if a message is received including the neighbors multiplier state.*/
         void fromCommunication_received_multiplierState(const MultiplierState& state, PenaltyState penalty, int from);
-        /*This function is called if a message is received including the neighbors sensi states*/
-        void fromCommunication_received_sensiState(const SensiState& state, int from);
+        /*This function is called if a message is received including the neighbors SBDP states*/
+        void fromCommunication_received_SBDPState(const SBDPState& state, int from);
         /*This function is called if a message is received including the optimization info.*/
         void fromCommunication_configured_optimization(const OptimizationInfo& info);
         /*This function is called if a message is received to trigger an ADMM step.*/
         void fromCommunication_trigger_step(const AlgStep& step);
         /*this function is called if a message is received to stop the ADMM algorithm*/
-        void fromCommunication_received_flagToStopAdmm(const bool flag);
+        void fromCommunication_received_flagToStopADMM(const bool flag);
         /*this function is called if a message is received containing the ADMM iterations of the neighbors*/
-        void fromCommunication_received_flagStoppedAdmm(const bool flag, int from);
+        void fromCommunication_received_flagStoppedADMM(const bool flag, int from);
 
         /*************************************************************************
         end of communication functions
@@ -201,20 +201,20 @@ namespace grampcd
         const int get_delay_sending_neighbors(const AlgStep& step) const;
         /*returns the delay of the corresponding neighbor*/
         const int get_delay_receiving_neighbors(const AlgStep& step) const;
-        /*resets the flag stopAdmmflag*/
-        void reset_stopAdmmflag_of_neighbors();
+        /*resets the flag stopADMMflag*/
+        void reset_stopADMMflag_of_neighbors();
 
         /************************************************************************
         end of asynchronous functions/
        *************************************************************************/
 
        /*************************************************************************
-        sensi functions
+        SBDP functions
         *************************************************************************/
 
 
         /*************************************************************************
-        end of sensi functions
+        end of SBDP functions
         *************************************************************************/
        
 

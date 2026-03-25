@@ -54,7 +54,7 @@ namespace grampcd
         agent_->set_neighbors_initial_states();
         // steps needed for asynchronous execution
         send_numberofNeighbors();    
-        agent_->reset_stopAdmmflag_of_neighbors();
+        agent_->reset_stopADMMflag_of_neighbors();
         agent_->initialize_allNeighborDelays();
     
     }

@@ -353,15 +353,15 @@ namespace grampcd
 			.def_readwrite("ADMM_AdaptPenaltyParameter_", &OptimizationInfo::ADMM_AdaptPenaltyParameter_)
 			.def_readwrite("ADMM_innerIterations_", &OptimizationInfo::ADMM_innerIterations_)
 			
-			// parameters for SENSI
-			.def_readwrite("SENSI_maxIterations_",&OptimizationInfo::SENSI_maxIterations_)
-			.def_readwrite("SENSI_ConvexivityTerm_", &OptimizationInfo::SENSI_ConvexivityTerm_)
-			.def_readwrite("SENSI_ConvexFactor_x_", &OptimizationInfo::SENSI_ConvexFactor_x_)
-			.def_readwrite("SENSI_ConvexFactor_u_", &OptimizationInfo::SENSI_ConvexFactor_u_)
-			.def_readwrite("SENSI_ConvexSum_", &OptimizationInfo::SENSI_ConvexSum_)
-			.def_readwrite("SENSI_ConvexSumAlpha_", &OptimizationInfo::SENSI_ConvexSumAlpha_)
-			.def_readwrite("SENSI_ConvergenceTolerance_", &OptimizationInfo::SENSI_ConvergenceTolerance_)
-			.def_readwrite("SENSI_higherOrder_", &OptimizationInfo::SENSI_higherOrder_)
+			// parameters for SBDP
+			.def_readwrite("SBDP_maxIterations_",&OptimizationInfo::SBDP_maxIterations_)
+			.def_readwrite("SBDP_ConvexivityTerm_", &OptimizationInfo::SBDP_ConvexivityTerm_)
+			.def_readwrite("SBDP_ConvexFactor_x_", &OptimizationInfo::SBDP_ConvexFactor_x_)
+			.def_readwrite("SBDP_ConvexFactor_u_", &OptimizationInfo::SBDP_ConvexFactor_u_)
+			.def_readwrite("SBDP_ConvexSum_", &OptimizationInfo::SBDP_ConvexSum_)
+			.def_readwrite("SBDP_ConvexSumAlpha_", &OptimizationInfo::SBDP_ConvexSumAlpha_)
+			.def_readwrite("SBDP_ConvergenceTolerance_", &OptimizationInfo::SBDP_ConvergenceTolerance_)
+			.def_readwrite("SBDP_higherOrder_", &OptimizationInfo::SBDP_higherOrder_)
 
 			// parameters for neighbor approximation
 			.def_readwrite("APPROX_ApproximateCost_", &OptimizationInfo::APPROX_ApproximateCost_)

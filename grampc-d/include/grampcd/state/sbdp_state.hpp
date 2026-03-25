@@ -19,7 +19,7 @@
 namespace grampcd
 {
 
-    struct SensiState
+    struct SBDPState
     {
     public:
 

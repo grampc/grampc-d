@@ -559,50 +559,50 @@ namespace grampcd
 	};
 
 	
-	struct Message_send_flag_stopped_admm : public Message
+	struct Message_send_flag_stopped_ADMM : public Message
 	{
-		Message_send_flag_stopped_admm();
-		Message_send_flag_stopped_admm(const bool flag_stoppedAdmm, const int from);
+		Message_send_flag_stopped_ADMM();
+		Message_send_flag_stopped_ADMM(const bool flag_stoppedADMM, const int from);
 		const Messagetype get_message_type() const;
 		
-		 bool flag_stoppedAdmm_ = false;
+		 bool flag_stoppedADMM_ = false;
 		 int from_ = 0;
 
 		template<class Archive>
 		void serialize(Archive& ar)
 		{
-			ar(flag_stoppedAdmm_,from_);
+			ar(flag_stoppedADMM_,from_);
 		}
 	};
 
-	struct Message_send_flag_stopped_admm_coordinator : public Message
+	struct Message_send_flag_stopped_ADMM_coordinator : public Message
 	{
-		Message_send_flag_stopped_admm_coordinator();
-		Message_send_flag_stopped_admm_coordinator(const bool flag_stoppedAdmm, const int from);
+		Message_send_flag_stopped_ADMM_coordinator();
+		Message_send_flag_stopped_ADMM_coordinator(const bool flag_stoppedADMM, const int from);
 		const Messagetype get_message_type() const;
 
-		bool flag_stoppedAdmm_ = false;
+		bool flag_stoppedADMM_ = false;
 		int from_ = 0;
 
 		template<class Archive>
 		void serialize(Archive& ar)
 		{
-			ar(flag_stoppedAdmm_, from_);
+			ar(flag_stoppedADMM_, from_);
 		}
 	};
 
-	struct Message_send_flag_to_stop_admm : public Message
+	struct Message_send_flag_to_stop_ADMM : public Message
 	{
-		Message_send_flag_to_stop_admm();
-		Message_send_flag_to_stop_admm(const bool flag_toStopAdmm);
+		Message_send_flag_to_stop_ADMM();
+		Message_send_flag_to_stop_ADMM(const bool flag_toStopADMM);
 		const Messagetype get_message_type() const;
 
-		bool flag_toStopAdmm_ = false;
+		bool flag_toStopADMM_ = false;
 
 		template<class Archive>
 		void serialize(Archive& ar)
 		{
-			ar(flag_toStopAdmm_);
+			ar(flag_toStopADMM_);
 		}
 	};
 

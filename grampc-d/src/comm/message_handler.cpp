@@ -277,24 +277,24 @@ namespace grampcd
 
 		case Messagetype::SEND_FLAG_STOPPED_ADMM:
 		{
-			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_admm>(message);
-			communication_interface_->fromCommunication_send_stoppedAlgFlag(comm_data,my_message->flag_stoppedAdmm_, my_message->from_);
+			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_ADMM>(message);
+			communication_interface_->fromCommunication_send_stoppedAlgFlag(comm_data,my_message->flag_stoppedADMM_, my_message->from_);
 
 			break;
 		}
 
 		case Messagetype::SEND_FLAG_STOPPED_ADMM_COORDINATOR:
 		{
-			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_admm_coordinator>(message);
-			communication_interface_->fromCommunication_send_stoppedAlgFlagCoordinator(comm_data, my_message->flag_stoppedAdmm_, my_message->from_);
+			const auto my_message = std::static_pointer_cast<Message_send_flag_stopped_ADMM_coordinator>(message);
+			communication_interface_->fromCommunication_send_stoppedAlgFlagCoordinator(comm_data, my_message->flag_stoppedADMM_, my_message->from_);
 
 			break;
 		}
 
 		case Messagetype::SEND_FLAG_TO_STOP_ADMM:
 		{
-			const auto my_message = std::static_pointer_cast<Message_send_flag_to_stop_admm>(message);
-			communication_interface_->fromCommunication_send_flagToStopAdmm(comm_data, my_message->flag_toStopAdmm_);
+			const auto my_message = std::static_pointer_cast<Message_send_flag_to_stop_ADMM>(message);
+			communication_interface_->fromCommunication_send_flagToStopADMM(comm_data, my_message->flag_toStopADMM_);
 
 			break;
 		}

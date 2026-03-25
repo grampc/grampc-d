@@ -310,7 +310,7 @@ const bool  CommunicationInterfaceCentral::send_stoppedAlgFlag(const bool flag, 
         return false;
     }
   
-    agents_[to]->fromCommunication_received_flagStoppedAdmm(flag, from);
+    agents_[to]->fromCommunication_received_flagStoppedADMM(flag, from);
     return true;
 }
 

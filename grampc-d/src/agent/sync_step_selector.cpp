@@ -13,7 +13,7 @@
 #include"grampcd/agent/sync_step_selector.hpp"
 
 #include "grampcd/optim/solver_local_admm.hpp"
-#include "grampcd/optim/solver_local_sensi.hpp"
+#include "grampcd/optim/solver_local_sbdp.hpp"
 
 #include "grampcd/agent/agent.hpp"
 
@@ -81,33 +81,33 @@ namespace grampcd
         }
         
         /*****************************
-       Sensi STEPS
+       SBDP STEPS
        ******************************/
 
-        case AlgStep::SENSI_INITIALIZE:
+        case AlgStep::SBDP_INITIALIZE:
         {
-            local_solver_->initialize_Sensi();
+            local_solver_->initialize_SBDP();
             break;
         }
 
-        case AlgStep::SENSI_UPDATE_AGENT_STATE:
+        case AlgStep::SBDP_UPDATE_AGENT_STATE:
         {
             local_solver_->update_agentStates();
             break;
         }
 
-        case AlgStep::SENSI_UPDATE_SENSI_STATE:
+        case AlgStep::SBDP_UPDATE_SBDP_STATE:
         {
-            local_solver_->update_sensiStates();
+            local_solver_->update_SBDPStates();
             break;
         }
 
-        case AlgStep::SENSI_SEND_AGENT_STATE:
+        case AlgStep::SBDP_SEND_AGENT_STATE:
         {
             local_solver_->send_agentStates();
 
-            // increase sensi Iterations 
-            ++sensiIter_;
+            // increase SBDP Iterations 
+            ++sbdpIter_;
             break;
         }
        /*****************************
@@ -135,8 +135,8 @@ namespace grampcd
     {
         if (agent_->get_optimizationInfo().COMMON_Solver_ == "ADMM")
             return admmIter_;
-        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "Sensi")
-            return sensiIter_;
+        else if (agent_->get_optimizationInfo().COMMON_Solver_ == "SBDP")
+            return sbdpIter_;
         else
             return 0;
     }

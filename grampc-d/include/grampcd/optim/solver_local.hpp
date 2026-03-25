@@ -47,10 +47,10 @@ namespace grampcd
        virtual void send_numberofNeighbors();
 
         /***********************************************
-        Sensi functions
+        SBDP functions
         ************************************************/
-       virtual void initialize_Sensi();
-       virtual void update_sensiStates();
+       virtual void initialize_SBDP();
+       virtual void update_SBDPStates();
         
     };
 

@@ -134,8 +134,8 @@ namespace grampcd
 		// main loop for distributed solution
 		if(oi.COMMON_Solver_=="ADMM")
 			coordinator_->initialize_ADMM(oi);
-		else if(oi.COMMON_Solver_ == "Sensi")
-			coordinator_->initialize_sensi(oi);
+		else if(oi.COMMON_Solver_ == "SBDP")
+			coordinator_->initialize_SBDP(oi);
 		else 
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
 
@@ -162,13 +162,13 @@ namespace grampcd
 				print_progressbar(iMPC, maxSimIter);
 			}
 		}
-		else if (oi.COMMON_Solver_ == "Sensi")
+		else if (oi.COMMON_Solver_ == "SBDP")
 		{
 			for (unsigned int iMPC = 0; iMPC <= maxSimIter; ++iMPC)
 			{
 				// optimize
 				const auto tstart = std::chrono::steady_clock::now();
-				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				coordinator_->solve_SBDP(oi.SBDP_maxIterations_);
 				const auto tend = std::chrono::steady_clock::now();
 				CPUtime += std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart);
 				CPUtime_max = std::max(CPUtime_max, std::chrono::duration_cast<std::chrono::microseconds>(tend - tstart).count());
@@ -196,8 +196,8 @@ namespace grampcd
 		// main loop for distributed solution
 		if (oi.COMMON_Solver_ == "ADMM")
 			coordinator_->initialize_ADMM(oi);
-		else if (oi.COMMON_Solver_ == "Sensi")
-			coordinator_->initialize_sensi(oi);
+		else if (oi.COMMON_Solver_ == "SBDP")
+			coordinator_->initialize_SBDP(oi);
 		else
 			log_->print(DebugType::Error) << "[DmpcInterface::run_DMPC]: No proper solver initialized" << std::endl;
 
@@ -231,13 +231,13 @@ namespace grampcd
 				simulator->distributed_simulation(oi.COMMON_Integrator_, simulate_timestep);
 			}
 		}
-		else if (oi.COMMON_Solver_ == "Sensi")
+		else if (oi.COMMON_Solver_ == "SBDP")
 		{
 			while (true)
 			{
 				// optimize
 				const auto tstart = std::chrono::steady_clock::now();
-				coordinator_->solve_sensi(oi.SENSI_maxIterations_);
+				coordinator_->solve_SBDP(oi.SBDP_maxIterations_);
 				const auto tend = std::chrono::steady_clock::now();
 				CPUtime_iteration = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(tend - tstart).count());
 

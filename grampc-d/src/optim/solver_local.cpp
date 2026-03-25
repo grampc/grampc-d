@@ -49,12 +49,12 @@ namespace grampcd
         // implemented in derived classes
     }
 
-    void SolverLocal::initialize_Sensi()
+    void SolverLocal::initialize_SBDP()
     {
         // implemented in derived classes
     }
 
-    void SolverLocal::update_sensiStates()
+    void SolverLocal::update_SBDPStates()
     {
         // implemented in derived classes
     }
