@@ -81,7 +81,7 @@ namespace grampcd
 		log_->print(DebugType::Progressbar) << std::endl;
 
 		log_->print(DebugType::Base) << "MPC finished. Average computation time: "
-			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " µs." << std::endl << std::endl;
+			<< static_cast<typeRNum>(static_cast<typeRNum>(CPUtime.count()) / static_cast<typeRNum>(maxSimIter + 1)) << " us." << std::endl << std::endl;
 	}
 
 	void DmpcInterface::run_MPC(const std::vector<AgentPtr>& agents, const SimulatorPtr& simulator, const OptimizationInfo& oi)
@@ -185,10 +185,10 @@ namespace grampcd
 		const auto number_of_agents = communication_interface_->get_numberOfAgents();
 		log_->print(DebugType::Base) << "DMPC finished." << std::endl
 			<< "Maximum computation time : "
-			<< CPUtime_max << " µs in total or " << CPUtime_max / number_of_agents << " µs per agent." << std::endl
+			<< CPUtime_max << " us in total or " << CPUtime_max / number_of_agents << " us per agent." << std::endl
 			<< "Average computation time : "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " µs in total or "
-			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / number_of_agents << " µs per agent." << std::endl << std::endl;
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) << " us in total or "
+			<< CPUtime.count() / static_cast<typeRNum>(maxSimIter + 1) / number_of_agents << " us per agent." << std::endl << std::endl;
 	}
 
 	void DmpcInterface::run_DMPC(const SimulatorPtr& simulator, const OptimizationInfo& oi)
